@@ -232,15 +232,8 @@ class _StockUpdater extends StatefulWidget {
 }
 
 class _StockUpdaterState extends State<_StockUpdater> {
-  final _controller = TextEditingController();
+  final _manualController = TextEditingController();
   Timer? _debounce;
-
-  void _onChanged(String value) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 500), () {
-      _setManualStock();
-    });
-  }
 
   Future<void> _adjustStock(int amount) async {
     try {
@@ -256,25 +249,80 @@ class _StockUpdaterState extends State<_StockUpdater> {
     }
   }
 
-  Future<void> _setManualStock() async {
-    final newStock = int.tryParse(_controller.text);
+  Future<void> _setManualStock(String value) async {
+    final newStock = int.tryParse(value);
     if (newStock == null) return;
-    try {
-      await Supabase.instance.client
-          .from('inventory')
-          .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
-          .eq('id', 1);
-      _controller.clear();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 600), () async {
+      try {
+        await Supabase.instance.client
+            .from('inventory')
+            .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
+            .eq('id', 1);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+        }
       }
-    }
+    });
+  }
+
+  void _showManualInput() {
+    _manualController.text = widget.currentStock.toString();
+    _manualController.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: _manualController.text.length,
+    );
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(
+          left: 24, right: 24, top: 24,
+          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Set Stok: ${widget.flavor}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _manualController,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                labelText: 'Jumlah stok',
+                border: OutlineInputBorder(),
+                suffix: Text('pek'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () async {
+                final val = _manualController.text;
+                Navigator.pop(ctx);
+                await _setManualStock(val);
+              },
+              child: const Text('Simpan', style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _manualController.dispose();
     _debounce?.cancel();
     super.dispose();
   }
@@ -282,12 +330,14 @@ class _StockUpdaterState extends State<_StockUpdater> {
   @override
   Widget build(BuildContext context) {
     final isSoldOut = widget.currentStock <= 0;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Card(
-      elevation: 2,
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: isSoldOut ? Colors.red.shade50 : null,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -296,59 +346,103 @@ class _StockUpdaterState extends State<_StockUpdater> {
               children: [
                 Text(widget.flavor, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 if (isSoldOut)
-                  const Text('SOLD OUT', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
+                    child: const Text('SOLD OUT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text('Stok Semasa: ${widget.currentStock} pek', style: TextStyle(fontSize: 16, color: isSoldOut ? Colors.red : null)),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
+            // Counter Row: [-] [number] [+]
             Row(
               children: [
-                _adjustButton(icon: HugeIcons.strokeRoundedMinusSign, label: '-1', color: Colors.orange, onPressed: () => _adjustStock(-1)),
-                const SizedBox(width: 8),
-                _adjustButton(icon: HugeIcons.strokeRoundedPlusSign, label: '+1', color: Colors.green, onPressed: () => _adjustStock(1)),
-                const SizedBox(width: 8),
-                _adjustButton(icon: HugeIcons.strokeRoundedPlusSignCircle, label: '+10', color: Colors.green.shade700, onPressed: () => _adjustStock(10)),
-              ],
-            ),
-            const Divider(height: 32),
-            Row(
-              children: [
+                // Minus button
+                _CounterButton(
+                  icon: HugeIcons.strokeRoundedMinusSign,
+                  color: Colors.orange,
+                  onPressed: widget.currentStock > 0 ? () => _adjustStock(-1) : null,
+                ),
+                // Middle: tappable number display
                 Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    keyboardType: TextInputType.number,
-                    onChanged: _onChanged,
-                    decoration: const InputDecoration(
-                      labelText: 'Taip untuk set stok baru...',
-                      isDense: true,
-                      prefixIcon: Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedPencilEdit01, color: Colors.grey, size: 20),
+                  child: GestureDetector(
+                    onTap: _showManualInput,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: primary, width: 2),
+                        borderRadius: BorderRadius.circular(12),
+                        color: primary.withValues(alpha: 0.05),
                       ),
-                      border: OutlineInputBorder(),
+                      child: Column(
+                        children: [
+                          Text(
+                            '${widget.currentStock}',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: isSoldOut ? Colors.red : primary,
+                            ),
+                          ),
+                          Text(
+                            'pek  •  ketuk untuk edit',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+                // Plus button
+                _CounterButton(
+                  icon: HugeIcons.strokeRoundedPlusSign,
+                  color: Colors.green,
+                  onPressed: () => _adjustStock(1),
+                ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _adjustButton({required List<List<dynamic>> icon, required String label, required Color color, required VoidCallback onPressed}) {
-    return Expanded(
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: HugeIcon(icon: icon, size: 16, color: color),
-        label: Text(label, style: TextStyle(color: color)),
-        style: OutlinedButton.styleFrom(
-          side: BorderSide(color: color),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+class _CounterButton extends StatelessWidget {
+  final List<List<dynamic>> icon;
+  final Color color;
+  final VoidCallback? onPressed;
+
+  const _CounterButton({required this.icon, required this.color, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: onPressed != null ? color.withValues(alpha: 0.1) : Colors.grey.shade200,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onPressed,
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            border: Border.all(color: onPressed != null ? color : Colors.grey.shade400, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: HugeIcon(
+              icon: icon,
+              color: onPressed != null ? color : Colors.grey,
+              size: 24,
+            ),
+          ),
         ),
       ),
     );
   }
 }
+

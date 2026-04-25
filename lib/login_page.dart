@@ -70,9 +70,26 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: Colors.black, size: 24),
-          onPressed: () => Navigator.pop(context),
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(50),
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+              child: Center(
+                child: HugeIcon(
+                  icon: HugeIcons.strokeRoundedArrowLeft01,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
       body: Center(

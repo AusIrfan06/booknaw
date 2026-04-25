@@ -1,0 +1,23 @@
+name: booknaw
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.5.4
+  url_launcher: ^6.3.0
+  google_fonts: ^6.2.1
+  hugeicons: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

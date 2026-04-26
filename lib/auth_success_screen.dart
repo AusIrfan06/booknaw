@@ -90,8 +90,8 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTicker
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: isDark 
-              ? [const Color(0xFF1A237E), const Color(0xFF000000)]
-              : [const Color(0xFFE3F2FD), const Color(0xFFBBDEFB)],
+              ? [const Color(0xFFE64A19), const Color(0xFF000000)]
+              : [const Color(0xFFFFF3E0), const Color(0xFFFFE0B2)],
           ),
         ),
         child: Center(

@@ -281,7 +281,7 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildGlassField({
     required TextEditingController controller,
     required String label,
-    IconData? icon,
+    dynamic icon,
     required bool isDark,
     bool obscureText = false,
     Widget? suffixIcon,
@@ -356,7 +356,5 @@ class _ChoicePill extends StatelessWidget {
         ),
       ),
     );
-  }
-}
   }
 }

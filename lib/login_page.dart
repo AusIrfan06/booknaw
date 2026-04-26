@@ -251,7 +251,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildGlassField({
     required TextEditingController controller,
     required String label,
-    required IconData icon,
+    required dynamic icon,
     required bool isDark,
     bool obscureText = false,
     Widget? suffixIcon,
@@ -281,7 +281,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-}
   }
 }

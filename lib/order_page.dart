@@ -23,10 +23,10 @@ class _OrderPageState extends State<OrderPage> {
   final Map<String, double> _deliveryFees = {
     'Pickup Alpha (A5-03-03)': 0.0,
     'Pickup Beta (B10-03-11)': 0.0,
-    'Delivery Alpha': 0.5,
-    'Delivery Beta': 0.5,
-    'Delivery Gamma': 1.0,
-    'Delivery NR': 2.0,
+    'Delivery Alpha': 1.0,
+    'Delivery Beta': 1.0,
+    'Delivery Gamma': 2.0,
+    'Delivery NR': 4.0,
   };
 
   double get _totalPrice {

@@ -599,6 +599,41 @@ class _StaffOrderCard extends StatelessWidget {
           .from('orders')
           .update({'payment_status': 'Paid'})
           .eq('id', order['id']);
+
+      // Deduct inventory
+      final opt = order['delivery_option'] as String? ?? '';
+      int locationId = 1; // Default to Alpha
+      if (opt.contains('Alpha')) locationId = 1;
+      else if (opt.contains('Beta')) locationId = 2;
+      else if (opt.contains('Gamma')) locationId = 3;
+      else if (opt.contains('NR')) locationId = 4;
+
+      final hotQty = order['hot_quantity_100g'] as int? ?? 0;
+      final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
+
+      if (hotQty > 0 || bbqQty > 0) {
+        final invRes = await Supabase.instance.client
+            .from('inventory')
+            .select()
+            .eq('id', locationId)
+            .maybeSingle();
+
+        if (invRes != null) {
+          final currentHot = invRes['hot_stock'] as int? ?? 0;
+          final currentBbq = invRes['bbq_stock'] as int? ?? 0;
+
+          final newHot = currentHot - hotQty;
+          final newBbq = currentBbq - bbqQty;
+
+          await Supabase.instance.client
+              .from('inventory')
+              .update({
+                'hot_stock': newHot < 0 ? 0 : newHot,
+                'bbq_stock': newBbq < 0 ? 0 : newBbq,
+              })
+              .eq('id', locationId);
+        }
+      }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

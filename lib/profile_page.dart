@@ -51,99 +51,106 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
 
-                // Profile Header
-                Center(
-                    child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? const Color(0xFFFF5722).withOpacity(0.5) : Colors.grey.withOpacity(0.3), width: 2)),
-                            child: CircleAvatar(
-                               radius: 50,
-                               backgroundColor: isDark ? Colors.white10 : Colors.black12,
-                               child: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: isDark ? Colors.white70 : Colors.black54, size: 40),
-                             ),
-                           ),
-                           const SizedBox(height: 16),
-                           Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
-                           const SizedBox(height: 4),
-                           Text(email, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14)),
-                          const SizedBox(height: 8),
+                      // Profile Header
+                      Center(
+                          child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? const Color(0xFFFF5722).withOpacity(0.5) : Colors.grey.withOpacity(0.3), width: 2)),
+                                  child: CircleAvatar(
+                                     radius: 50,
+                                     backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                                     child: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: isDark ? Colors.white70 : Colors.black54, size: 40),
+                                   ),
+                                 ),
+                                 const SizedBox(height: 16),
+                                 Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+                                 const SizedBox(height: 4),
+                                 Text(email, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14)),
+                                const SizedBox(height: 8),
 
-                          Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                  color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
-                                  borderRadius: BorderRadius.circular(20)
-                              ),
-                              child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: const Color(0xFFFF5722), size: 14),
-                                    SizedBox(width: 4),
-                                    Text(locationStr, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                    SizedBox(width: 6),
-                                    Icon(Icons.refresh_rounded, color: Colors.grey, size: 12),
-                                  ]
-                              )
-                          ),
-                        ]
-                    )
+                                Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                        color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(20)
+                                    ),
+                                    child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: const Color(0xFFFF5722), size: 14),
+                                          SizedBox(width: 4),
+                                          Text(locationStr, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                          SizedBox(width: 6),
+                                          Icon(Icons.refresh_rounded, color: Colors.grey, size: 12),
+                                        ]
+                                    )
+                                ),
+                              ]
+                          )
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Main Content
+                      if (!isLoggedIn) ...[
+                        _buildGlassButton(isDark, "Log Masuk / Daftar", const Color(0xFFFF5722), () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+                        }),
+                        const SizedBox(height: 32),
+                      ],
+
+                      if (isLoggedIn) ...[
+                        _buildSectionHeader("Akaun"),
+                        _buildGlassSection(isDark, Column(children: [
+                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedUserEdit01, "Butiran Akaun"),
+                          _buildDivider(isDark),
+                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Maklumat Peribadi"),
+                          _buildDivider(isDark),
+                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan"),
+                        ])),
+                        const SizedBox(height: 24),
+                      ],
+
+                      _buildSectionHeader("Pilihan"),
+                      _buildGlassSection(isDark, Column(children: [
+                        _buildThemeToggleTile(isDark),
+                      ])),
+                      const SizedBox(height: 24),
+
+                      _buildSectionHeader("Sokongan"),
+                      _buildGlassSection(isDark, Column(children: [
+                        _buildSettingsTile(isDark, HugeIcons.strokeRoundedCustomerService, "Pusat Bantuan"),
+                        _buildDivider(isDark),
+                        _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Hubungi Kami", onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactPage()));
+                        }),
+                      ])),
+                      const SizedBox(height: 40),
+
+                      if (isLoggedIn) ...[
+                        _buildGlassButton(isDark, "Log Keluar", Colors.redAccent, () async {
+                          await Supabase.instance.client.auth.signOut();
+                          if (mounted) Navigator.pop(context);
+                        }),
+                        const SizedBox(height: 40),
+                      ],
+                      
+                      Center(child: Column(children: [const Text("Nachozyyy v0.1.0", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 4), const Text("Dibuat dengan Kasih Sayang", style: TextStyle(color: Colors.grey, fontSize: 10))])),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 32),
-
-                // Main Content
-                if (!isLoggedIn) ...[
-                  _buildGlassButton(isDark, "Log Masuk / Daftar", const Color(0xFFFF5722), () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
-                  }),
-                  const SizedBox(height: 32),
-                ],
-
-                if (isLoggedIn) ...[
-                  _buildSectionHeader("Akaun"),
-                  _buildGlassSection(isDark, Column(children: [
-                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedUserEdit01, "Butiran Akaun"),
-                    _buildDivider(isDark),
-                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Maklumat Peribadi"),
-                    _buildDivider(isDark),
-                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan"),
-                  ])),
-                  const SizedBox(height: 24),
-                ],
-
-                _buildSectionHeader("Pilihan"),
-                _buildGlassSection(isDark, Column(children: [
-                  _buildThemeToggleTile(isDark),
-                ])),
-                const SizedBox(height: 24),
-
-                _buildSectionHeader("Sokongan"),
-                _buildGlassSection(isDark, Column(children: [
-                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedCustomerService, "Pusat Bantuan"),
-                  _buildDivider(isDark),
-                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Hubungi Kami", onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactPage()));
-                  }),
-                ])),
-                const SizedBox(height: 40),
-
-                if (isLoggedIn) ...[
-                  _buildGlassButton(isDark, "Log Keluar", Colors.redAccent, () async {
-                    await Supabase.instance.client.auth.signOut();
-                    if (mounted) Navigator.pop(context);
-                  }),
-                  const SizedBox(height: 40),
-                ],
-                
-                Center(child: Column(children: [const Text("Nachozyyy v0.1.0", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 4), const Text("Dibuat dengan Kasih Sayang", style: TextStyle(color: Colors.grey, fontSize: 10))])),
-                const SizedBox(height: 40),
-              ],
+              ),
             ),
           ),
         ],

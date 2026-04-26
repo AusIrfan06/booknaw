@@ -187,101 +187,106 @@ class _HomeTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          GlassContainer(
-            useOwnLayer: true,
-            quality: GlassQuality.standard,
-            shape: LiquidRoundedSuperellipse(
-              borderRadius: 30.0,
-            ),
-            settings: LiquidGlassSettings(
-              thickness: 0.1,
-              blur: 15,
-              refractiveIndex: 1.0,
-              glassColor: Colors.transparent,
-              lightAngle: 45.0,
-              lightIntensity: isDark ? 0.1 : 0.2,
-              ambientStrength: 1.0,
-              saturation: 1.0,
-              chromaticAberration: 0.0,
-            ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(isDark ? 0.2 : 0.8),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GlassContainer(
+                useOwnLayer: true,
+                quality: GlassQuality.standard,
+                shape: LiquidRoundedSuperellipse(
+                  borderRadius: 30.0,
+                ),
+                settings: LiquidGlassSettings(
+                  thickness: 0.1,
+                  blur: 15,
+                  refractiveIndex: 1.0,
+                  glassColor: Colors.transparent,
+                  lightAngle: 45.0,
+                  lightIntensity: isDark ? 0.1 : 0.2,
+                  ambientStrength: 1.0,
+                  saturation: 1.0,
+                  chromaticAberration: 0.0,
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(isDark ? 0.2 : 0.8),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(30),
+                      bottomRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                    const AppLogo(size: 60),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Krup Krap, Krup Krap... 👀🔥',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Team HOT 🌶️ atau BBQ 🍖? Pilih ikut craving korang!',
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: onOrder,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 15),
+                      ),
+                      child:
+                          const Text('Order Now!', style: TextStyle(fontSize: 18)),
+                    ),
+                  ],
                 ),
               ),
-              child: Column(
-                children: [
-                const AppLogo(size: 60),
-                const SizedBox(height: 16),
-                const Text(
-                  'Krup Krap, Krup Krap... 👀🔥',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Pilihan Perisa ✨',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFlavorCard(
+                      context,
+                      title: 'HOT & SPICYYY 🌶️',
+                      desc: 'Pedas berapi, memang ada kick!',
+                      lightColor: Colors.red.shade100,
+                      darkColor: Colors.red.shade900.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildFlavorCard(
+                      context,
+                      title: 'BBQ 🍖',
+                      desc: 'Smoky & sedap, sekali makan susah nak stop!',
+                      lightColor: Colors.orange.shade100,
+                      darkColor: Colors.orange.shade900.withOpacity(0.5),
+                    ),
+                    const SizedBox(height: 30),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  'Team HOT 🌶️ atau BBQ 🍖? Pilih ikut craving korang!',
-                  style: TextStyle(fontSize: 16, color: Colors.white70),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: onOrder,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    foregroundColor: Colors.black87,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 15),
-                  ),
-                  child:
-                      const Text('Order Now!', style: TextStyle(fontSize: 18)),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Pilihan Perisa ✨',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 10),
-                _buildFlavorCard(
-                  context,
-                  title: 'HOT & SPICYYY 🌶️',
-                  desc: 'Pedas berapi, memang ada kick!',
-                  lightColor: Colors.red.shade100,
-                  darkColor: Colors.red.shade900.withOpacity(0.5),
-                ),
-                const SizedBox(height: 10),
-                _buildFlavorCard(
-                  context,
-                  title: 'BBQ 🍖',
-                  desc: 'Smoky & sedap, sekali makan susah nak stop!',
-                  lightColor: Colors.orange.shade100,
-                  darkColor: Colors.orange.shade900.withOpacity(0.5),
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

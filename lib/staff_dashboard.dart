@@ -162,239 +162,244 @@ class _DashboardPage extends StatelessWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Welcome banner ──────────────────────────────────────────────────
-          GlassContainer(
-            useOwnLayer: true,
-            quality: GlassQuality.standard,
-            shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-            settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(
-                  Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.08
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2)
-                ),
-              ),
-              child: Row(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedUserCircle,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 32,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selamat datang, $name 👋',
-                          style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark 
-                              ? Colors.white 
-                              : Colors.black87,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          'Staff NACHOZYYY',
-                          style: TextStyle(
-                            color: Theme.of(context).brightness == Brightness.dark 
-                              ? Colors.white70 
-                              : Colors.black54,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-          const Text(
-            'Ringkasan Hari Ini',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 14),
-
-          // ── Stats cards ─────────────────────────────────────────────────────
-          StreamBuilder<List<Map<String, dynamic>>>(
-            stream: ordersStream,
-            builder: (context, snap) {
-              final orders = snap.data ?? [];
-              final pending = orders
-                  .where((o) => o['status'] != 'Delivered')
-                  .length;
-              final delivered = orders
-                  .where((o) => o['status'] == 'Delivered')
-                  .length;
-              final paidOrders = orders.where(
-                (o) => o['payment_status'] == 'Paid',
-              );
-              final totalSales = paidOrders.fold<double>(0.0, (sum, o) {
-                final price = o['total_price'];
-                if (price is num) return sum + price.toDouble();
-                if (price is String)
-                  return sum + (double.tryParse(price) ?? 0.0);
-                return sum;
-              });
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 250,
-                  mainAxisExtent: 110,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: 4,
-                itemBuilder: (context, index) {
-                  switch (index) {
-                    case 0:
-                      return _StatCard(
-                        label: 'Jumlah Pesanan',
-                        value: '${orders.length}',
-                        icon: HugeIcons.strokeRoundedShoppingCart01,
-                        color: const Color(0xFF5C6BC0),
-                      );
-                    case 1:
-                      return _StatCard(
-                        label: 'Jualan (RM)',
-                        value: totalSales.toStringAsFixed(2),
-                        icon: HugeIcons.strokeRoundedWallet01,
-                        color: Colors.green,
-                      );
-                    case 2:
-                      return _StatCard(
-                        label: 'Belum Hantar',
-                        value: '$pending',
-                        icon: HugeIcons.strokeRoundedClock01,
-                        color: const Color(0xFFE65100),
-                      );
-                    default:
-                      return _StatCard(
-                        label: 'Selesai',
-                        value: '$delivered',
-                        icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                        color: const Color(0xFF2E7D32),
-                      );
-                  }
-                },
-              );
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Stock summary ───────────────────────────────────────────────────
-          const Text(
-            'Status Stok',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 14),
-
-          StreamBuilder<List<Map<String, dynamic>>>(
-            stream: inventoryStream,
-            builder: (context, snap) {
-              if (!snap.hasData || snap.data!.isEmpty) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final data = snap.data!;
-              final hotTotal = data.fold<int>(0, (sum, row) => sum + (row['hot_stock'] as int? ?? 0));
-              final bbqTotal = data.fold<int>(0, (sum, row) => sum + (row['bbq_stock'] as int? ?? 0));
-              final cheeseTotal = data.fold<int>(0, (sum, row) => sum + (row['cheese_stock'] as int? ?? 0));
-
-              return Column(
-                children: [
-                  _StockSummaryTile(
-                    label: 'Jumlah Keseluruhan HOT & SPICYYY 🌶️',
-                    stock: hotTotal,
-                  ),
-                  const SizedBox(height: 10),
-                  _StockSummaryTile(label: 'Jumlah Keseluruhan BBQ 🍖', stock: bbqTotal),
-                  const SizedBox(height: 10),
-                  _StockSummaryTile(label: 'Jumlah Keseluruhan Cheese Dip 🧀', stock: cheeseTotal, unit: 'unit'),
-                ],
-              );
-            },
-          ),
-
-          const SizedBox(height: 24),
-
-          // ── Password Reset Helper ───────────────────────────────────────────
-          const _PasswordResetHelper(),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Sedia Untuk Penghantaran 🚚',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 14),
-
-          StreamBuilder<List<Map<String, dynamic>>>(
-            stream: ordersStream,
-            builder: (context, snap) {
-              if (snap.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final orders = snap.data ?? [];
-              // Only paid, not yet delivered
-              final readyOrders = orders
-                  .where(
-                    (o) =>
-                        (o['payment_status'] ?? '') == 'Paid' &&
-                        (o['status'] ?? '') != 'Delivered',
-                  )
-                  .toList();
-
-              if (readyOrders.isEmpty) {
-                return Container(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Welcome banner ──────────────────────────────────────────────────
+              GlassContainer(
+                useOwnLayer: true,
+                quality: GlassQuality.standard,
+                shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+                settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
+                child: Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Theme.of(context).colorScheme.primary.withOpacity(
+                      Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.08
+                    ),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.green.withValues(alpha: 0.2),
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2)
                     ),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.check_circle_outline, color: Colors.green),
-                      SizedBox(width: 12),
+                      HugeIcon(
+                        icon: HugeIcons.strokeRoundedUserCircle,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 32,
+                      ),
+                      const SizedBox(width: 16),
                       Expanded(
-                        child: Text(
-                          'Tiada pesanan menunggu penghantaran.',
-                          style: TextStyle(color: Colors.green),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Selamat datang, $name 👋',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.white 
+                                  : Colors.black87,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Staff NACHOZYYY',
+                              style: TextStyle(
+                                color: Theme.of(context).brightness == Brightness.dark 
+                                  ? Colors.white70 
+                                  : Colors.black54,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                );
-              }
+                ),
+              ),
 
-              return Column(
-                children: readyOrders
-                    .map((o) => _StaffOrderCard(order: o))
-                    .toList(),
-              );
-            },
+              const SizedBox(height: 24),
+              const Text(
+                'Ringkasan Hari Ini',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 14),
+
+              // ── Stats cards ─────────────────────────────────────────────────────
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: ordersStream,
+                builder: (context, snap) {
+                  final orders = snap.data ?? [];
+                  final pending = orders
+                      .where((o) => o['status'] != 'Delivered')
+                      .length;
+                  final delivered = orders
+                      .where((o) => o['status'] == 'Delivered')
+                      .length;
+                  final paidOrders = orders.where(
+                    (o) => o['payment_status'] == 'Paid',
+                  );
+                  final totalSales = paidOrders.fold<double>(0.0, (sum, o) {
+                    final price = o['total_price'];
+                    if (price is num) return sum + price.toDouble();
+                    if (price is String)
+                      return sum + (double.tryParse(price) ?? 0.0);
+                    return sum;
+                  });
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 250,
+                      mainAxisExtent: 110,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                    ),
+                    itemCount: 4,
+                    itemBuilder: (context, index) {
+                      switch (index) {
+                        case 0:
+                          return _StatCard(
+                            label: 'Jumlah Pesanan',
+                            value: '${orders.length}',
+                            icon: HugeIcons.strokeRoundedShoppingCart01,
+                            color: const Color(0xFF5C6BC0),
+                          );
+                        case 1:
+                          return _StatCard(
+                            label: 'Jualan (RM)',
+                            value: totalSales.toStringAsFixed(2),
+                            icon: HugeIcons.strokeRoundedWallet01,
+                            color: Colors.green,
+                          );
+                        case 2:
+                          return _StatCard(
+                            label: 'Belum Hantar',
+                            value: '$pending',
+                            icon: HugeIcons.strokeRoundedClock01,
+                            color: const Color(0xFFE65100),
+                          );
+                        default:
+                          return _StatCard(
+                            label: 'Selesai',
+                            value: '$delivered',
+                            icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                            color: const Color(0xFF2E7D32),
+                          );
+                      }
+                    },
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Stock summary ───────────────────────────────────────────────────
+              const Text(
+                'Status Stok',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 14),
+
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: inventoryStream,
+                builder: (context, snap) {
+                  if (!snap.hasData || snap.data!.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final data = snap.data!;
+                  final hotTotal = data.fold<int>(0, (sum, row) => sum + (row['hot_stock'] as int? ?? 0));
+                  final bbqTotal = data.fold<int>(0, (sum, row) => sum + (row['bbq_stock'] as int? ?? 0));
+                  final cheeseTotal = data.fold<int>(0, (sum, row) => sum + (row['cheese_stock'] as int? ?? 0));
+
+                  return Column(
+                    children: [
+                      _StockSummaryTile(
+                        label: 'Jumlah Keseluruhan HOT & SPICYYY 🌶️',
+                        stock: hotTotal,
+                      ),
+                      const SizedBox(height: 10),
+                      _StockSummaryTile(label: 'Jumlah Keseluruhan BBQ 🍖', stock: bbqTotal),
+                      const SizedBox(height: 10),
+                      _StockSummaryTile(label: 'Jumlah Keseluruhan Cheese Dip 🧀', stock: cheeseTotal, unit: 'unit'),
+                    ],
+                  );
+                },
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Password Reset Helper ───────────────────────────────────────────
+              const _PasswordResetHelper(),
+
+              const SizedBox(height: 24),
+
+              const Text(
+                'Sedia Untuk Penghantaran 🚚',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 14),
+
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: ordersStream,
+                builder: (context, snap) {
+                  if (snap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final orders = snap.data ?? [];
+                  // Only paid, not yet delivered
+                  final readyOrders = orders
+                      .where(
+                        (o) =>
+                            (o['payment_status'] ?? '') == 'Paid' &&
+                            (o['status'] ?? '') != 'Delivered',
+                      )
+                      .toList();
+
+                  if (readyOrders.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.check_circle_outline, color: Colors.green),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Tiada pesanan menunggu penghantaran.',
+                              style: TextStyle(color: Colors.green),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: readyOrders
+                        .map((o) => _StaffOrderCard(order: o))
+                        .toList(),
+                  );
+                },
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
-          const SizedBox(height: 40),
-        ],
+        ),
       ),
     );
   }

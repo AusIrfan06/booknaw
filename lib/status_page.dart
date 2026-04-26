@@ -510,7 +510,11 @@ class _CustomerOrderCard extends StatelessWidget {
                       );
                       const lysaNumber = '60132163194';
                       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
-                      await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                      try {
+                        await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                      } catch (e) {
+                        debugPrint('Could not launch WhatsApp: $e');
+                      }
                     },
                     icon: const Icon(Icons.payment),
                     label: const Text('Hubungi & Buat Bayaran'),

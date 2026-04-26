@@ -30,8 +30,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       final message = Uri.encodeComponent(
           "Hi Ipan, saya terlupa katalaluan untuk akaun Nachozyyy saya (No. Tel: $identifier). Boleh bantu saya set semula?");
       final url = "https://wa.me/601115892468?text=$message"; // Using Ipan's number
-      if (await canLaunchUrl(Uri.parse(url))) {
+      try {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tidak dapat membuka WhatsApp.')),
+          );
+        }
       }
       return;
     }

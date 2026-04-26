@@ -136,7 +136,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                  try {
+                    await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                    debugPrint('Could not launch WhatsApp: $e');
+                  }
                 },
                 icon: const Icon(Icons.chat, color: Colors.white),
                 label: const Text(

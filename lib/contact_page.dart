@@ -7,8 +7,10 @@ class ContactPage extends StatelessWidget {
 
   Future<void> _launchWhatsApp(String phoneUrl) async {
     final Uri url = Uri.parse('https://$phoneUrl');
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
+    try {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      debugPrint('Could not launch WhatsApp: $e');
     }
   }
 

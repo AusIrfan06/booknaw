@@ -373,8 +373,57 @@ class _StockSummaryTile extends StatelessWidget {
 
 // ─── Page 1: Pesanan ──────────────────────────────────────────────────────────
 
-class _OrdersTab extends StatelessWidget {
+class _OrdersTab extends StatefulWidget {
   const _OrdersTab();
+
+  @override
+  State<_OrdersTab> createState() => _OrdersTabState();
+}
+
+class _OrdersTabState extends State<_OrdersTab>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  static const _tabs = [
+    (label: 'Semua',       icon: Icons.list_alt_rounded),
+    (label: 'Belum Bayar', icon: Icons.hourglass_empty_rounded),
+    (label: 'Dibayar',     icon: Icons.payments_outlined),
+    (label: 'Selesai',     icon: Icons.check_circle_outline_rounded),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabs.length, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> _filter(
+      List<Map<String, dynamic>> orders, int i) {
+    switch (i) {
+      case 1:
+        return orders
+            .where((o) => (o['payment_status'] ?? 'Pending Payment') != 'Paid')
+            .toList();
+      case 2:
+        return orders
+            .where((o) =>
+                (o['payment_status'] ?? '') == 'Paid' &&
+                (o['status'] ?? '') != 'Delivered')
+            .toList();
+      case 3:
+        return orders
+            .where((o) => (o['status'] ?? '') == 'Delivered')
+            .toList();
+      default:
+        return orders;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -383,33 +432,79 @@ class _OrdersTab extends StatelessWidget {
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false);
 
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: ordersStream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Ralat: ${snapshot.error}'));
-        }
+    return Column(
+      children: [
+        // ── Tab bar ────────────────────────────────────────────────────────
+        Container(
+          color: Theme.of(context).colorScheme.primary,
+          child: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white60,
+            tabs: _tabs
+                .map((t) => Tab(
+                      child: Row(
+                        children: [
+                          Icon(t.icon, size: 16),
+                          const SizedBox(width: 6),
+                          Text(t.label),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+        ),
 
-        final orders = snapshot.data;
-        if (orders == null || orders.isEmpty) {
-          return const Center(child: Text('Belum ada pesanan.'));
-        }
+        // ── Content ────────────────────────────────────────────────────────
+        Expanded(
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: ordersStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Ralat: ${snapshot.error}'));
+              }
+              final allOrders = snapshot.data ?? [];
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16.0),
-          itemCount: orders.length,
-          itemBuilder: (context, index) {
-            final order = orders[index];
-            return _StaffOrderCard(order: order);
-          },
-        );
-      },
+              return TabBarView(
+                controller: _tabController,
+                children: List.generate(_tabs.length, (i) {
+                  final filtered = _filter(allOrders, i);
+                  if (filtered.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inbox_outlined,
+                              size: 56, color: Colors.grey.shade400),
+                          const SizedBox(height: 12),
+                          Text('Tiada pesanan "${_tabs[i].label}"',
+                              style: TextStyle(color: Colors.grey.shade600)),
+                        ],
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, idx) =>
+                        _StaffOrderCard(order: filtered[idx]),
+                  );
+                }),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
+
 
 class _StaffOrderCard extends StatelessWidget {
   final Map<String, dynamic> order;

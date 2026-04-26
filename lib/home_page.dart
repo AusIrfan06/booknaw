@@ -5,6 +5,7 @@ import 'order_page.dart';
 import 'contact_page.dart';
 import 'login_page.dart';
 import 'staff_dashboard.dart';
+import 'status_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,7 +15,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  
+  int _currentIndex = 0;
+
   void _handleProfileTap() {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
@@ -37,149 +39,177 @@ class _HomePageState extends State<HomePage> {
             content: const Text('Adakah anda pasti ingin log keluar?'),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context), 
-                child: const Text('Batal')
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
               ),
               TextButton(
                 onPressed: () async {
                   await Supabase.instance.client.auth.signOut();
                   if (context.mounted) Navigator.pop(context);
-                  setState(() {}); // refresh the UI
-                }, 
-                child: const Text('Log Keluar', style: TextStyle(color: Colors.red)),
+                  setState(() {});
+                },
+                child: const Text('Log Keluar',
+                    style: TextStyle(color: Colors.red)),
               ),
-            ]
-          )
+            ],
+          ),
         );
       }
     }
   }
 
-  void _handleOrderTap() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const OrderPage()),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      _HomeTab(onOrder: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const OrderPage()),
+        );
+      }),
+      const StatusPage(),
+      const ContactPage(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('NACHOZYYY 🌶️🧀'),
         centerTitle: true,
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedUser, color: Colors.white, size: 24),
+            icon: const HugeIcon(
+                icon: HugeIcons.strokeRoundedUser,
+                color: Colors.white,
+                size: 24),
             tooltip: 'Profil',
             onPressed: _handleProfileTap,
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
+      body: IndexedStack(index: _currentIndex, children: pages),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home_rounded),
+            label: 'Utama',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long_rounded),
+            label: 'Pesanan Saya',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            activeIcon: Icon(Icons.chat_bubble_rounded),
+            label: 'Hubungi',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Home Tab Content ─────────────────────────────────────────────────────────
+
+class _HomeTab extends StatelessWidget {
+  final VoidCallback onOrder;
+  const _HomeTab({required this.onOrder});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  'Krup Krap, Krup Krap... 👀🔥',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              child: Column(
-                children: [
-                  const Text(
-                    'Krup Krap, Krup Krap... 👀🔥',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
+                const SizedBox(height: 10),
+                const Text(
+                  'Team HOT 🌶️ atau BBQ 🍖? Pilih ikut craving korang!',
+                  style: TextStyle(fontSize: 16, color: Colors.white70),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: onOrder,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    foregroundColor: Colors.black87,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
                   ),
-                  const SizedBox(height: 10),
-                  const Text(
-                    'Team HOT 🌶️ atau BBQ 🍖? Pilih ikut craving korang!',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _handleOrderTap,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      foregroundColor: Colors.black87,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                    ),
-                    child: const Text('Order Now!', style: TextStyle(fontSize: 18)),
-                  ),
-                ],
-              ),
+                  child:
+                      const Text('Order Now!', style: TextStyle(fontSize: 18)),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Pilihan Perisa ✨',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildFlavorCard(
-                    context,
-                    title: 'HOT & SPICYYY 🌶️',
-                    desc: 'Pedas berapi, memang ada kick!',
-                    lightColor: Colors.red.shade100,
-                    darkColor: Colors.red.shade900.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildFlavorCard(
-                    context,
-                    title: 'BBQ 🍖',
-                    desc: 'Smoky & sedap, sekali makan susah nak stop!',
-                    lightColor: Colors.orange.shade100,
-                    darkColor: Colors.orange.shade900.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 30),
-                  Center(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ContactPage()),
-                        );
-                      },
-                      icon: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedWhatsapp,
-                        color: Colors.green,
-                        size: 28.0,
-                      ),
-                      label: const Text('Hubungi Kami (WhatsApp)'),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Pilihan Perisa ✨',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                _buildFlavorCard(
+                  context,
+                  title: 'HOT & SPICYYY 🌶️',
+                  desc: 'Pedas berapi, memang ada kick!',
+                  lightColor: Colors.red.shade100,
+                  darkColor: Colors.red.shade900.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 10),
+                _buildFlavorCard(
+                  context,
+                  title: 'BBQ 🍖',
+                  desc: 'Smoky & sedap, sekali makan susah nak stop!',
+                  lightColor: Colors.orange.shade100,
+                  darkColor: Colors.orange.shade900.withValues(alpha: 0.5),
+                ),
+                const SizedBox(height: 30),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildFlavorCard(BuildContext context, {required String title, required String desc, required Color lightColor, required Color darkColor}) {
+  Widget _buildFlavorCard(
+    BuildContext context, {
+    required String title,
+    required String desc,
+    required Color lightColor,
+    required Color darkColor,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
       elevation: 2,
@@ -193,14 +223,19 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(title,
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  Text(desc, style: TextStyle(fontSize: 14, color: isDark ? Colors.white70 : Colors.black87)),
+                  Text(desc,
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.white70 : Colors.black87)),
                 ],
               ),
             ),
             HugeIcon(
-              icon: HugeIcons.strokeRoundedArrowRight01, 
+              icon: HugeIcons.strokeRoundedArrowRight01,
               color: isDark ? Colors.white54 : Colors.black54,
               size: 20,
             ),

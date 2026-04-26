@@ -13,6 +13,8 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _staffCodeController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -20,6 +22,13 @@ class _SignupPageState extends State<SignupPage> {
   bool _usePhone = false;
 
   Future<void> _signUp() async {
+    if (_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sila masukkan nama pertama dan nama akhir!')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
       bool isStaff = false;
@@ -39,6 +48,9 @@ class _SignupPageState extends State<SignupPage> {
         email: identifier,
         password: _passwordController.text,
         data: {
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'full_name': '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
           'is_staff': isStaff,
           'phone': _usePhone ? _emailController.text.trim() : null,
         },
@@ -68,6 +80,8 @@ class _SignupPageState extends State<SignupPage> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _staffCodeController.dispose();
     super.dispose();
   }
@@ -84,6 +98,38 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               const Center(child: AppLogo(size: 60)),
               const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _firstNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Pertama',
+                        prefixIcon: Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedUser,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
+                        ),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _lastNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nama Akhir',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               const Text(
                 'Daftar menggunakan:',
                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -156,7 +202,6 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 obscureText: _obscurePassword,
               ),
-              const SizedBox(height: 16),
               const SizedBox(height: 16),
               TextField(
                 controller: _staffCodeController,

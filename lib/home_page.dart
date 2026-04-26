@@ -7,7 +7,8 @@ import 'contact_page.dart';
 import 'login_page.dart';
 import 'staff_dashboard.dart';
 import 'status_page.dart';
-import 'app_logo.dart';
+import 'profile_page.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -101,44 +102,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleProfileTap() {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    } else {
-      final isStaff = user.userMetadata?['is_staff'] == true;
-      if (isStaff) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const StaffDashboard()),
-        );
-      } else {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Log Keluar?'),
-            content: const Text('Adakah anda pasti ingin log keluar?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal'),
-              ),
-              TextButton(
-                onPressed: () async {
-                  await Supabase.instance.client.auth.signOut();
-                  if (context.mounted) Navigator.pop(context);
-                  setState(() {});
-                },
-                child: const Text('Log Keluar',
-                    style: TextStyle(color: Colors.red)),
-              ),
-            ],
-          ),
-        );
-      }
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const ProfileSettingsScreen()),
+    ).then((_) => setState(() {}));
   }
 
   @override
@@ -216,21 +183,43 @@ class _HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: const BorderRadius.only(
+          GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
               ),
             ),
-            child: Column(
-              children: [
+            settings: LiquidGlassSettings(
+              thickness: 0.1,
+              blur: 15,
+              refractiveIndex: 1.0,
+              glassColor: Colors.transparent,
+              lightAngle: 45.0,
+              lightIntensity: isDark ? 0.1 : 0.2,
+              ambientStrength: 1.0,
+              saturation: 1.0,
+              chromaticAberration: 0.0,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(isDark ? 0.2 : 0.8),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
+              child: Column(
+                children: [
                 const AppLogo(size: 60),
                 const SizedBox(height: 16),
                 const Text(
@@ -279,7 +268,7 @@ class _HomeTab extends StatelessWidget {
                   title: 'HOT & SPICYYY 🌶️',
                   desc: 'Pedas berapi, memang ada kick!',
                   lightColor: Colors.red.shade100,
-                  darkColor: Colors.red.shade900.withValues(alpha: 0.5),
+                  darkColor: Colors.red.shade900.withOpacity(0.5),
                 ),
                 const SizedBox(height: 10),
                 _buildFlavorCard(
@@ -287,7 +276,7 @@ class _HomeTab extends StatelessWidget {
                   title: 'BBQ 🍖',
                   desc: 'Smoky & sedap, sekali makan susah nak stop!',
                   lightColor: Colors.orange.shade100,
-                  darkColor: Colors.orange.shade900.withValues(alpha: 0.5),
+                  darkColor: Colors.orange.shade900.withOpacity(0.5),
                 ),
                 const SizedBox(height: 30),
               ],
@@ -306,35 +295,52 @@ class _HomeTab extends StatelessWidget {
     required Color darkColor,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      elevation: 2,
-      color: isDark ? darkColor : lightColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  Text(desc,
-                      style: TextStyle(
-                          fontSize: 14,
-                          color: isDark ? Colors.white70 : Colors.black87)),
-                ],
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 15.0),
+      settings: LiquidGlassSettings(
+        thickness: 0.05,
+        blur: 10,
+        refractiveIndex: 1.0,
+        glassColor: Colors.transparent,
+        lightAngle: 45.0,
+        lightIntensity: 0.1,
+        ambientStrength: 1.0,
+        saturation: 1.0,
+        chromaticAberration: 0.0,
+      ),
+      child: Card(
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        color: isDark ? darkColor.withOpacity(0.3) : lightColor.withOpacity(0.4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 5),
+                    Text(desc,
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: isDark ? Colors.white70 : Colors.black87)),
+                  ],
+                ),
               ),
-            ),
-            HugeIcon(
-              icon: HugeIcons.strokeRoundedArrowRight01,
-              color: isDark ? Colors.white54 : Colors.black54,
-              size: 20,
-            ),
-          ],
+              HugeIcon(
+                icon: HugeIcons.strokeRoundedArrowRight01,
+                color: isDark ? Colors.white54 : Colors.black54,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );

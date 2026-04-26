@@ -14,7 +14,7 @@ class OrderPage extends StatefulWidget {
 class _OrderPageState extends State<OrderPage> {
   int _hotQuantity = 0;
   int _bbqQuantity = 0;
-  bool _addCheeseDip = false;
+  int _cheeseQuantity = 0;
   String? _deliveryOption;
   String? _deliveryType; // 'pickup' or 'delivery'
 
@@ -32,7 +32,7 @@ class _OrderPageState extends State<OrderPage> {
 
   double get _totalPrice {
     double total = ((_hotQuantity + _bbqQuantity) * _pricePer100g);
-    if (_addCheeseDip) total += _cheeseDipPrice;
+    if (_cheeseQuantity > 0) total += (_cheeseQuantity * _cheeseDipPrice);
     if (_deliveryOption != null) {
       total += _deliveryFees[_deliveryOption] ?? 0.0;
     }
@@ -72,7 +72,7 @@ class _OrderPageState extends State<OrderPage> {
         builder: (context) => CheckoutPage(
           hotQuantity: _hotQuantity,
           bbqQuantity: _bbqQuantity,
-          addCheeseDip: _addCheeseDip,
+          cheeseQuantity: _cheeseQuantity,
           deliveryOption: _deliveryOption!,
           totalPrice: _totalPrice,
         ),
@@ -226,14 +226,15 @@ class _OrderPageState extends State<OrderPage> {
                 const SizedBox(height: 24),
 
                 _buildSectionTitle('2. Add-on Padu 🤤'),
-                CheckboxListTile(
-                  title: const Text('Cheese Dip 🧀 (+ RM1.00)'),
-                  value: _addCheeseDip,
-                  onChanged: (val) =>
-                      setState(() => _addCheeseDip = val ?? false),
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  contentPadding: EdgeInsets.zero,
-                  controlAffinity: ListTileControlAffinity.leading,
+                _FlavorQuantityCard(
+                  title: 'Cheese Dip 🧀',
+                  subtitle: '(+ RM 1.00 per unit)',
+                  quantity: _cheeseQuantity,
+                  maxStock: 99, // Assuming high stock for cheese
+                  onIncrement: () => setState(() => _cheeseQuantity++),
+                  onDecrement: () {
+                    if (_cheeseQuantity > 0) setState(() => _cheeseQuantity--);
+                  },
                 ),
                 const SizedBox(height: 24),
 
@@ -333,7 +334,7 @@ class _OrderPageState extends State<OrderPage> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.amber.shade900.withValues(alpha: 0.3)
+                        ? Colors.amber.shade900.withOpacity(0.3)
                         : Colors.amber.shade100,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -422,7 +423,7 @@ class _FlavorQuantityCard extends StatelessWidget {
         color: isSoldOut
             ? (isDark ? Colors.grey.shade900 : Colors.grey.shade300)
             : (isSelected
-                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
                   : (isDark ? Colors.grey.shade800 : Colors.grey.shade200)),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
@@ -487,7 +488,7 @@ class _FlavorQuantityCard extends StatelessWidget {
                         : (isSelected
                               ? Theme.of(
                                   context,
-                                ).colorScheme.primary.withValues(alpha: 0.8)
+                                ).colorScheme.primary.withOpacity(0.8)
                               : (isDark ? Colors.white54 : Colors.black54)),
                   ),
                 ),
@@ -563,7 +564,7 @@ class _TypeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          color: selected ? color.withOpacity(0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected ? color : Colors.grey.shade400,
@@ -585,7 +586,7 @@ class _TypeButton extends StatelessWidget {
               sublabel,
               style: TextStyle(
                 fontSize: 11,
-                color: selected ? color.withValues(alpha: 0.8) : Colors.grey,
+                color: selected ? color.withOpacity(0.8) : Colors.grey,
               ),
             ),
           ],
@@ -621,7 +622,7 @@ class _ZoneChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          color: selected ? color.withOpacity(0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: selected ? color : Colors.grey.shade400,

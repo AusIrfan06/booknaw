@@ -266,7 +266,7 @@ class _CustomerOrderCard extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.amber.shade900.withValues(alpha: 0.3)
+                          ? Colors.amber.shade900.withOpacity(0.3)
                           : Colors.amber.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -401,7 +401,7 @@ class _CustomerOrderCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: primary.withValues(alpha: 0.1),
+                          color: primary.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(Icons.receipt_long_rounded,
@@ -586,8 +586,8 @@ class _CustomerOrderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withOpacity(0.1),
+        border: Border.all(color: color.withOpacity(0.3)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -621,8 +621,8 @@ class _CustomerOrderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        color: color.withOpacity(0.12),
+        border: Border.all(color: color.withOpacity(0.4)),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

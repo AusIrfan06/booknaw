@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 class CheckoutPage extends StatefulWidget {
   final int hotQuantity;
   final int bbqQuantity;
-  final bool addCheeseDip;
+  final int cheeseQuantity;
   final String deliveryOption;
   final double totalPrice;
 
@@ -14,7 +14,7 @@ class CheckoutPage extends StatefulWidget {
     super.key,
     required this.hotQuantity,
     required this.bbqQuantity,
-    required this.addCheeseDip,
+    required this.cheeseQuantity,
     required this.deliveryOption,
     required this.totalPrice,
   });
@@ -45,7 +45,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'delivery_address': _isDelivery ? _addressController.text.trim() : null,
         'hot_quantity_100g': widget.hotQuantity,
         'bbq_quantity_100g': widget.bbqQuantity,
-        'add_cheese_dip': widget.addCheeseDip,
+        'cheese_quantity': widget.cheeseQuantity,
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
@@ -68,7 +68,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final phone = _phoneController.text;
       final hot = widget.hotQuantity > 0 ? 'HOT & SPICYYY x${widget.hotQuantity}' : '';
       final bbq = widget.bbqQuantity > 0 ? 'BBQ x${widget.bbqQuantity}' : '';
-      final cheese = widget.addCheeseDip ? '+ Cheese Dip' : '';
+      final cheese = widget.cheeseQuantity > 0 ? 'Cheese Dip x${widget.cheeseQuantity}' : '';
       final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
       final total = 'RM ${widget.totalPrice.toStringAsFixed(2)}';
       final location = widget.deliveryOption;
@@ -181,7 +181,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             children: [
               Card(
                 elevation: 0,
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -192,7 +192,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       const Divider(),
                       if (widget.hotQuantity > 0) _buildSummaryRow('HOT & SPICYYY', '${widget.hotQuantity} pek'),
                       if (widget.bbqQuantity > 0) _buildSummaryRow('BBQ', '${widget.bbqQuantity} pek'),
-                      if (widget.addCheeseDip) _buildSummaryRow('Cheese Dip', 'Ya'),
+                      if (widget.cheeseQuantity > 0) _buildSummaryRow('Cheese Dip', '${widget.cheeseQuantity} unit'),
                       _buildSummaryRow('Lokasi', widget.deliveryOption),
                       const Divider(),
                       _buildSummaryRow('Jumlah Bayaran', 'RM ${widget.totalPrice.toStringAsFixed(2)}', isBold: true),

@@ -13,7 +13,7 @@ dependencies:
   url_launcher: ^6.3.0
   google_fonts: ^6.2.1
   hugeicons: ^1.1.0
-  liquid_glass_widgets: ^0.0.1+2
+  liquid_glass_widgets: ^0.5.0
 
 dev_dependencies:
   flutter_test:

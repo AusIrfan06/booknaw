@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'login_page.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class StatusPage extends StatefulWidget {
   const StatusPage({super.key});
@@ -241,15 +242,31 @@ class _CustomerOrderCard extends StatelessWidget {
     return InkWell(
       onTap: () => _showReceipt(context),
       borderRadius: BorderRadius.circular(14),
-      child: Card(
-        elevation: 2,
-        margin: const EdgeInsets.only(bottom: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 14.0),
+        settings: LiquidGlassSettings(
+          thickness: 0.05,
+          blur: 10,
+          refractiveIndex: 1.0,
+          glassColor: Colors.transparent,
+          lightAngle: 45.0,
+          lightIntensity: 0.1,
+          ambientStrength: 1.0,
+          saturation: 1.0,
+          chromaticAberration: 0.0,
+        ),
+        child: Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 14),
+          color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
               // Top row: name + total
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -319,6 +336,7 @@ class _CustomerOrderCard extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 

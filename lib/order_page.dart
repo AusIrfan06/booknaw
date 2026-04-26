@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'checkout_page.dart';
 import 'login_page.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -417,23 +418,38 @@ class _FlavorQuantityCard extends StatelessWidget {
     final isSelected = quantity > 0;
     final isSoldOut = maxStock <= 0;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: isSoldOut
-            ? (isDark ? Colors.grey.shade900 : Colors.grey.shade300)
-            : (isSelected
-                  ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade200)),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isSelected && !isSoldOut
-              ? Theme.of(context).colorScheme.primary
-              : (isDark ? Colors.grey.shade600 : Colors.grey.shade400),
-          width: 2,
-        ),
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+      settings: LiquidGlassSettings(
+        thickness: 0.05,
+        blur: 10,
+        refractiveIndex: 1.0,
+        glassColor: Colors.transparent,
+        lightAngle: 45.0,
+        lightIntensity: 0.1,
+        ambientStrength: 1.0,
+        saturation: 1.0,
+        chromaticAberration: 0.0,
       ),
-      child: Row(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSoldOut
+              ? (isDark ? Colors.grey.shade900.withOpacity(0.5) : Colors.grey.shade300.withOpacity(0.5))
+              : (isSelected
+                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
+                    : (isDark ? Colors.grey.shade800.withOpacity(0.3) : Colors.grey.shade200.withOpacity(0.5))),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected && !isSoldOut
+                ? Theme.of(context).colorScheme.primary
+                : (isDark ? Colors.grey.shade600.withOpacity(0.3) : Colors.grey.shade400.withOpacity(0.3)),
+            width: 2,
+          ),
+        ),
+        child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
@@ -533,6 +549,7 @@ class _FlavorQuantityCard extends StatelessWidget {
             ),
         ],
       ),
+    ),
     );
   }
 }

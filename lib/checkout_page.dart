@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class CheckoutPage extends StatefulWidget {
   final int hotQuantity;
@@ -179,24 +180,42 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Card(
-                elevation: 0,
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, size: 40),
-                      const SizedBox(height: 8),
-                      const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      const Divider(),
-                      if (widget.hotQuantity > 0) _buildSummaryRow('HOT & SPICYYY', '${widget.hotQuantity} pek'),
-                      if (widget.bbqQuantity > 0) _buildSummaryRow('BBQ', '${widget.bbqQuantity} pek'),
-                      if (widget.cheeseQuantity > 0) _buildSummaryRow('Cheese Dip', '${widget.cheeseQuantity} unit'),
-                      _buildSummaryRow('Lokasi', widget.deliveryOption),
-                      const Divider(),
-                      _buildSummaryRow('Jumlah Bayaran', 'RM ${widget.totalPrice.toStringAsFixed(2)}', isBold: true),
-                    ],
+              const SizedBox(height: 16),
+              GlassContainer(
+                useOwnLayer: true,
+                quality: GlassQuality.standard,
+                shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
+                settings: LiquidGlassSettings(
+                  thickness: 0.05,
+                  blur: 10,
+                  refractiveIndex: 1.0,
+                  glassColor: Colors.transparent,
+                  lightAngle: 45.0,
+                  lightIntensity: 0.1,
+                  ambientStrength: 1.0,
+                  saturation: 1.0,
+                  chromaticAberration: 0.0,
+                ),
+                child: Card(
+                  elevation: 0,
+                  margin: EdgeInsets.zero,
+                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, size: 40),
+                        const SizedBox(height: 8),
+                        const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        const Divider(),
+                        if (widget.hotQuantity > 0) _buildSummaryRow('HOT & SPICYYY', '${widget.hotQuantity} pek'),
+                        if (widget.bbqQuantity > 0) _buildSummaryRow('BBQ', '${widget.bbqQuantity} pek'),
+                        if (widget.cheeseQuantity > 0) _buildSummaryRow('Cheese Dip', '${widget.cheeseQuantity} unit'),
+                        _buildSummaryRow('Lokasi', widget.deliveryOption),
+                        const Divider(),
+                        _buildSummaryRow('Jumlah Bayaran', 'RM ${widget.totalPrice.toStringAsFixed(2)}', isBold: true),
+                      ],
+                    ),
                   ),
                 ),
               ),

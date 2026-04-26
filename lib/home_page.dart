@@ -8,6 +8,7 @@ import 'login_page.dart';
 import 'staff_dashboard.dart';
 import 'status_page.dart';
 import 'profile_page.dart';
+import 'app_logo.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class HomePage extends StatefulWidget {
@@ -192,11 +193,8 @@ class _HomeTab extends StatelessWidget {
           GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
+            shape: LiquidRoundedSuperellipse(
+              borderRadius: 30.0,
             ),
             settings: LiquidGlassSettings(
               thickness: 0.1,
@@ -251,6 +249,7 @@ class _HomeTab extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
           const SizedBox(height: 20),
           Padding(

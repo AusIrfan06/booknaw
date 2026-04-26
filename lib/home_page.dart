@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import 'order_page.dart';
 import 'contact_page.dart';
 import 'login_page.dart';
@@ -221,7 +220,6 @@ class _HomeTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (kIsWeb) const _PwaInstallBanner(),
           Container(
             padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
             decoration: BoxDecoration(
@@ -338,75 +336,6 @@ class _HomeTab extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PwaInstallBanner extends StatefulWidget {
-  const _PwaInstallBanner();
-
-  @override
-  State<_PwaInstallBanner> createState() => _PwaInstallBannerState();
-}
-
-class _PwaInstallBannerState extends State<_PwaInstallBanner> {
-  bool _isVisible = true;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isVisible) return const SizedBox.shrink();
-
-    // Simple detection for iOS/Android on web
-    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.amber.shade100, Colors.white],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.amber.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.install_mobile, color: Colors.amber),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Gunakan Nachozyyy sebagai App! 📲',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close, size: 20, color: Colors.grey),
-                onPressed: () => setState(() => _isVisible = false),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isIOS
-                ? 'Klik butang "Share" 📤 kemudian pilih "Add to Home Screen" untuk pengalaman lebih lancar.'
-                : 'Klik butang menu (3 titik) ︙ kemudian pilih "Install App" untuk pengalaman lebih lancar.',
-            style: const TextStyle(fontSize: 12, color: Colors.black87),
-          ),
-        ],
       ),
     );
   }

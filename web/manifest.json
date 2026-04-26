@@ -8,6 +8,23 @@
     "description": "Order and manage inventory for NACHOZYYY ENT300 project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": ["food", "business", "shopping"],
+    "screenshots": [
+        {
+            "src": "favicon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Nachozyyy Home Screen"
+        },
+        {
+            "src": "favicon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Nachozyyy Mobile"
+        }
+    ],
     "icons": [
         {
             "src": "icons/Icon-192.png",

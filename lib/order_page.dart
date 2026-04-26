@@ -88,7 +88,7 @@ class _OrderPageState extends State<OrderPage> {
     _inventoryStream = Supabase.instance.client
         .from('inventory')
         .stream(primaryKey: ['id'])
-        .eq('id', 1);
+        .order('id');
   }
 
   @override
@@ -141,18 +141,54 @@ class _OrderPageState extends State<OrderPage> {
           int bbqStock = 0;
 
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-            final inv = snapshot.data!.first;
-            hotStock = inv['hot_stock'] as int? ?? 0;
-            bbqStock = inv['bbq_stock'] as int? ?? 0;
+            final data = snapshot.data!;
+            
+            if (_deliveryOption == null) {
+              // No zone selected: Use the maximum stock available in ANY single zone
+              hotStock = data.fold<int>(0, (max, row) {
+                final s = row['hot_stock'] as int? ?? 0;
+                return s > max ? s : max;
+              });
+              bbqStock = data.fold<int>(0, (max, row) {
+                final s = row['bbq_stock'] as int? ?? 0;
+                return s > max ? s : max;
+              });
+            } else {
+              // Zone is selected, use exact stock for that zone
+              int locId = 1;
+              if (_deliveryOption!.contains('Alpha')) locId = 1;
+              else if (_deliveryOption!.contains('Beta')) locId = 2;
+              else if (_deliveryOption!.contains('Gamma')) locId = 3;
+              else if (_deliveryOption!.contains('NR')) locId = 4;
+              
+              final row = data.firstWhere((r) => r['id'] == locId, orElse: () => <String, dynamic>{});
+              hotStock = row['hot_stock'] as int? ?? 0;
+              bbqStock = row['bbq_stock'] as int? ?? 0;
+            }
           }
 
           // Auto-correct quantities ONLY if stock drops below selected quantity
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              if (_hotQuantity > hotStock)
+              bool changed = false;
+              if (_hotQuantity > hotStock) {
                 setState(() => _hotQuantity = hotStock);
-              if (_bbqQuantity > bbqStock)
+                changed = true;
+              }
+              if (_bbqQuantity > bbqStock) {
                 setState(() => _bbqQuantity = bbqStock);
+                changed = true;
+              }
+              
+              if (changed && _deliveryOption != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Maaf, stok di zon pilihan tidak mencukupi. Kuantiti diselaraskan secara automatik.'),
+                    backgroundColor: Colors.orange,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              }
             }
           });
 

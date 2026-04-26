@@ -25,8 +25,8 @@ class _OrderPageState extends State<OrderPage> {
     'Pickup Beta (B10-03-11)': 0.0,
     'Delivery Alpha': 1.0,
     'Delivery Beta': 1.0,
-    'Delivery Gamma': 2.0,
-    'Delivery NR': 4.0,
+    'Delivery Gamma': 1.0,
+    'Delivery NR': 2.0,
   };
 
   double get _totalPrice {
@@ -41,7 +41,9 @@ class _OrderPageState extends State<OrderPage> {
   void _proceedToCheckout() {
     if (_hotQuantity == 0 && _bbqQuantity == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila tambah sekurang-kurangnya 1 perisa! 🌶️🍖')),
+        const SnackBar(
+          content: Text('Sila tambah sekurang-kurangnya 1 perisa! 🌶️🍖'),
+        ),
       );
       return;
     }
@@ -102,7 +104,11 @@ class _OrderPageState extends State<OrderPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, color: Colors.red, size: 48),
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedAlertCircle,
+                      color: Colors.red,
+                      size: 48,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Ralat: ${snapshot.error}',
@@ -125,7 +131,8 @@ class _OrderPageState extends State<OrderPage> {
             );
           }
 
-          if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -141,8 +148,10 @@ class _OrderPageState extends State<OrderPage> {
           // Auto-correct quantities ONLY if stock drops below selected quantity
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
-              if (_hotQuantity > hotStock) setState(() => _hotQuantity = hotStock);
-              if (_bbqQuantity > bbqStock) setState(() => _bbqQuantity = bbqStock);
+              if (_hotQuantity > hotStock)
+                setState(() => _hotQuantity = hotStock);
+              if (_bbqQuantity > bbqStock)
+                setState(() => _bbqQuantity = bbqStock);
             }
           });
 
@@ -183,7 +192,8 @@ class _OrderPageState extends State<OrderPage> {
                 CheckboxListTile(
                   title: const Text('Cheese Dip 🧀 (+ RM1.00)'),
                   value: _addCheeseDip,
-                  onChanged: (val) => setState(() => _addCheeseDip = val ?? false),
+                  onChanged: (val) =>
+                      setState(() => _addCheeseDip = val ?? false),
                   activeColor: Theme.of(context).colorScheme.primary,
                   contentPadding: EdgeInsets.zero,
                   controlAffinity: ListTileControlAffinity.leading,
@@ -193,9 +203,13 @@ class _OrderPageState extends State<OrderPage> {
                 _buildSectionTitle('3. Delivery / Pickup 🚗'),
                 DropdownButtonFormField<String>(
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey.shade800 : Colors.grey.shade100,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey.shade800
+                        : Colors.grey.shade100,
                   ),
                   hint: const Text('Pilih lokasi'),
                   value: _deliveryOption,
@@ -215,16 +229,28 @@ class _OrderPageState extends State<OrderPage> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.amber.shade900.withValues(alpha: 0.3) : Colors.amber.shade100,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.amber.shade900.withValues(alpha: 0.3)
+                        : Colors.amber.shade100,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Total:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Total:',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       Text(
                         'RM ${_totalPrice.toStringAsFixed(2)}',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -235,15 +261,20 @@ class _OrderPageState extends State<OrderPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _proceedToCheckout,
-                    style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                    child: const Text('Teruskan ke Pembayaran', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text(
+                      'Teruskan ke Pembayaran',
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
               ],
             ),
           );
-        }
+        },
       ),
     );
   }
@@ -285,14 +316,16 @@ class _FlavorQuantityCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isSoldOut 
+        color: isSoldOut
             ? (isDark ? Colors.grey.shade900 : Colors.grey.shade300)
-            : (isSelected 
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1) 
-                : (isDark ? Colors.grey.shade800 : Colors.grey.shade200)),
+            : (isSelected
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade200)),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isSelected && !isSoldOut ? Theme.of(context).colorScheme.primary : (isDark ? Colors.grey.shade600 : Colors.grey.shade400),
+          color: isSelected && !isSoldOut
+              ? Theme.of(context).colorScheme.primary
+              : (isDark ? Colors.grey.shade600 : Colors.grey.shade400),
           width: 2,
         ),
       ),
@@ -311,28 +344,48 @@ class _FlavorQuantityCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: isSoldOut 
-                              ? Colors.grey 
-                              : (isSelected ? Theme.of(context).colorScheme.primary : (isDark ? Colors.white70 : Colors.black87)),
+                          color: isSoldOut
+                              ? Colors.grey
+                              : (isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : (isDark
+                                          ? Colors.white70
+                                          : Colors.black87)),
                         ),
                       ),
                     ),
                     if (isSoldOut)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Text('SOLD OUT', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                      )
+                        child: const Text(
+                          'SOLD OUT',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
                 Text(
                   isSoldOut ? 'Stok habis buat masa ini.' : subtitle,
                   style: TextStyle(
                     fontSize: 12,
-                    color: isSoldOut ? Colors.grey : (isSelected ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.8) : (isDark ? Colors.white54 : Colors.black54)),
+                    color: isSoldOut
+                        ? Colors.grey
+                        : (isSelected
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.8)
+                              : (isDark ? Colors.white54 : Colors.black54)),
                   ),
                 ),
               ],
@@ -344,8 +397,10 @@ class _FlavorQuantityCard extends StatelessWidget {
                 IconButton(
                   onPressed: onDecrement,
                   icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedMinusSignCircle, 
-                    color: quantity > 0 ? Theme.of(context).colorScheme.primary : Colors.grey,
+                    icon: HugeIcons.strokeRoundedMinusSignCircle,
+                    color: quantity > 0
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
                     size: 28,
                   ),
                 ),
@@ -354,19 +409,24 @@ class _FlavorQuantityCard extends StatelessWidget {
                   child: Text(
                     '$quantity',
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 IconButton(
                   onPressed: quantity < maxStock ? onIncrement : null,
                   icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedPlusSignCircle, 
-                    color: quantity < maxStock ? Theme.of(context).colorScheme.primary : Colors.grey,
+                    icon: HugeIcons.strokeRoundedPlusSignCircle,
+                    color: quantity < maxStock
+                        ? Theme.of(context).colorScheme.primary
+                        : Colors.grey,
                     size: 28,
                   ),
                 ),
               ],
-            )
+            ),
         ],
       ),
     );

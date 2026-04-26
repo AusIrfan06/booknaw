@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'home_page.dart';
@@ -19,7 +18,8 @@ class AuthSuccessScreen extends StatefulWidget {
   State<AuthSuccessScreen> createState() => _AuthSuccessScreenState();
 }
 
-class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTickerProviderStateMixin {
+class _AuthSuccessScreenState extends State<AuthSuccessScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
@@ -38,7 +38,10 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTicker
     );
 
     _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.5, curve: Curves.easeIn)),
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+      ),
     );
 
     _controller.forward();
@@ -49,7 +52,8 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTicker
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => widget.isStaff ? const StaffDashboard() : const HomePage(),
+            builder: (context) =>
+                widget.isStaff ? const StaffDashboard() : const HomePage(),
           ),
           (route) => false,
         );
@@ -89,9 +93,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTicker
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFFE64A19), const Color(0xFF000000)]
-              : [const Color(0xFFFFF3E0), const Color(0xFFFFE0B2)],
+            colors: isDark
+                ? [const Color(0xFFE64A19), const Color(0xFF000000)]
+                : [const Color(0xFFFFF3E0), const Color(0xFFFFE0B2)],
           ),
         ),
         child: Center(
@@ -106,11 +110,20 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTicker
                 settings: _getGlassSettings(isDark),
                 child: Container(
                   width: 300,
-                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 40,
+                    horizontal: 20,
+                  ),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.4),
+                    color: isDark
+                        ? Colors.white.withOpacity(0.1)
+                        : Colors.white.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(32),
-                    border: Border.all(color: isDark ? Colors.white.withOpacity(0.2) : Colors.white.withOpacity(0.5)),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withOpacity(0.2)
+                          : Colors.white.withOpacity(0.5),
+                    ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -120,7 +133,10 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen> with SingleTicker
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF5722).withOpacity(0.2),
                           shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFFF5722).withOpacity(0.5), width: 2),
+                          border: Border.all(
+                            color: const Color(0xFFFF5722).withOpacity(0.5),
+                            width: 2,
+                          ),
                         ),
                         child: const HugeIcon(
                           icon: HugeIcons.strokeRoundedCheckmarkCircle01,

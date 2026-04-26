@@ -17,11 +17,11 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
+  final _phoneController = TextEditingController(text: '+60');
   final _staffCodeController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureStaffCode = true;
-  bool _usePhone = false;
 
   Future<void> _signUp() async {
     if (_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty) {
@@ -38,23 +38,18 @@ class _SignupPageState extends State<SignupPage> {
         isStaff = true;
       }
 
-      String identifier = _emailController.text.trim();
-      if (_usePhone) {
-        if (!RegExp(r'^[0-9]+$').hasMatch(identifier)) {
-          throw Exception('Sila masukkan nombor telefon yang sah!');
-        }
-        identifier = '$identifier@nachos.com';
-      }
+      String email = _emailController.text.trim();
+      String phone = _phoneController.text.trim();
 
       await Supabase.instance.client.auth.signUp(
-        email: identifier,
+        email: email,
         password: _passwordController.text,
         data: {
           'first_name': _firstNameController.text.trim(),
           'last_name': _lastNameController.text.trim(),
           'full_name': '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
           'is_staff': isStaff,
-          'phone': _usePhone ? _emailController.text.trim() : null,
+          'phone': phone,
         },
       );
       
@@ -89,6 +84,7 @@ class _SignupPageState extends State<SignupPage> {
     _passwordController.dispose();
     _firstNameController.dispose();
     _lastNameController.dispose();
+    _phoneController.dispose();
     _staffCodeController.dispose();
     super.dispose();
   }
@@ -168,52 +164,34 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildGlassField(
-                            controller: _firstNameController,
-                            label: 'Nama Pertama',
-                            icon: HugeIcons.strokeRoundedUser,
-                            isDark: isDark,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildGlassField(
-                            controller: _lastNameController,
-                            label: 'Nama Akhir',
-                            isDark: isDark,
-                          ),
-                        ),
-                      ],
+                    _buildGlassField(
+                      controller: _firstNameController,
+                      label: 'Nama Pertama',
+                      icon: HugeIcons.strokeRoundedUser,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _ChoicePill(
-                          label: 'Email',
-                          selected: !_usePhone,
-                          onTap: () => setState(() => _usePhone = false),
-                          isDark: isDark,
-                        ),
-                        const SizedBox(width: 12),
-                        _ChoicePill(
-                          label: 'Telefon',
-                          selected: _usePhone,
-                          onTap: () => setState(() => _usePhone = true),
-                          isDark: isDark,
-                        ),
-                      ],
+                    _buildGlassField(
+                      controller: _lastNameController,
+                      label: 'Nama Akhir',
+                      icon: HugeIcons.strokeRoundedUser,
+                      isDark: isDark,
                     ),
                     const SizedBox(height: 16),
                     _buildGlassField(
                       controller: _emailController,
-                      label: _usePhone ? 'No. Telefon' : 'Email',
-                      icon: _usePhone ? HugeIcons.strokeRoundedSmartPhone01 : HugeIcons.strokeRoundedMail01,
+                      label: 'Email',
+                      icon: HugeIcons.strokeRoundedMail01,
                       isDark: isDark,
-                      keyboardType: _usePhone ? TextInputType.phone : TextInputType.emailAddress,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildGlassField(
+                      controller: _phoneController,
+                      label: 'No. Telefon',
+                      icon: HugeIcons.strokeRoundedSmartPhone01,
+                      isDark: isDark,
+                      keyboardType: TextInputType.phone,
                     ),
                     const SizedBox(height: 16),
                     _buildGlassField(
@@ -314,47 +292,4 @@ class _SignupPageState extends State<SignupPage> {
   }
 }
 
-class _ChoicePill extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool isDark;
 
-  const _ChoicePill({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    required this.isDark,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected 
-            ? const Color(0xFFFF5722) 
-            : (isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: selected ? [
-            BoxShadow(
-              color: const Color(0xFFFF5722).withOpacity(0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ] : null,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : (isDark ? Colors.white70 : Colors.black54),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-}

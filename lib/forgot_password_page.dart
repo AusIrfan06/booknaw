@@ -28,8 +28,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     if (_isPhone) {
       // Logic for Phone users: Contact Admin via WhatsApp
       final message = Uri.encodeComponent(
-          "Hi Lysa, saya terlupa katalaluan untuk akaun Nachozyyy saya (No. Tel: $identifier). Boleh bantu saya set semula?");
-      final url = "https://wa.me/601111059902?text=$message"; // Using Lysa's number from contact us
+          "Hi Ipan, saya terlupa katalaluan untuk akaun Nachozyyy saya (No. Tel: $identifier). Boleh bantu saya set semula?");
+      final url = "https://wa.me/601115892468?text=$message"; // Using Ipan's number
       if (await canLaunchUrl(Uri.parse(url))) {
         await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
       }
@@ -147,7 +147,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(_isPhone ? 'Hubungi Lysa di WhatsApp' : 'Hantar Pautan Reset',
+                      : Text(_isPhone ? 'Hubungi Ipan di WhatsApp' : 'Hantar Pautan Reset',
                           style: const TextStyle(fontSize: 16)),
                 ),
               ),

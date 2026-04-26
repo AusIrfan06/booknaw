@@ -819,15 +819,18 @@ class _DeliveryOrderCard extends StatelessWidget {
 
   const _DeliveryOrderCard({required this.order});
 
-  Future<void> _completeDeliveryAndWhatsApp(BuildContext context) async {
-    // Show confirmation dialog before sending WhatsApp
+  Future<void> _updateStatusAndWhatsApp(BuildContext context, String newStatus) async {
+    final isDelivered = newStatus == 'Delivered';
+    final title = isDelivered ? 'Sahkan Penghantaran Selesai' : 'Mula Penghantaran';
+    final content = isDelivered
+        ? 'Selesai pesanan ini dan hantar mesej WhatsApp bukti penghantaran?'
+        : 'Tukar status ke "Sedang Dihantar" dan hantar WhatsApp kepada pelanggan?';
+
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sahkan Penghantaran'),
-        content: const Text(
-          'Anda pasti ingin selesaikan pesanan ini dan hantar mesej WhatsApp kepada pelanggan?',
-        ),
+        title: Text(title),
+        content: Text(content),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -836,9 +839,9 @@ class _DeliveryOrderCard extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF25D366),
+              backgroundColor: isDelivered ? const Color(0xFF25D366) : Colors.orange,
             ),
-            child: const Text('Ya, Hantar'),
+            child: const Text('Ya, Teruskan', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -847,30 +850,23 @@ class _DeliveryOrderCard extends StatelessWidget {
     if (confirm != true) return;
 
     try {
-      // 1. Update status in Supabase
       await Supabase.instance.client
           .from('orders')
-          .update({'status': 'Delivered'})
+          .update({'status': newStatus})
           .eq('id', order['id']);
 
-      // 2. Open WhatsApp to customer
       String phone = order['phone_number'] ?? '';
-      // Ensure phone number starts with 6 for Malaysia if it starts with 0
-      if (phone.startsWith('0')) {
-        phone = '6$phone';
-      }
-      // Remove any non-numeric characters
+      if (phone.startsWith('0')) phone = '6$phone';
       phone = phone.replaceAll(RegExp(r'\D'), '');
 
       final name = order['customer_name'] ?? 'Pelanggan';
       final orderId = order['id'];
-      final waMessage = Uri.encodeComponent(
-        'Hi $name 👋\n\n'
-        'Kami dari NACHOZYYY 🌶️🧀\n'
-        'Pesanan anda (No. #$orderId) telah selamat dihantar!\n\n'
-        'Terima kasih kerana menyokong kami.',
-      );
+      
+      final msg = isDelivered
+          ? 'Hi $name 👋\n\nKami dari NACHOZYYY 🌶️🧀\nPesanan anda (No. #$orderId) telah selamat dihantar!\n\nTerima kasih kerana menyokong kami. (Gambar bukti penghantaran disertakan di bawah 👇)'
+          : 'Hi $name 👋\n\nKami dari NACHOZYYY 🌶️🧀\nPesanan anda (No. #$orderId) sedang dihantar ke lokasi anda! 🛵💨\n\nSila bersedia untuk menerima pesanan anda sebentar lagi.';
 
+      final waMessage = Uri.encodeComponent(msg);
       final waUrl = Uri.parse('https://wa.me/$phone?text=$waMessage');
       await launchUrl(waUrl, mode: LaunchMode.externalApplication);
     } catch (e) {
@@ -891,6 +887,8 @@ class _DeliveryOrderCard extends StatelessWidget {
     final phone = order['phone_number'] ?? 'Unknown';
     final delivery = order['delivery_option'] ?? 'Unknown';
     final address = order['delivery_address'] as String?;
+    final status = order['status'] ?? 'Pending';
+    final isOutForDelivery = status == 'Out for Delivery';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
@@ -949,21 +947,38 @@ class _DeliveryOrderCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _completeDeliveryAndWhatsApp(context),
-                icon: const Icon(Icons.camera_alt, color: Colors.white),
-                label: const Text(
-                  'Selesai & Hantar Gambar',
-                  style: TextStyle(color: Colors.white),
+            if (!isOutForDelivery)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _updateStatusAndWhatsApp(context, 'Out for Delivery'),
+                  icon: const Icon(Icons.two_wheeler, color: Colors.white),
+                  label: const Text(
+                    'Mula Penghantaran (WhatsApp)',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF25D366),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+              )
+            else
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _updateStatusAndWhatsApp(context, 'Delivered'),
+                  icon: const Icon(Icons.camera_alt, color: Colors.white),
+                  label: const Text(
+                    'Selesai & Hantar Gambar',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF25D366),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),

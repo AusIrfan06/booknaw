@@ -216,6 +216,7 @@ class _CustomerOrderCard extends StatelessWidget {
     final paymentStatus = order['payment_status'] ?? 'Pending Payment';
     final isPaid = paymentStatus == 'Paid';
     final isDelivered = status == 'Delivered';
+    final isOutForDelivery = status == 'Out for Delivery';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Payment pill colour
@@ -223,8 +224,19 @@ class _CustomerOrderCard extends StatelessWidget {
     String payLabel = isPaid ? '💰 Dibayar' : '⏳ Belum Bayar';
 
     // Delivery pill colour
-    Color delColor = isDelivered ? Colors.blue : Colors.grey;
-    String delLabel = isDelivered ? '✅ Selesai' : '🚚 Diproses';
+    Color delColor;
+    String delLabel;
+    
+    if (isDelivered) {
+      delColor = Colors.blue;
+      delLabel = '✅ Telah Dihantar';
+    } else if (isOutForDelivery) {
+      delColor = Colors.orange;
+      delLabel = '🛵 Sedang Dihantar';
+    } else {
+      delColor = Colors.grey;
+      delLabel = isPaid ? '🚚 Sedang Diproses' : '⏳ Belum Bayar';
+    }
 
     return InkWell(
       onTap: () => _showReceipt(context),
@@ -325,6 +337,21 @@ class _CustomerOrderCard extends StatelessWidget {
     final createdAt = order['created_at'] as String?;
     final isPaid = paymentStatus == 'Paid';
     final isDelivered = status == 'Delivered';
+    final isOutForDelivery = status == 'Out for Delivery';
+
+    Color delColor;
+    String delLabel;
+    
+    if (isDelivered) {
+      delColor = Colors.blue;
+      delLabel = '✅ Telah Dihantar';
+    } else if (isOutForDelivery) {
+      delColor = Colors.orange;
+      delLabel = '🛵 Sedang Dihantar';
+    } else {
+      delColor = Colors.grey;
+      delLabel = isPaid ? '🚚 Sedang Diproses' : '⏳ Belum Bayar';
+    }
 
     String dateStr = '-';
     if (createdAt != null) {
@@ -454,8 +481,8 @@ class _CustomerOrderCard extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _statusBadge(
-                        isDelivered ? '✅ Selesai' : '🚚 Diproses',
-                        isDelivered ? Colors.blue : Colors.grey,
+                        delLabel,
+                        delColor,
                       ),
                     ),
                   ],

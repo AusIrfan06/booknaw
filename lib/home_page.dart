@@ -60,6 +60,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final isLoggedIn = user != null;
+
     final pages = [
       _HomeTab(onOrder: () {
         Navigator.push(
@@ -67,8 +70,30 @@ class _HomePageState extends State<HomePage> {
           MaterialPageRoute(builder: (context) => const OrderPage()),
         );
       }),
-      const StatusPage(),
+      if (isLoggedIn) const StatusPage(),
       const ContactPage(),
+    ];
+
+    // Clamp index in case user just logged out and was on Pesanan Saya
+    final safeIndex = _currentIndex.clamp(0, pages.length - 1);
+
+    final navItems = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.home_outlined),
+        activeIcon: Icon(Icons.home_rounded),
+        label: 'Utama',
+      ),
+      if (isLoggedIn)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.receipt_long_outlined),
+          activeIcon: Icon(Icons.receipt_long_rounded),
+          label: 'Pesanan Saya',
+        ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.chat_bubble_outline_rounded),
+        activeIcon: Icon(Icons.chat_bubble_rounded),
+        label: 'Hubungi',
+      ),
     ];
 
     return Scaffold(
@@ -87,33 +112,18 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: IndexedStack(index: _currentIndex, children: pages),
+      body: IndexedStack(index: safeIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: safeIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: 'Utama',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long_rounded),
-            label: 'Pesanan Saya',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            activeIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Hubungi',
-          ),
-        ],
+        items: navItems,
       ),
     );
   }
 }
+
 
 // ─── Home Tab Content ─────────────────────────────────────────────────────────
 

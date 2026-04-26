@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_page.dart';
 
 class StatusPage extends StatefulWidget {
   const StatusPage({super.key});
@@ -57,13 +58,60 @@ class _StatusPageState extends State<StatusPage>
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final userId = user?.id;
 
-    // Stream all orders for this user (filter by user_id if column exists,
-    // else show all — adjust .eq() to your actual column name)
+    // ── Not logged in ──────────────────────────────────────────────────────
+    if (user == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Pesanan Saya 📦'),
+          automaticallyImplyLeading: false,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_outline_rounded,
+                    size: 72, color: Colors.grey.shade400),
+                const SizedBox(height: 20),
+                const Text(
+                  'Log masuk untuk lihat pesanan anda',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Pesanan anda akan disimpan dan boleh dijejaki selepas log masuk.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 28),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const LoginPage()),
+                  ),
+                  icon: const Icon(Icons.login_rounded),
+                  label: const Text('Log Masuk'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    // ── Logged in: filter by user_id ───────────────────────────────────────
     final ordersStream = Supabase.instance.client
         .from('orders')
         .stream(primaryKey: ['id'])
+        .eq('user_id', user.id)
         .order('created_at', ascending: false);
 
     return Scaffold(

@@ -254,9 +254,9 @@ class _DashboardPage extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // ── Recent orders ───────────────────────────────────────────────────
+          // ── Paid orders ready for delivery ──────────────────────────────────
           const Text(
-            'Pesanan Terbaru',
+            'Sedia Untuk Penghantaran 🚚',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 14),
@@ -268,12 +268,34 @@ class _DashboardPage extends StatelessWidget {
                 return const Center(child: CircularProgressIndicator());
               }
               final orders = snap.data ?? [];
-              if (orders.isEmpty) {
-                return const Center(child: Text('Belum ada pesanan.'));
+              // Only paid, not yet delivered
+              final readyOrders = orders
+                  .where((o) =>
+                      (o['payment_status'] ?? '') == 'Paid' &&
+                      (o['status'] ?? '') != 'Delivered')
+                  .toList();
+
+              if (readyOrders.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.check_circle_outline, color: Colors.green),
+                      SizedBox(width: 12),
+                      Text('Tiada pesanan menunggu penghantaran.',
+                          style: TextStyle(color: Colors.green)),
+                    ],
+                  ),
+                );
               }
-              final recent = orders.take(3).toList();
+
               return Column(
-                children: recent
+                children: readyOrders
                     .map((o) => _StaffOrderCard(order: o))
                     .toList(),
               );

@@ -36,6 +36,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
     try {
       await Supabase.instance.client.from('orders').insert({
+        'user_id': Supabase.instance.client.auth.currentUser?.id,
         'customer_name': _nameController.text,
         'phone_number': _phoneController.text,
         'hot_quantity_100g': widget.hotQuantity,

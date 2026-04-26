@@ -313,12 +313,11 @@ class _CustomerOrderCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Status pills
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              Row(
                 children: [
-                  _pill(payLabel, payColor),
-                  _pill(delLabel, delColor),
+                  Flexible(child: _pill(payLabel, payColor)),
+                  const SizedBox(width: 8),
+                  Flexible(child: _pill(delLabel, delColor)),
                 ],
               ),
               const SizedBox(height: 10),
@@ -646,6 +645,8 @@ class _CustomerOrderCard extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: TextStyle(
             color: color, fontSize: 11, fontWeight: FontWeight.bold),
       ),

@@ -16,6 +16,8 @@ void main() async {
 }
 
 class NachozyyyApp extends StatelessWidget {
+  static final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.system);
+
   const NachozyyyApp({super.key});
 
   @override
@@ -23,10 +25,13 @@ class NachozyyyApp extends StatelessWidget {
     final user = Supabase.instance.client.auth.currentUser;
     final isStaff = user?.userMetadata?['is_staff'] == true;
 
-    return MaterialApp(
-      title: 'NACHOZYYY',
-      themeMode: ThemeMode.system,
-      theme: ThemeData(
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          title: 'NACHOZYYY',
+          themeMode: currentMode,
+          theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepOrange,
           primary: Colors.deepOrange,
@@ -90,7 +95,9 @@ class NachozyyyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: isStaff ? const StaffDashboard() : const HomePage(),
-    );
-  }
+        home: isStaff ? const StaffDashboard() : const HomePage(),
+      );
+    },
+  );
+}
 }

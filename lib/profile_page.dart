@@ -4,6 +4,8 @@ import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_page.dart';
+import 'main.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -43,8 +45,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       body: Stack(
         children: [
           // Background blobs
-          Positioned(top: -100, right: -50, child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blueAccent.withOpacity(isDark ? 0.05 : 0.1)))),
-          Positioned(bottom: -50, left: -50, child: Container(width: 250, height: 250, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.purpleAccent.withOpacity(isDark ? 0.05 : 0.1)))),
+          Positioned(top: -100, right: -50, child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFF5722).withOpacity(isDark ? 0.05 : 0.1)))),
+          Positioned(bottom: -50, left: -50, child: Container(width: 250, height: 250, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.amber.withOpacity(isDark ? 0.05 : 0.1)))),
 
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -59,7 +61,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? Colors.blue.withOpacity(0.5) : Colors.grey.withOpacity(0.3), width: 2)),
+                            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? const Color(0xFFFF5722).withOpacity(0.5) : Colors.grey.withOpacity(0.3), width: 2)),
                             child: CircleAvatar(
                               radius: 50,
                               backgroundColor: isDark ? Colors.white10 : Colors.black12,
@@ -81,7 +83,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: Colors.blue, size: 14),
+                                    HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: const Color(0xFFFF5722), size: 14),
                                     SizedBox(width: 4),
                                     Text(locationStr, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                                     SizedBox(width: 6),
@@ -96,7 +98,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
                 // Main Content
                 if (!isLoggedIn) ...[
-                  _buildGlassButton(isDark, "Log In / Register", Colors.blueAccent, () {}),
+                  _buildGlassButton(isDark, "Log In / Register", const Color(0xFFFF5722), () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
+                  }),
                   const SizedBox(height: 32),
                 ],
 
@@ -114,9 +118,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
                 _buildSectionHeader("Preferences"),
                 _buildGlassSection(isDark, Column(children: [
-                  _buildToggleTile(isDark, HugeIcons.strokeRoundedMoon02, "Dark Mode", true),
-                  _buildDivider(isDark),
-                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedGlobe02, "Language", trailing: const Text("English", style: TextStyle(color: Colors.grey, fontSize: 14))),
+                  _buildThemeToggleTile(isDark),
                 ])),
                 const SizedBox(height: 24),
 
@@ -189,13 +191,57 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       ])
   );
 
+  Widget _buildThemeToggleTile(bool isDark) {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: NachozyyyApp.themeNotifier,
+      builder: (context, currentMode, _) {
+        final isDarkNow = currentMode == ThemeMode.dark || 
+            (currentMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+            
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: HugeIcon(
+                  icon: isDarkNow ? HugeIcons.strokeRoundedMoon02 : HugeIcons.strokeRoundedSun01,
+                  color: const Color(0xFFFF5722),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Text(
+                  "Dark Mode",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+              Switch.adaptive(
+                value: isDarkNow,
+                activeColor: const Color(0xFFFF5722),
+                onChanged: (v) {
+                  NachozyyyApp.themeNotifier.value = v ? ThemeMode.dark : ThemeMode.light;
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildToggleTile(bool isDark, dynamic icon, String title, bool value) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(children: [
-        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: Colors.blue, size: 20)),
+        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20)),
         const SizedBox(width: 16),
         Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
-        Switch.adaptive(value: value, activeColor: Colors.blue, onChanged: (v) {})
+        Switch.adaptive(value: value, activeColor: const Color(0xFFFF5722), onChanged: (v) {})
       ])
   );
 

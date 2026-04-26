@@ -24,12 +24,74 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     // Rebuild whenever login/logout happens
-    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
-      if (mounted) setState(() {
-        // Clamp index in case Pesanan Saya disappears
-        _currentIndex = 0;
-      });
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        _showUpdatePasswordDialog();
+      }
+      if (mounted) {
+        setState(() {
+          // Clamp index in case Pesanan Saya disappears
+          _currentIndex = 0;
+        });
+      }
     });
+  }
+
+  void _showUpdatePasswordDialog() {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Tukar Katalaluan Baru 🔑'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Sila masukkan katalaluan baru anda.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Katalaluan Baru',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              final newPass = controller.text.trim();
+              if (newPass.length < 6) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Minimum 6 aksara!')),
+                );
+                return;
+              }
+              try {
+                await Supabase.instance.client.auth.updateUser(
+                  UserAttributes(password: newPass),
+                );
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Katalaluan berjaya ditukar!')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
+                  );
+                }
+              }
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

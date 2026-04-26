@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'signup_page.dart';
 import 'staff_dashboard.dart';
 import 'app_logo.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -144,6 +145,20 @@ class _LoginPageState extends State<LoginPage> {
                   border: const OutlineInputBorder(),
                 ),
                 obscureText: _obscurePassword,
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordPage()),
+                    );
+                  },
+                  child: const Text('Lupa Katalaluan?',
+                      style: TextStyle(color: Colors.deepOrange)),
+                ),
               ),
               const SizedBox(height: 24),
               ElevatedButton(

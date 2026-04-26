@@ -140,6 +140,7 @@ class _OrderPageState extends State<OrderPage> {
 
           int hotStock = 0;
           int bbqStock = 0;
+          int cheeseStock = 0;
 
           if (snapshot.hasData && snapshot.data!.isNotEmpty) {
             final data = snapshot.data!;
@@ -154,6 +155,10 @@ class _OrderPageState extends State<OrderPage> {
                 final s = row['bbq_stock'] as int? ?? 0;
                 return s > max ? s : max;
               });
+              cheeseStock = data.fold<int>(0, (max, row) {
+                final s = row['cheese_stock'] as int? ?? 0;
+                return s > max ? s : max;
+              });
             } else {
               // Zone is selected, use exact stock for that zone
               int locId = 1;
@@ -165,6 +170,7 @@ class _OrderPageState extends State<OrderPage> {
               final row = data.firstWhere((r) => r['id'] == locId, orElse: () => <String, dynamic>{});
               hotStock = row['hot_stock'] as int? ?? 0;
               bbqStock = row['bbq_stock'] as int? ?? 0;
+              cheeseStock = row['cheese_stock'] as int? ?? 0;
             }
           }
 
@@ -178,6 +184,10 @@ class _OrderPageState extends State<OrderPage> {
               }
               if (_bbqQuantity > bbqStock) {
                 setState(() => _bbqQuantity = bbqStock);
+                changed = true;
+              }
+              if (_cheeseQuantity > cheeseStock) {
+                setState(() => _cheeseQuantity = cheeseStock);
                 changed = true;
               }
               
@@ -231,8 +241,10 @@ class _OrderPageState extends State<OrderPage> {
                   title: 'Cheese Dip 🧀',
                   subtitle: '(+ RM 1.00 per unit)',
                   quantity: _cheeseQuantity,
-                  maxStock: 99, // Assuming high stock for cheese
-                  onIncrement: () => setState(() => _cheeseQuantity++),
+                  maxStock: cheeseStock,
+                  onIncrement: () {
+                    if (_cheeseQuantity < cheeseStock) setState(() => _cheeseQuantity++);
+                  },
                   onDecrement: () {
                     if (_cheeseQuantity > 0) setState(() => _cheeseQuantity--);
                   },

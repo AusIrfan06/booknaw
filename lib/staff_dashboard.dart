@@ -278,6 +278,7 @@ class _DashboardPage extends StatelessWidget {
               final data = snap.data!;
               final hotTotal = data.fold<int>(0, (sum, row) => sum + (row['hot_stock'] as int? ?? 0));
               final bbqTotal = data.fold<int>(0, (sum, row) => sum + (row['bbq_stock'] as int? ?? 0));
+              final cheeseTotal = data.fold<int>(0, (sum, row) => sum + (row['cheese_stock'] as int? ?? 0));
 
               return Column(
                 children: [
@@ -287,6 +288,8 @@ class _DashboardPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   _StockSummaryTile(label: 'Jumlah Keseluruhan BBQ 🍖', stock: bbqTotal),
+                  const SizedBox(height: 10),
+                  _StockSummaryTile(label: 'Jumlah Keseluruhan Cheese Dip 🧀', stock: cheeseTotal, unit: 'unit'),
                 ],
               );
             },
@@ -299,7 +302,6 @@ class _DashboardPage extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // ── Paid orders ready for delivery ──────────────────────────────────
           const Text(
             'Sedia Untuk Penghantaran 🚚',
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
@@ -511,8 +513,13 @@ class _StatCard extends StatelessWidget {
 class _StockSummaryTile extends StatelessWidget {
   final String label;
   final int stock;
+  final String unit;
 
-  const _StockSummaryTile({required this.label, required this.stock});
+  const _StockSummaryTile({
+    required this.label,
+    required this.stock,
+    this.unit = 'pek',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -540,7 +547,7 @@ class _StockSummaryTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              isSoldOut ? 'SOLD OUT' : '$stock pek',
+              isSoldOut ? 'SOLD OUT' : '$stock $unit',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 12,
@@ -716,8 +723,9 @@ class _StaffOrderCard extends StatelessWidget {
 
       final hotQty = order['hot_quantity_100g'] as int? ?? 0;
       final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
+      final cheeseQty = order['cheese_quantity'] as int? ?? 0;
 
-      if (hotQty > 0 || bbqQty > 0) {
+      if (hotQty > 0 || bbqQty > 0 || cheeseQty > 0) {
         final invRes = await Supabase.instance.client
             .from('inventory')
             .select()
@@ -727,15 +735,18 @@ class _StaffOrderCard extends StatelessWidget {
         if (invRes != null) {
           final currentHot = invRes['hot_stock'] as int? ?? 0;
           final currentBbq = invRes['bbq_stock'] as int? ?? 0;
+          final currentCheese = invRes['cheese_stock'] as int? ?? 0;
 
           final newHot = currentHot - hotQty;
           final newBbq = currentBbq - bbqQty;
+          final newCheese = currentCheese - cheeseQty;
 
           await Supabase.instance.client
               .from('inventory')
               .update({
                 'hot_stock': newHot < 0 ? 0 : newHot,
                 'bbq_stock': newBbq < 0 ? 0 : newBbq,
+                'cheese_stock': newCheese < 0 ? 0 : newCheese,
               })
               .eq('id', locationId);
         }
@@ -1224,6 +1235,7 @@ class _InventoryTab extends StatelessWidget {
                     );
                     final hotStock = row['hot_stock'] as int? ?? 0;
                     final bbqStock = row['bbq_stock'] as int? ?? 0;
+                    final cheeseStock = row['cheese_stock'] as int? ?? 0;
 
                     return ListView(
                       padding: const EdgeInsets.all(16.0),
@@ -1242,6 +1254,15 @@ class _InventoryTab extends StatelessWidget {
                           dbColumn: 'bbq_stock',
                           currentStock: bbqStock,
                           currentRow: row,
+                        ),
+                        const SizedBox(height: 20),
+                        _StockUpdater(
+                          locationId: loc['id'] as int,
+                          flavor: 'Cheese Dip 🧀',
+                          dbColumn: 'cheese_stock',
+                          currentStock: cheeseStock,
+                          currentRow: row,
+                          unit: 'unit',
                         ),
                       ],
                     );
@@ -1262,6 +1283,7 @@ class _StockUpdater extends StatefulWidget {
   final String dbColumn;
   final int currentStock;
   final Map<String, dynamic> currentRow;
+  final String unit;
 
   const _StockUpdater({
     required this.locationId,
@@ -1269,6 +1291,7 @@ class _StockUpdater extends StatefulWidget {
     required this.dbColumn,
     required this.currentStock,
     required this.currentRow,
+    this.unit = 'pek',
     super.key,
   });
 
@@ -1287,6 +1310,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
         'id': widget.locationId,
         'hot_stock': widget.currentRow['hot_stock'] ?? 0,
         'bbq_stock': widget.currentRow['bbq_stock'] ?? 0,
+        'cheese_stock': widget.currentRow['cheese_stock'] ?? 0,
       };
       payload[widget.dbColumn] = newStock < 0 ? 0 : newStock;
 
@@ -1308,6 +1332,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
           'id': widget.locationId,
           'hot_stock': widget.currentRow['hot_stock'] ?? 0,
           'bbq_stock': widget.currentRow['bbq_stock'] ?? 0,
+          'cheese_stock': widget.currentRow['cheese_stock'] ?? 0,
         };
         payload[widget.dbColumn] = newStock < 0 ? 0 : newStock;
 
@@ -1354,10 +1379,10 @@ class _StockUpdaterState extends State<_StockUpdater> {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Jumlah stok',
                 border: OutlineInputBorder(),
-                suffix: Text('pek'),
+                suffix: Text(widget.unit),
               ),
             ),
             const SizedBox(height: 16),
@@ -1460,7 +1485,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
                             ),
                           ),
                           Text(
-                            'pek  •  ketuk untuk edit',
+                            '${widget.unit}  •  ketuk untuk edit',
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 11,

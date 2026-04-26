@@ -52,15 +52,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'payment_status': 'Pending Payment',
       });
 
-      // Deduct stock
-      final invData = await Supabase.instance.client.from('inventory').select().eq('id', 1).single();
+      // Determine locId from delivery option
+      int locId = 1;
+      if (widget.deliveryOption.contains('Alpha')) locId = 1;
+      else if (widget.deliveryOption.contains('Beta')) locId = 2;
+      else if (widget.deliveryOption.contains('Gamma')) locId = 3;
+      else if (widget.deliveryOption.contains('NR')) locId = 4;
+
+      // Deduct stock from the CORRECT location
+      final invData = await Supabase.instance.client.from('inventory').select().eq('id', locId).single();
       final newHot = (invData['hot_stock'] as int? ?? 0) - widget.hotQuantity;
       final newBbq = (invData['bbq_stock'] as int? ?? 0) - widget.bbqQuantity;
+      final newCheese = (invData['cheese_stock'] as int? ?? 0) - widget.cheeseQuantity;
       
       await Supabase.instance.client.from('inventory').update({
         'hot_stock': newHot < 0 ? 0 : newHot,
         'bbq_stock': newBbq < 0 ? 0 : newBbq,
-      }).eq('id', 1);
+        'cheese_stock': newCheese < 0 ? 0 : newCheese,
+      }).eq('id', locId);
 
       if (!mounted) return;
 

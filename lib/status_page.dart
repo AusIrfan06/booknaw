@@ -223,11 +223,11 @@ class _CustomerOrderCard extends StatelessWidget {
 
             // Items
             if (hotQty > 0)
-              _row('HOT & SPICYYY 🌶️', '${hotQty} pek', isDark);
+              _row('HOT & SPICYYY 🌶️', '$hotQty pek', isDark),
             if (bbqQty > 0)
-              _row('BBQ 🍖', '${bbqQty} pek', isDark);
+              _row('BBQ 🍖', '$bbqQty pek', isDark),
             if (addCheese)
-              _row('Cheese Dip 🧀', 'Ya', isDark);
+              _row('Cheese Dip 🧀', 'Ya', isDark),
 
             const SizedBox(height: 12),
 

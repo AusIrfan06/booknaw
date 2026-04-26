@@ -290,8 +290,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-          Text(value, style: TextStyle(fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Expanded(
+            child: Text(label,
+                style: TextStyle(
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          ),
+          const SizedBox(width: 8),
+          Text(value,
+              style: TextStyle(
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
         ],
       ),
     );

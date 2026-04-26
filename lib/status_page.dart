@@ -313,10 +313,11 @@ class _CustomerOrderCard extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Status pills
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   _pill(payLabel, payColor),
-                  const SizedBox(width: 8),
                   _pill(delLabel, delColor),
                 ],
               ),

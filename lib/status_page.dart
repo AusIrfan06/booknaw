@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'login_page.dart';
 
 class StatusPage extends StatefulWidget {
@@ -144,11 +145,11 @@ class _StatusPageState extends State<StatusPage>
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (snapshot.hasError) {
-            return Center(child: Text('Ralat: ${snapshot.error}'));
-          }
 
-          final allOrders = snapshot.data ?? [];
+          // On error (e.g. user_id column not yet added), just show empty
+          final allOrders = snapshot.hasError
+              ? <Map<String, dynamic>>[]
+              : (snapshot.data ?? <Map<String, dynamic>>[]);
 
           return TabBarView(
             controller: _tabController,
@@ -225,70 +226,346 @@ class _CustomerOrderCard extends StatelessWidget {
     Color delColor = isDelivered ? Colors.blue : Colors.grey;
     String delLabel = isDelivered ? '✅ Selesai' : '🚚 Diproses';
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top row: name + total
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return InkWell(
+      onTap: () => _showReceipt(context),
+      borderRadius: BorderRadius.circular(14),
+      child: Card(
+        elevation: 2,
+        margin: const EdgeInsets.only(bottom: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top row: name + total
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      customerName,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? Colors.amber.shade900.withValues(alpha: 0.3)
+                          : Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'RM ${totalPrice.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(delivery,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+              const Divider(height: 20),
+
+              // Items
+              if (hotQty > 0)
+                _row('HOT & SPICYYY 🌶️', '$hotQty pek', isDark),
+              if (bbqQty > 0)
+                _row('BBQ 🍖', '$bbqQty pek', isDark),
+              if (addCheese)
+                _row('Cheese Dip 🧀', 'Ya', isDark),
+
+              const SizedBox(height: 12),
+
+              // Status pills
+              Row(
+                children: [
+                  _pill(payLabel, payColor),
+                  const SizedBox(width: 8),
+                  _pill(delLabel, delColor),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(Icons.receipt_long_outlined,
+                      size: 13, color: Colors.grey.shade400),
+                  const SizedBox(width: 4),
+                  Text('Tekan untuk lihat resit',
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey.shade400)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showReceipt(BuildContext context) {
+    final hotQty = order['hot_quantity_100g'] as int? ?? 0;
+    final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
+    final addCheese = order['add_cheese_dip'] as bool? ?? false;
+    final totalPrice = (order['total_price'] as num?)?.toDouble() ?? 0.0;
+    final customerName = order['customer_name'] ?? '-';
+    final phone = order['phone_number'] ?? '-';
+    final delivery = order['delivery_option'] ?? '-';
+    final address = order['delivery_address'] as String?;
+    final status = order['status'] ?? 'Pending';
+    final paymentStatus = order['payment_status'] ?? 'Pending Payment';
+    final orderId = order['id']?.toString() ?? '-';
+    final createdAt = order['created_at'] as String?;
+    final isPaid = paymentStatus == 'Paid';
+    final isDelivered = status == 'Delivered';
+
+    String dateStr = '-';
+    if (createdAt != null) {
+      try {
+        final dt = DateTime.parse(createdAt).toLocal();
+        dateStr =
+            '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}  '
+            '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      } catch (_) {}
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        final primary = Theme.of(ctx).colorScheme.primary;
+        return DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.75,
+          maxChildSize: 0.95,
+          builder: (_, controller) => SingleChildScrollView(
+            controller: controller,
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Text(
-                    customerName,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.amber.shade900.withValues(alpha: 0.3)
-                        : Colors.amber.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    'RM ${totalPrice.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                // Handle
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade400,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
+
+                // Header
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.receipt_long_rounded,
+                            color: primary, size: 32),
+                      ),
+                      const SizedBox(height: 10),
+                      Text('NACHOZYYY 🌶️🧀',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: primary)),
+                      const SizedBox(height: 2),
+                      Text('Resit Pesanan',
+                          style: TextStyle(
+                              color: Colors.grey.shade500, fontSize: 13)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _dashedDivider(),
+
+                // Order info
+                _receiptRow('📌 No. Pesanan', '#$orderId'),
+                _receiptRow('📅 Tarikh', dateStr),
+                _receiptRow('👤 Nama', customerName),
+                _receiptRow('📱 No. Tel', phone),
+                if (address != null && address.isNotEmpty)
+                  _receiptRow('🏠 Alamat', address),
+                _receiptRow('📍 Lokasi', delivery),
+                _dashedDivider(),
+
+                // Items
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text('Pesanan',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade500,
+                          fontSize: 12)),
+                ),
+                if (hotQty > 0)
+                  _receiptRow('HOT & SPICYYY 🌶️',
+                      '${hotQty}x  @RM5.00  =  RM${(hotQty * 5.0).toStringAsFixed(2)}'),
+                if (bbqQty > 0)
+                  _receiptRow('BBQ 🍖',
+                      '${bbqQty}x  @RM5.00  =  RM${(bbqQty * 5.0).toStringAsFixed(2)}'),
+                if (addCheese)
+                  _receiptRow('Cheese Dip 🧀', 'RM1.00'),
+                _dashedDivider(),
+
+                // Total
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('JUMLAH',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('RM ${totalPrice.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: primary)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _dashedDivider(),
+
+                // Status
+                Row(
+                  children: [
+                    Expanded(
+                      child: _statusBadge(
+                        isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
+                        isPaid ? Colors.green : Colors.orange,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _statusBadge(
+                        isDelivered ? '✅ Selesai' : '🚚 Diproses',
+                        isDelivered ? Colors.blue : Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Footer
+                if (!isPaid) ...[
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final hot = hotQty > 0 ? 'HOT & SPICYYY x$hotQty' : '';
+                      final bbq = bbqQty > 0 ? 'BBQ x$bbqQty' : '';
+                      final cheese = addCheese ? '+ Cheese Dip' : '';
+                      final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
+                      
+                      final waMessage = Uri.encodeComponent(
+                        'Assalamualaikum Lysa 🙋 Saya nak buat bayaran untuk pesanan (No. #$orderId)!\n\n'
+                        '👤 Nama: $customerName\n'
+                        '📱 No. Tel: $phone\n'
+                        '🛒 Pesanan: $items\n'
+                        '📍 Lokasi: $delivery\n'
+                        '${address != null && address.isNotEmpty ? "🏠 Alamat: $address\n" : ""}'
+                        '💰 Jumlah: RM ${totalPrice.toStringAsFixed(2)}\n\n'
+                        'Sila semak resit pembayaran saya ya! Terima kasih 🙏',
+                      );
+                      const lysaNumber = '60132163194';
+                      final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
+                      if (await canLaunchUrl(waUrl)) {
+                        await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(Icons.payment),
+                    label: const Text('Hubungi & Buat Bayaran'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Center(
+                  child: Text(
+                    'Terima kasih kerana menyokong kami! 💛',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        color: Colors.grey.shade500, fontSize: 12),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(delivery,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-            const Divider(height: 20),
+          ),
+        );
+      },
+    );
+  }
 
-            // Items
-            if (hotQty > 0)
-              _row('HOT & SPICYYY 🌶️', '$hotQty pek', isDark),
-            if (bbqQty > 0)
-              _row('BBQ 🍖', '$bbqQty pek', isDark),
-            if (addCheese)
-              _row('Cheese Dip 🧀', 'Ya', isDark),
-
-            const SizedBox(height: 12),
-
-            // Status pills
-            Row(
-              children: [
-                _pill(payLabel, payColor),
-                const SizedBox(width: 8),
-                _pill(delLabel, delColor),
-              ],
+  Widget _dashedDivider() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: List.generate(
+          30,
+          (_) => Expanded(
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              height: 1,
+              color: Colors.grey.shade300,
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _receiptRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(label,
+                style: TextStyle(
+                    color: Colors.grey.shade500, fontSize: 13)),
+          ),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w600, fontSize: 13)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+            color: color, fontWeight: FontWeight.bold, fontSize: 13),
       ),
     );
   }

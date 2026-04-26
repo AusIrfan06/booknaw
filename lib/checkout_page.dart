@@ -27,7 +27,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
   bool _isLoading = false;
+
+  bool get _isDelivery => widget.deliveryOption.startsWith('Delivery');
 
   Future<void> _submitOrder() async {
     if (!_formKey.currentState!.validate()) return;
@@ -39,6 +42,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'user_id': Supabase.instance.client.auth.currentUser?.id,
         'customer_name': _nameController.text,
         'phone_number': _phoneController.text,
+        'delivery_address': _isDelivery ? _addressController.text.trim() : null,
         'hot_quantity_100g': widget.hotQuantity,
         'bbq_quantity_100g': widget.bbqQuantity,
         'add_cheese_dip': widget.addCheeseDip,
@@ -75,6 +79,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         '📱 No. Tel: $phone\n'
         '🛒 Pesanan: $items\n'
         '📍 Lokasi: $location\n'
+        '${_isDelivery ? "🏠 Alamat: ${_addressController.text.trim()}\n" : ""}'
         '💰 Jumlah: $total\n\n'
         'Sila semak resit pembayaran saya ya! Terima kasih 🙏',
       );
@@ -214,6 +219,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 keyboardType: TextInputType.phone,
                 validator: (val) => val == null || val.isEmpty ? 'Sila masukkan no. telefon' : null,
               ),
+              if (_isDelivery) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _addressController,
+                  decoration: const InputDecoration(
+                    labelText: 'Alamat Penghantaran',
+                    hintText: 'Cth: Blok B, Bilik 203, UiTM...',
+                    prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedMapsLocation01, color: Colors.grey, size: 20),
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                  validator: (val) => val == null || val.trim().isEmpty ? 'Sila masukkan alamat penghantaran' : null,
+                ),
+              ],
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitOrder,

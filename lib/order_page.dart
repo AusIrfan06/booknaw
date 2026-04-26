@@ -16,6 +16,7 @@ class _OrderPageState extends State<OrderPage> {
   int _bbqQuantity = 0;
   bool _addCheeseDip = false;
   String? _deliveryOption;
+  String? _deliveryType; // 'pickup' or 'delivery'
 
   final double _pricePer100g = 5.0;
   final double _cheeseDipPrice = 1.0;
@@ -201,29 +202,95 @@ class _OrderPageState extends State<OrderPage> {
                 const SizedBox(height: 24),
 
                 _buildSectionTitle('3. Delivery / Pickup 🚗'),
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+
+                // ── Step 1: Pickup or Delivery ───────────────────────────
+                Row(
+                  children: [
+                    Expanded(
+                      child: _TypeButton(
+                        label: 'Pickup',
+                        icon: Icons.store_outlined,
+                        sublabel: 'FREE',
+                        selected: _deliveryType == 'pickup',
+                        color: Colors.green,
+                        onTap: () => setState(() {
+                          _deliveryType = 'pickup';
+                          _deliveryOption = null;
+                        }),
+                      ),
                     ),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey.shade800
-                        : Colors.grey.shade100,
-                  ),
-                  hint: const Text('Pilih lokasi'),
-                  value: _deliveryOption,
-                  items: _deliveryFees.entries.map((e) {
-                    String label = e.key;
-                    if (e.value > 0) {
-                      label += ' (+ RM${e.value.toStringAsFixed(2)})';
-                    } else {
-                      label += ' (FREE)';
-                    }
-                    return DropdownMenuItem(value: e.key, child: Text(label));
-                  }).toList(),
-                  onChanged: (val) => setState(() => _deliveryOption = val),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _TypeButton(
+                        label: 'Delivery',
+                        icon: Icons.delivery_dining_outlined,
+                        sublabel: 'RM 1.00 – 2.00',
+                        selected: _deliveryType == 'delivery',
+                        color: Colors.deepOrange,
+                        onTap: () => setState(() {
+                          _deliveryType = 'delivery';
+                          _deliveryOption = null;
+                        }),
+                      ),
+                    ),
+                  ],
                 ),
+
+                // ── Step 2: Zone ─────────────────────────────────────────
+                if (_deliveryType != null) ...[
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (_deliveryType == 'pickup') ...[
+                        _ZoneChip(
+                          label: 'Alpha (A5-03-03)',
+                          value: 'Pickup Alpha (A5-03-03)',
+                          fee: 0,
+                          selected: _deliveryOption == 'Pickup Alpha (A5-03-03)',
+                          onTap: () => setState(() => _deliveryOption = 'Pickup Alpha (A5-03-03)'),
+                        ),
+                        _ZoneChip(
+                          label: 'Beta (B10-03-11)',
+                          value: 'Pickup Beta (B10-03-11)',
+                          fee: 0,
+                          selected: _deliveryOption == 'Pickup Beta (B10-03-11)',
+                          onTap: () => setState(() => _deliveryOption = 'Pickup Beta (B10-03-11)'),
+                        ),
+                      ] else ...[
+                        _ZoneChip(
+                          label: 'Alpha',
+                          value: 'Delivery Alpha',
+                          fee: 1,
+                          selected: _deliveryOption == 'Delivery Alpha',
+                          onTap: () => setState(() => _deliveryOption = 'Delivery Alpha'),
+                        ),
+                        _ZoneChip(
+                          label: 'Beta',
+                          value: 'Delivery Beta',
+                          fee: 1,
+                          selected: _deliveryOption == 'Delivery Beta',
+                          onTap: () => setState(() => _deliveryOption = 'Delivery Beta'),
+                        ),
+                        _ZoneChip(
+                          label: 'Gamma',
+                          value: 'Delivery Gamma',
+                          fee: 1,
+                          selected: _deliveryOption == 'Delivery Gamma',
+                          onTap: () => setState(() => _deliveryOption = 'Delivery Gamma'),
+                        ),
+                        _ZoneChip(
+                          label: 'Non-Resident',
+                          value: 'Delivery NR',
+                          fee: 2,
+                          selected: _deliveryOption == 'Delivery NR',
+                          onTap: () => setState(() => _deliveryOption = 'Delivery NR'),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 40),
 
                 Container(
@@ -428,6 +495,111 @@ class _FlavorQuantityCard extends StatelessWidget {
               ],
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Delivery Type Button ──────────────────────────────────────────────────────
+
+class _TypeButton extends StatelessWidget {
+  final String label;
+  final String sublabel;
+  final IconData icon;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _TypeButton({
+    required this.label,
+    required this.sublabel,
+    required this.icon,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: selected ? color : Colors.grey.shade400,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: selected ? color : Colors.grey, size: 28),
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: selected ? color : Colors.grey.shade700,
+              ),
+            ),
+            Text(
+              sublabel,
+              style: TextStyle(
+                fontSize: 11,
+                color: selected ? color.withValues(alpha: 0.8) : Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Zone Chip ─────────────────────────────────────────────────────────────────
+
+class _ZoneChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final int fee;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ZoneChip({
+    required this.label,
+    required this.value,
+    required this.fee,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: selected ? color : Colors.grey.shade400,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Text(
+          fee == 0 ? '$label  •  FREE' : '$label  •  +RM${fee.toStringAsFixed(2)}',
+          style: TextStyle(
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            color: selected ? color : Colors.grey.shade700,
+            fontSize: 13,
+          ),
+        ),
       ),
     );
   }

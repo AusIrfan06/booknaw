@@ -7,6 +7,7 @@ import 'contact_page.dart';
 import 'login_page.dart';
 import 'staff_dashboard.dart';
 import 'status_page.dart';
+import 'app_logo.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -168,6 +169,8 @@ class _HomeTab extends StatelessWidget {
             ),
             child: Column(
               children: [
+                const AppLogo(size: 60),
+                const SizedBox(height: 16),
                 const Text(
                   'Krup Krap, Krup Krap... 👀🔥',
                   style: TextStyle(

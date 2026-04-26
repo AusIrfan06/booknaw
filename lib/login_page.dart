@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'signup_page.dart';
 import 'staff_dashboard.dart';
+import 'app_logo.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -99,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const HugeIcon(icon: HugeIcons.strokeRoundedFire, size: 80, color: Colors.deepOrange),
+              const AppLogo(size: 80),
               const SizedBox(height: 16),
               const Text(
                 'Selamat Kembali ke NACHOZYYY!',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'app_logo.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -81,6 +82,8 @@ class _SignupPageState extends State<SignupPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const Center(child: AppLogo(size: 60)),
+              const SizedBox(height: 24),
               const Text(
                 'Daftar menggunakan:',
                 style: TextStyle(fontWeight: FontWeight.bold),

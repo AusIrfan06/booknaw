@@ -6,6 +6,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_page.dart';
 import 'main.dart';
+import 'contact_page.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -32,7 +33,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text("Profile", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text("Profil", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isDark ? Colors.white : Colors.black87)),
         leading: IconButton(
             icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: Colors.grey, size: 24),
             onPressed: () => Navigator.pop(context)
@@ -63,15 +64,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? const Color(0xFFFF5722).withOpacity(0.5) : Colors.grey.withOpacity(0.3), width: 2)),
                             child: CircleAvatar(
-                              radius: 50,
-                              backgroundColor: isDark ? Colors.white10 : Colors.black12,
-                              child: const HugeIcon(icon: HugeIcons.strokeRoundedUser, color: Colors.grey, size: 40),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
-                          const SizedBox(height: 4),
-                          Text(email, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                               radius: 50,
+                               backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                               child: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: isDark ? Colors.white70 : Colors.black54, size: 40),
+                             ),
+                           ),
+                           const SizedBox(height: 16),
+                           Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+                           const SizedBox(height: 4),
+                           Text(email, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14)),
                           const SizedBox(height: 8),
 
                           Container(
@@ -98,47 +99,49 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
                 // Main Content
                 if (!isLoggedIn) ...[
-                  _buildGlassButton(isDark, "Log In / Register", const Color(0xFFFF5722), () {
+                  _buildGlassButton(isDark, "Log Masuk / Daftar", const Color(0xFFFF5722), () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginPage()));
                   }),
                   const SizedBox(height: 32),
                 ],
 
                 if (isLoggedIn) ...[
-                  _buildSectionHeader("Account"),
+                  _buildSectionHeader("Akaun"),
                   _buildGlassSection(isDark, Column(children: [
-                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedUserEdit01, "Account Details"),
+                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedUserEdit01, "Butiran Akaun"),
                     _buildDivider(isDark),
-                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Personal Information"),
+                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Maklumat Peribadi"),
                     _buildDivider(isDark),
-                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privacy & Security"),
+                    _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan"),
                   ])),
                   const SizedBox(height: 24),
                 ],
 
-                _buildSectionHeader("Preferences"),
+                _buildSectionHeader("Pilihan"),
                 _buildGlassSection(isDark, Column(children: [
                   _buildThemeToggleTile(isDark),
                 ])),
                 const SizedBox(height: 24),
 
-                _buildSectionHeader("Support"),
+                _buildSectionHeader("Sokongan"),
                 _buildGlassSection(isDark, Column(children: [
-                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedCustomerService, "Help Center"),
+                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedCustomerService, "Pusat Bantuan"),
                   _buildDivider(isDark),
-                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Contact Us"),
+                  _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Hubungi Kami", onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactPage()));
+                  }),
                 ])),
                 const SizedBox(height: 40),
 
                 if (isLoggedIn) ...[
-                  _buildGlassButton(isDark, "Log Out", Colors.redAccent, () async {
+                  _buildGlassButton(isDark, "Log Keluar", Colors.redAccent, () async {
                     await Supabase.instance.client.auth.signOut();
                     if (mounted) Navigator.pop(context);
                   }),
                   const SizedBox(height: 40),
                 ],
                 
-                Center(child: Column(children: [const Text("Nachozyyy v0.1.0", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 4), const Text("Made with Love", style: TextStyle(color: Colors.grey, fontSize: 10))])),
+                Center(child: Column(children: [const Text("Nachozyyy v0.1.0", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 4), const Text("Dibuat dengan Kasih Sayang", style: TextStyle(color: Colors.grey, fontSize: 10))])),
                 const SizedBox(height: 40),
               ],
             ),
@@ -179,16 +182,23 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
   Widget _buildSectionHeader(String title) => Padding(padding: const EdgeInsets.only(left: 8, bottom: 12), child: Align(alignment: Alignment.centerLeft, child: Text(title.toUpperCase(), style: const TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2))));
 
-  Widget _buildSettingsTile(bool isDark, dynamic icon, String title, {Widget? trailing}) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(children: [
-        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: isDark ? Colors.white : Colors.black87, size: 20)),
-        const SizedBox(width: 16),
-        Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
-        if (trailing != null) trailing,
-        const SizedBox(width: 8),
-        const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: Colors.grey, size: 20)
-      ])
+  Widget _buildSettingsTile(bool isDark, dynamic icon, String title, {Widget? trailing, VoidCallback? onTap}) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(children: [
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: isDark ? Colors.white : Colors.black87, size: 20)),
+            const SizedBox(width: 16),
+            Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
+            if (trailing != null) trailing,
+            const SizedBox(width: 8),
+            const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: Colors.grey, size: 20)
+          ]),
+        ),
+      ),
   );
 
   Widget _buildThemeToggleTile(bool isDark) {
@@ -217,7 +227,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               const SizedBox(width: 16),
               const Expanded(
                 child: Text(
-                  "Dark Mode",
+                  "Mod Gelap",
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
               ),

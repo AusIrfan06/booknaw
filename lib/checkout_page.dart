@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CheckoutPage extends StatefulWidget {
   final int hotQuantity;
@@ -42,6 +43,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'add_cheese_dip': widget.addCheeseDip,
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
+        'payment_status': 'Pending Payment',
       });
 
       // Deduct stock
@@ -55,16 +57,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
       }).eq('id', 1);
 
       if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pesanan berjaya dihantar! 🎉 Kami akan hubungi anda.'),
-          backgroundColor: Colors.green,
-        ),
-      );
 
-      // Back to home
-      Navigator.popUntil(context, (route) => route.isFirst);
+      // Build WhatsApp message for Lysa
+      final name = _nameController.text;
+      final phone = _phoneController.text;
+      final hot = widget.hotQuantity > 0 ? 'HOT & SPICYYY x${widget.hotQuantity}' : '';
+      final bbq = widget.bbqQuantity > 0 ? 'BBQ x${widget.bbqQuantity}' : '';
+      final cheese = widget.addCheeseDip ? '+ Cheese Dip' : '';
+      final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
+      final total = 'RM ${widget.totalPrice.toStringAsFixed(2)}';
+      final location = widget.deliveryOption;
+
+      final waMessage = Uri.encodeComponent(
+        'Assalamualaikum Lysa 🙋 Saya baru buat pesanan NACHOZYYY dan dah buat bayaran!\n\n'
+        '👤 Nama: $name\n'
+        '📱 No. Tel: $phone\n'
+        '🛒 Pesanan: $items\n'
+        '📍 Lokasi: $location\n'
+        '💰 Jumlah: $total\n\n'
+        'Sila semak resit pembayaran saya ya! Terima kasih 🙏',
+      );
+      const lysaNumber = '60132163194'; // Lysa - Beta & Gamma
+      final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
+
+      _showPaymentSheet(context, waUrl);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -74,6 +90,72 @@ class _CheckoutPageState extends State<CheckoutPage> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showPaymentSheet(BuildContext context, Uri waUrl) {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: const BoxDecoration(
+                color: Color(0xFFE8F5E9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.check_circle, color: Colors.green, size: 36),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Pesanan Berjaya! 🎉',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Langkah seterusnya: Hantar bukti pembayaran kepada Lysa melalui WhatsApp untuk pengesahan.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                },
+                icon: const Icon(Icons.chat, color: Colors.white),
+                label: const Text(
+                  'Hubungi Lysa di WhatsApp',
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                Navigator.popUntil(context, (route) => route.isFirst);
+              },
+              child: const Text('Kembali ke Laman Utama'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

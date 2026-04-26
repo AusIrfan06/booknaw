@@ -4,10 +4,17 @@ import 'dart:async';
 import 'package:hugeicons/hugeicons.dart';
 import 'home_page.dart';
 
-// ─── Staff Home (Landing Page) ───────────────────────────────────────────────
+// ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
-class StaffHomePage extends StatelessWidget {
-  const StaffHomePage({super.key});
+class StaffDashboard extends StatefulWidget {
+  const StaffDashboard({super.key});
+
+  @override
+  State<StaffDashboard> createState() => _StaffDashboardState();
+}
+
+class _StaffDashboardState extends State<StaffDashboard> {
+  int _currentIndex = 0;
 
   Future<void> _logout(BuildContext context) async {
     await Supabase.instance.client.auth.signOut();
@@ -19,6 +26,92 @@ class StaffHomePage extends StatelessWidget {
       );
     }
   }
+
+  static const _titles = ['Dashboard', 'Pesanan', 'Stok Inventori'];
+
+  @override
+  Widget build(BuildContext context) {
+    final pages = [
+      const _DashboardPage(),
+      const _OrdersTab(),
+      const _InventoryTab(),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(_titles[_currentIndex]),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedLogout01,
+              color: Colors.white,
+              size: 24,
+            ),
+            onPressed: () => _logout(context),
+            tooltip: 'Log Keluar',
+          ),
+        ],
+      ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: pages,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (i) => setState(() => _currentIndex = i),
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedDashboardSquare01,
+              color: Colors.grey,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedDashboardSquare01,
+              color: Color(0xFFFF5722),
+              size: 24,
+            ),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedTask01,
+              color: Colors.grey,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedTask01,
+              color: Color(0xFFFF5722),
+              size: 24,
+            ),
+            label: 'Pesanan',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedPackage,
+              color: Colors.grey,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedPackage,
+              color: Color(0xFFFF5722),
+              size: 24,
+            ),
+            label: 'Stok Inventori',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Page 0: Dashboard Overview ───────────────────────────────────────────────
+
+class _DashboardPage extends StatelessWidget {
+  const _DashboardPage();
 
   @override
   Widget build(BuildContext context) {
@@ -26,272 +119,259 @@ class StaffHomePage extends StatelessWidget {
     final email = user?.email ?? 'Staff';
     final name = email.split('@').first;
 
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFFF5722), Color(0xFFBF360C)],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // ── Header ──────────────────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 28, 16, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Selamat datang,',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.8),
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              '🧑‍💼  Staff NACHOZYYY',
-                              style: TextStyle(color: Colors.white, fontSize: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => _logout(context),
-                      icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 26),
-                      tooltip: 'Log Keluar',
-                    ),
-                  ],
-                ),
+    final ordersStream = Supabase.instance.client
+        .from('orders')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
+
+    final inventoryStream = Supabase.instance.client
+        .from('inventory')
+        .stream(primaryKey: ['id'])
+        .eq('id', 1);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Welcome banner ──────────────────────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF5722), Color(0xFFBF360C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-
-              const SizedBox(height: 32),
-
-              // ── Nav Cards ───────────────────────────────────────────────────
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF1A1A1A)
-                        : const Color(0xFFF7F7F7),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Menu Utama',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 20),
-
-                        // Dashboard card
-                        _StaffNavCard(
-                          icon: HugeIcons.strokeRoundedDashboardSquare01,
-                          iconColor: const Color(0xFF5C6BC0),
-                          bgColor: const Color(0xFFE8EAF6),
-                          darkBgColor: const Color(0xFF1E2040),
-                          title: 'Dashboard',
-                          subtitle: 'Semua pesanan & inventori dalam satu pandangan',
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const StaffDashboard()),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Pesanan card
-                        _StaffNavCard(
-                          icon: HugeIcons.strokeRoundedTask01,
-                          iconColor: const Color(0xFFE65100),
-                          bgColor: const Color(0xFFFBE9E7),
-                          darkBgColor: const Color(0xFF3E1A0A),
-                          title: 'Pesanan',
-                          subtitle: 'Semak dan uruskan pesanan pelanggan',
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const StaffDashboard(initialTab: 0),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Stok Inventori card
-                        _StaffNavCard(
-                          icon: HugeIcons.strokeRoundedPackage,
-                          iconColor: const Color(0xFF2E7D32),
-                          bgColor: const Color(0xFFE8F5E9),
-                          darkBgColor: const Color(0xFF0D2E10),
-                          title: 'Stok Inventori',
-                          subtitle: 'Kemaskini dan pantau stok keropok leker',
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const StaffDashboard(initialTab: 1),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Selamat datang, $name 👋',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  'Staff NACHOZYYY',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+          const SizedBox(height: 24),
+          const Text(
+            'Ringkasan Hari Ini',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 14),
+
+          // ── Stats cards ─────────────────────────────────────────────────────
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: ordersStream,
+            builder: (context, snap) {
+              final orders = snap.data ?? [];
+              final pending = orders.where((o) => o['status'] != 'Delivered').length;
+              final delivered = orders.where((o) => o['status'] == 'Delivered').length;
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Jumlah Pesanan',
+                      value: '${orders.length}',
+                      icon: HugeIcons.strokeRoundedShoppingCart01,
+                      color: const Color(0xFF5C6BC0),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Belum Hantar',
+                      value: '$pending',
+                      icon: HugeIcons.strokeRoundedClock01,
+                      color: const Color(0xFFE65100),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Selesai',
+                      value: '$delivered',
+                      icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                      color: const Color(0xFF2E7D32),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Stock summary ───────────────────────────────────────────────────
+          const Text(
+            'Status Stok',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 14),
+
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: inventoryStream,
+            builder: (context, snap) {
+              if (!snap.hasData || snap.data!.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final inv = snap.data!.first;
+              final hotStock = inv['hot_stock'] as int? ?? 0;
+              final bbqStock = inv['bbq_stock'] as int? ?? 0;
+
+              return Column(
+                children: [
+                  _StockSummaryTile(
+                    label: 'HOT & SPICYYY 🌶️',
+                    stock: hotStock,
+                  ),
+                  const SizedBox(height: 10),
+                  _StockSummaryTile(
+                    label: 'BBQ 🍖',
+                    stock: bbqStock,
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+
+          // ── Recent orders ───────────────────────────────────────────────────
+          const Text(
+            'Pesanan Terbaru',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 14),
+
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: ordersStream,
+            builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final orders = snap.data ?? [];
+              if (orders.isEmpty) {
+                return const Center(child: Text('Belum ada pesanan.'));
+              }
+              final recent = orders.take(3).toList();
+              return Column(
+                children: recent
+                    .map((o) => _StaffOrderCard(order: o))
+                    .toList(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 }
 
-class _StaffNavCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
+  final String label;
+  final String value;
   final List<List<dynamic>> icon;
-  final Color iconColor;
-  final Color bgColor;
-  final Color darkBgColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
+  final Color color;
 
-  const _StaffNavCard({
+  const _StatCard({
+    required this.label,
+    required this.value,
     required this.icon,
-    required this.iconColor,
-    required this.bgColor,
-    required this.darkBgColor,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Material(
-      color: isDark ? darkBgColor : bgColor,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-          child: Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: HugeIcon(icon: icon, color: iconColor, size: 26),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
-            ],
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isDark ? color.withValues(alpha: 0.15) : color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          HugeIcon(icon: icon, color: color, size: 22),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
-        ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ─── Staff Dashboard (Tab View) ───────────────────────────────────────────────
+class _StockSummaryTile extends StatelessWidget {
+  final String label;
+  final int stock;
 
-class StaffDashboard extends StatefulWidget {
-  final int initialTab;
-  const StaffDashboard({super.key, this.initialTab = 0});
-
-  @override
-  State<StaffDashboard> createState() => _StaffDashboardState();
-}
-
-class _StaffDashboardState extends State<StaffDashboard> {
-  Future<void> _logout(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
-    if (context.mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-        (route) => false,
-      );
-    }
-  }
+  const _StockSummaryTile({required this.label, required this.stock});
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      initialIndex: widget.initialTab,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Staff Dashboard 🧑‍💼'),
-          actions: [
-            IconButton(
-              icon: const HugeIcon(icon: HugeIcons.strokeRoundedLogout01, color: Colors.white, size: 24),
-              onPressed: () => _logout(context),
-            ),
-          ],
-          bottom: const TabBar(
-            tabs: [
-              Tab(icon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: Colors.white, size: 24), text: 'Pesanan'),
-              Tab(icon: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: Colors.white, size: 24), text: 'Stok Inventori'),
-            ],
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
+    final isSoldOut = stock <= 0;
+    final color = isSoldOut ? Colors.red : Colors.green;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
           ),
-        ),
-        body: const TabBarView(
-          children: [
-            _OrdersTab(),
-            _InventoryTab(),
-          ],
-        ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isSoldOut ? 'SOLD OUT' : '$stock pek',
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// ─── Page 1: Pesanan ──────────────────────────────────────────────────────────
 
 class _OrdersTab extends StatelessWidget {
   const _OrdersTab();
@@ -336,16 +416,28 @@ class _StaffOrderCard extends StatelessWidget {
 
   const _StaffOrderCard({required this.order});
 
+  Future<void> _markPaid(BuildContext context) async {
+    try {
+      await Supabase.instance.client
+          .from('orders')
+          .update({'payment_status': 'Paid'}).eq('id', order['id']);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   Future<void> _markDelivered(BuildContext context) async {
     try {
       await _tryUpdateStatus();
     } catch (e) {
-      // First error, wait 1 second and try again
       await Future.delayed(const Duration(seconds: 1));
       try {
         await _tryUpdateStatus();
       } catch (e2) {
-        // Second fail, show snackbar
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -361,8 +453,7 @@ class _StaffOrderCard extends StatelessWidget {
   Future<void> _tryUpdateStatus() async {
     await Supabase.instance.client
         .from('orders')
-        .update({'status': 'Delivered'})
-        .eq('id', order['id']);
+        .update({'status': 'Delivered'}).eq('id', order['id']);
   }
 
   @override
@@ -375,6 +466,8 @@ class _StaffOrderCard extends StatelessWidget {
     final phone = order['phone_number'] ?? 'Unknown';
     final delivery = order['delivery_option'] ?? 'Unknown';
     final status = order['status'] ?? 'Pending';
+    final paymentStatus = order['payment_status'] ?? 'Pending Payment';
+    final isPaid = paymentStatus == 'Paid';
     final isDelivered = status == 'Delivered';
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -382,7 +475,11 @@ class _StaffOrderCard extends StatelessWidget {
     return Card(
       elevation: 2,
       margin: const EdgeInsets.only(bottom: 12),
-      color: isDelivered ? (isDark ? Colors.green.shade900.withValues(alpha: 0.3) : Colors.green.shade50) : null,
+      color: isDelivered
+          ? (isDark
+              ? Colors.green.shade900.withValues(alpha: 0.3)
+              : Colors.green.shade50)
+          : null,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -392,8 +489,20 @@ class _StaffOrderCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(child: Text(customerName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))),
-                Text(status, style: TextStyle(fontWeight: FontWeight.bold, color: isDelivered ? Colors.green : Colors.orange)),
+                Expanded(
+                  child: Text(
+                    customerName,
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                Text(
+                  status,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDelivered ? Colors.green : Colors.orange,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 4),
@@ -403,16 +512,55 @@ class _StaffOrderCard extends StatelessWidget {
             if (bbqQty > 0) Text('- BBQ x$bbqQty'),
             if (addCheese) const Text('- Cheese Dip'),
             const SizedBox(height: 8),
-            Text('Lokasi: $delivery', style: const TextStyle(fontWeight: FontWeight.w500)),
-            Text('Total: RM ${totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text('Lokasi: $delivery',
+                style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text('Total: RM ${totalPrice.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.w500)),
+            const SizedBox(height: 8),
+            // Payment status row
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isPaid ? Colors.green : Colors.orange,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            if (!isPaid) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _markPaid(context),
+                  icon: const Icon(Icons.payments_outlined, color: Colors.white, size: 18),
+                  label: const Text('Tandakan Dibayar', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+              ),
+            ],
             if (!isDelivered) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () => _markDelivered(context),
-                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle01, color: Colors.green, size: 20),
-                  label: const Text('Mark as Delivered', style: TextStyle(color: Colors.green)),
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                    color: Colors.green,
+                    size: 20,
+                  ),
+                  label: const Text('Mark as Delivered',
+                      style: TextStyle(color: Colors.green)),
                 ),
               ),
             ]
@@ -423,6 +571,8 @@ class _StaffOrderCard extends StatelessWidget {
   }
 }
 
+// ─── Page 2: Stok Inventori ───────────────────────────────────────────────────
+
 class _InventoryTab extends StatelessWidget {
   const _InventoryTab();
 
@@ -430,8 +580,7 @@ class _InventoryTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final inventoryStream = Supabase.instance.client
         .from('inventory')
-        .stream(primaryKey: ['id'])
-        .eq('id', 1);
+        .stream(primaryKey: ['id']).eq('id', 1);
 
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: inventoryStream,
@@ -439,8 +588,12 @@ class _InventoryTab extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
-          return Center(child: Text('Sila cipta table inventory di Supabase. Error: ${snapshot.error}'));
+        if (snapshot.hasError ||
+            snapshot.data == null ||
+            snapshot.data!.isEmpty) {
+          return Center(
+              child: Text(
+                  'Sila cipta table inventory di Supabase. Error: ${snapshot.error}'));
         }
 
         final inv = snapshot.data!.first;
@@ -451,9 +604,15 @@ class _InventoryTab extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              _StockUpdater(flavor: 'HOT & SPICYYY 🌶️', dbColumn: 'hot_stock', currentStock: hotStock),
+              _StockUpdater(
+                  flavor: 'HOT & SPICYYY 🌶️',
+                  dbColumn: 'hot_stock',
+                  currentStock: hotStock),
               const SizedBox(height: 20),
-              _StockUpdater(flavor: 'BBQ 🍖', dbColumn: 'bbq_stock', currentStock: bbqStock),
+              _StockUpdater(
+                  flavor: 'BBQ 🍖',
+                  dbColumn: 'bbq_stock',
+                  currentStock: bbqStock),
             ],
           ),
         );
@@ -467,7 +626,11 @@ class _StockUpdater extends StatefulWidget {
   final String dbColumn;
   final int currentStock;
 
-  const _StockUpdater({required this.flavor, required this.dbColumn, required this.currentStock, super.key});
+  const _StockUpdater(
+      {required this.flavor,
+      required this.dbColumn,
+      required this.currentStock,
+      super.key});
 
   @override
   State<_StockUpdater> createState() => _StockUpdaterState();
@@ -482,11 +645,11 @@ class _StockUpdaterState extends State<_StockUpdater> {
       final newStock = widget.currentStock + amount;
       await Supabase.instance.client
           .from('inventory')
-          .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
-          .eq('id', 1);
+          .update({widget.dbColumn: newStock < 0 ? 0 : newStock}).eq('id', 1);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Ralat: $e')));
       }
     }
   }
@@ -499,11 +662,12 @@ class _StockUpdaterState extends State<_StockUpdater> {
       try {
         await Supabase.instance.client
             .from('inventory')
-            .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
-            .eq('id', 1);
+            .update(
+                {widget.dbColumn: newStock < 0 ? 0 : newStock}).eq('id', 1);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Ralat: $e')));
         }
       }
     });
@@ -523,7 +687,9 @@ class _StockUpdaterState extends State<_StockUpdater> {
       ),
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(
-          left: 24, right: 24, top: 24,
+          left: 24,
+          right: 24,
+          top: 24,
           bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
         ),
         child: Column(
@@ -532,7 +698,8 @@ class _StockUpdaterState extends State<_StockUpdater> {
           children: [
             Text(
               'Set Stok: ${widget.flavor}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -540,7 +707,8 @@ class _StockUpdaterState extends State<_StockUpdater> {
               autofocus: true,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               decoration: const InputDecoration(
                 labelText: 'Jumlah stok',
                 border: OutlineInputBorder(),
@@ -586,26 +754,33 @@ class _StockUpdaterState extends State<_StockUpdater> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(widget.flavor, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(widget.flavor,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
                 if (isSoldOut)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(8)),
-                    child: const Text('SOLD OUT', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(8)),
+                    child: const Text('SOLD OUT',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12)),
                   ),
               ],
             ),
             const SizedBox(height: 20),
-            // Counter Row: [-] [number] [+]
             Row(
               children: [
-                // Minus button
                 _CounterButton(
                   icon: HugeIcons.strokeRoundedMinusSign,
                   color: Colors.orange,
-                  onPressed: widget.currentStock > 0 ? () => _adjustStock(-1) : null,
+                  onPressed:
+                      widget.currentStock > 0 ? () => _adjustStock(-1) : null,
                 ),
-                // Middle: tappable number display
                 Expanded(
                   child: GestureDetector(
                     onTap: _showManualInput,
@@ -631,14 +806,14 @@ class _StockUpdaterState extends State<_StockUpdater> {
                           Text(
                             'pek  •  ketuk untuk edit',
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey.shade500),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                // Plus button
                 _CounterButton(
                   icon: HugeIcons.strokeRoundedPlusSign,
                   color: Colors.green,
@@ -658,7 +833,8 @@ class _CounterButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onPressed;
 
-  const _CounterButton({required this.icon, required this.color, this.onPressed});
+  const _CounterButton(
+      {required this.icon, required this.color, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -672,7 +848,9 @@ class _CounterButton extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            border: Border.all(color: onPressed != null ? color : Colors.grey.shade400, width: 2),
+            border: Border.all(
+                color: onPressed != null ? color : Colors.grey.shade400,
+                width: 2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
@@ -687,4 +865,3 @@ class _CounterButton extends StatelessWidget {
     );
   }
 }
-

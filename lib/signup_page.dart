@@ -14,7 +14,6 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _staffCodeController = TextEditingController();
   bool _isLoading = false;
-  bool _isStaffRegistration = false;
   bool _obscurePassword = true;
   bool _obscureStaffCode = true;
   bool _usePhone = false;
@@ -23,10 +22,7 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _isLoading = true);
     try {
       bool isStaff = false;
-      if (_isStaffRegistration) {
-        if (_staffCodeController.text != 'ENT300') {
-          throw Exception('Kod Staff tidak sah!');
-        }
+      if (_staffCodeController.text.trim() == 'STAFFENT300') {
         isStaff = true;
       }
 
@@ -158,49 +154,37 @@ class _SignupPageState extends State<SignupPage> {
                 obscureText: _obscurePassword,
               ),
               const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Saya adalah Staff ENT300'),
-                value: _isStaffRegistration,
-                onChanged: (val) => setState(() => _isStaffRegistration = val),
-                secondary: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedUserGroup,
-                  color: Colors.amber,
-                  size: 24,
-                ),
-              ),
-              if (_isStaffRegistration) ...[
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _staffCodeController,
-                  decoration: InputDecoration(
-                    labelText: 'Kod Rahsia Staff',
-                    prefixIcon: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedShield01,
-                        color: Colors.grey,
-                        size: 20,
-                      ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _staffCodeController,
+                decoration: InputDecoration(
+                  labelText: 'Kod Promosi / Rujukan (Pilihan)',
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedGiftCard,
+                      color: Colors.grey,
+                      size: 20,
                     ),
-                    suffixIcon: IconButton(
-                      icon: HugeIcon(
-                        icon: _obscureStaffCode
-                            ? HugeIcons.strokeRoundedViewOff
-                            : HugeIcons.strokeRoundedView,
-                        color: Colors.grey,
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscureStaffCode = !_obscureStaffCode;
-                        });
-                      },
-                    ),
-                    border: const OutlineInputBorder(),
                   ),
-                  obscureText: _obscureStaffCode,
+                  suffixIcon: IconButton(
+                    icon: HugeIcon(
+                      icon: _obscureStaffCode
+                          ? HugeIcons.strokeRoundedViewOff
+                          : HugeIcons.strokeRoundedView,
+                      color: Colors.grey,
+                      size: 20,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureStaffCode = !_obscureStaffCode;
+                      });
+                    },
+                  ),
+                  border: const OutlineInputBorder(),
                 ),
-              ],
+                obscureText: _obscureStaffCode,
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _signUp,

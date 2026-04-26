@@ -338,9 +338,11 @@ class _DashboardPage extends StatelessWidget {
                     children: [
                       Icon(Icons.check_circle_outline, color: Colors.green),
                       SizedBox(width: 12),
-                      Text(
-                        'Tiada pesanan menunggu penghantaran.',
-                        style: TextStyle(color: Colors.green),
+                      Expanded(
+                        child: Text(
+                          'Tiada pesanan menunggu penghantaran.',
+                          style: TextStyle(color: Colors.green),
+                        ),
                       ),
                     ],
                   ),
@@ -830,6 +832,8 @@ class _StaffOrderCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     customerName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -854,6 +858,8 @@ class _StaffOrderCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Lokasi: $delivery',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
             Text(

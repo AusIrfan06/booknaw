@@ -45,7 +45,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           builder: (context) => AlertDialog(
             title: const Text('Email Dihantar! 📧'),
             content: const Text(
-                'Sila semak peti masuk email anda untuk pautan tetapan semula katalaluan.\n\nNota: Pastikan anda telah menukar "Site URL" di Supabase Dashboard agar pautan ini berfungsi.'),
+                'Sila semak peti masuk email anda untuk pautan tetapan semula katalaluan.\n\n'
+                '💡 Tip: Jika anda tidak menemui email, sila semak folder SPAM anda.'),
             actions: [
               TextButton(
                 onPressed: () {

@@ -143,8 +143,7 @@ class _DashboardPage extends StatelessWidget {
 
     final inventoryStream = Supabase.instance.client
         .from('inventory')
-        .stream(primaryKey: ['id'])
-        .eq('id', 1);
+        .stream(primaryKey: ['id']);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -215,39 +214,48 @@ class _DashboardPage extends StatelessWidget {
                 return sum;
               });
 
-              return GridView.count(
+              return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.6,
-                children: [
-                  _StatCard(
-                    label: 'Jumlah Pesanan',
-                    value: '${orders.length}',
-                    icon: HugeIcons.strokeRoundedShoppingCart01,
-                    color: const Color(0xFF5C6BC0),
-                  ),
-                  _StatCard(
-                    label: 'Jualan (RM)',
-                    value: totalSales.toStringAsFixed(2),
-                    icon: HugeIcons.strokeRoundedWallet01,
-                    color: Colors.green,
-                  ),
-                  _StatCard(
-                    label: 'Belum Hantar',
-                    value: '$pending',
-                    icon: HugeIcons.strokeRoundedClock01,
-                    color: const Color(0xFFE65100),
-                  ),
-                  _StatCard(
-                    label: 'Selesai',
-                    value: '$delivered',
-                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                    color: const Color(0xFF2E7D32),
-                  ),
-                ],
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 250,
+                  mainAxisExtent: 110,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: 4,
+                itemBuilder: (context, index) {
+                  switch (index) {
+                    case 0:
+                      return _StatCard(
+                        label: 'Jumlah Pesanan',
+                        value: '${orders.length}',
+                        icon: HugeIcons.strokeRoundedShoppingCart01,
+                        color: const Color(0xFF5C6BC0),
+                      );
+                    case 1:
+                      return _StatCard(
+                        label: 'Jualan (RM)',
+                        value: totalSales.toStringAsFixed(2),
+                        icon: HugeIcons.strokeRoundedWallet01,
+                        color: Colors.green,
+                      );
+                    case 2:
+                      return _StatCard(
+                        label: 'Belum Hantar',
+                        value: '$pending',
+                        icon: HugeIcons.strokeRoundedClock01,
+                        color: const Color(0xFFE65100),
+                      );
+                    default:
+                      return _StatCard(
+                        label: 'Selesai',
+                        value: '$delivered',
+                        icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                        color: const Color(0xFF2E7D32),
+                      );
+                  }
+                },
               );
             },
           ),
@@ -267,18 +275,18 @@ class _DashboardPage extends StatelessWidget {
               if (!snap.hasData || snap.data!.isEmpty) {
                 return const Center(child: CircularProgressIndicator());
               }
-              final inv = snap.data!.first;
-              final hotStock = inv['hot_stock'] as int? ?? 0;
-              final bbqStock = inv['bbq_stock'] as int? ?? 0;
+              final data = snap.data!;
+              final hotTotal = data.fold<int>(0, (sum, row) => sum + (row['hot_stock'] as int? ?? 0));
+              final bbqTotal = data.fold<int>(0, (sum, row) => sum + (row['bbq_stock'] as int? ?? 0));
 
               return Column(
                 children: [
                   _StockSummaryTile(
-                    label: 'HOT & SPICYYY 🌶️',
-                    stock: hotStock,
+                    label: 'Jumlah Keseluruhan HOT & SPICYYY 🌶️',
+                    stock: hotTotal,
                   ),
                   const SizedBox(height: 10),
-                  _StockSummaryTile(label: 'BBQ 🍖', stock: bbqStock),
+                  _StockSummaryTile(label: 'Jumlah Keseluruhan BBQ 🍖', stock: bbqTotal),
                 ],
               );
             },
@@ -772,44 +780,79 @@ class _DeliveryTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ordersStream = Supabase.instance.client
-        .from('orders')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false);
-
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: ordersStream,
-      builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final orders = snap.data ?? [];
-        final deliveries = orders
-            .where(
-              (o) =>
-                  (o['payment_status'] ?? '') == 'Paid' &&
-                  (o['status'] ?? '') != 'Delivered' &&
-                  (o['delivery_option'] as String? ?? '').startsWith(
-                    'Delivery',
-                  ),
-            )
-            .toList();
-
-        if (deliveries.isEmpty) {
-          return const Center(
-            child: Text(
-              'Tiada pesanan penghantaran yang perlu dihantar.',
-              style: TextStyle(fontSize: 15, color: Colors.grey),
+    return DefaultTabController(
+      length: 4,
+      child: Column(
+        children: [
+          Container(
+            color: Theme.of(context).colorScheme.surface,
+            child: const TabBar(
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              tabs: [
+                Tab(text: 'Alpha'),
+                Tab(text: 'Beta'),
+                Tab(text: 'Gamma'),
+                Tab(text: 'Non Resident (NR)'),
+              ],
             ),
-          );
-        }
+          ),
+          Expanded(
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: Supabase.instance.client
+                  .from('orders')
+                  .stream(primaryKey: ['id'])
+                  .order('created_at', ascending: false),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final orders = snap.data ?? [];
+                final activeOrders = orders.where((o) =>
+                    (o['payment_status'] ?? '') == 'Paid' &&
+                    (o['status'] ?? '') != 'Delivered').toList();
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: deliveries.length,
-          itemBuilder: (context, i) => _DeliveryOrderCard(order: deliveries[i]),
-        );
-      },
+                return TabBarView(
+                  children: [
+                    _DeliveryList(orders: activeOrders, zone: 'Alpha'),
+                    _DeliveryList(orders: activeOrders, zone: 'Beta'),
+                    _DeliveryList(orders: activeOrders, zone: 'Gamma'),
+                    _DeliveryList(orders: activeOrders, zone: 'NR'),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DeliveryList extends StatelessWidget {
+  final List<Map<String, dynamic>> orders;
+  final String zone;
+
+  const _DeliveryList({required this.orders, required this.zone});
+
+  @override
+  Widget build(BuildContext context) {
+    final deliveries = orders.where((o) {
+      final opt = (o['delivery_option'] as String? ?? '');
+      return opt.contains(zone);
+    }).toList();
+
+    if (deliveries.isEmpty) {
+      return Center(
+        child: Text('Tiada pesanan untuk zon $zone.',
+            style: const TextStyle(fontSize: 15, color: Colors.grey)),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: deliveries.length,
+      itemBuilder: (context, i) => _DeliveryOrderCard(order: deliveries[i]),
     );
   }
 }
@@ -988,6 +1031,13 @@ class _DeliveryOrderCard extends StatelessWidget {
 
 // ─── Page 3: Stok Inventori ───────────────────────────────────────────────────
 
+const _inventoryLocations = [
+  {'id': 1, 'name': 'Alpha'},
+  {'id': 2, 'name': 'Beta'},
+  {'id': 3, 'name': 'Gamma'},
+  {'id': 4, 'name': 'Non Resident (NR)'},
+];
+
 class _InventoryTab extends StatelessWidget {
   const _InventoryTab();
 
@@ -996,7 +1046,7 @@ class _InventoryTab extends StatelessWidget {
     final inventoryStream = Supabase.instance.client
         .from('inventory')
         .stream(primaryKey: ['id'])
-        .eq('id', 1);
+        .order('id');
 
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: inventoryStream,
@@ -1004,34 +1054,58 @@ class _InventoryTab extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        if (snapshot.hasError ||
-            snapshot.data == null ||
-            snapshot.data!.isEmpty) {
-          return Center(
-            child: Text(
-              'Sila cipta table inventory di Supabase. Error: ${snapshot.error}',
-            ),
-          );
-        }
 
-        final inv = snapshot.data!.first;
-        final hotStock = inv['hot_stock'] as int? ?? 0;
-        final bbqStock = inv['bbq_stock'] as int? ?? 0;
+        final data = snapshot.data ?? [];
 
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
+        return DefaultTabController(
+          length: 4,
           child: Column(
             children: [
-              _StockUpdater(
-                flavor: 'HOT & SPICYYY 🌶️',
-                dbColumn: 'hot_stock',
-                currentStock: hotStock,
+              Container(
+                color: Theme.of(context).colorScheme.surface,
+                child: const TabBar(
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
+                  tabs: [
+                    Tab(text: 'Alpha'),
+                    Tab(text: 'Beta'),
+                    Tab(text: 'Gamma'),
+                    Tab(text: 'NR'),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              _StockUpdater(
-                flavor: 'BBQ 🍖',
-                dbColumn: 'bbq_stock',
-                currentStock: bbqStock,
+              Expanded(
+                child: TabBarView(
+                  children: _inventoryLocations.map((loc) {
+                    final row = data.firstWhere(
+                      (r) => r['id'] == loc['id'],
+                      orElse: () => <String, dynamic>{},
+                    );
+                    final hotStock = row['hot_stock'] as int? ?? 0;
+                    final bbqStock = row['bbq_stock'] as int? ?? 0;
+
+                    return ListView(
+                      padding: const EdgeInsets.all(16.0),
+                      children: [
+                        _StockUpdater(
+                          locationId: loc['id'] as int,
+                          flavor: 'HOT & SPICYYY 🌶️',
+                          dbColumn: 'hot_stock',
+                          currentStock: hotStock,
+                          currentRow: row,
+                        ),
+                        const SizedBox(height: 20),
+                        _StockUpdater(
+                          locationId: loc['id'] as int,
+                          flavor: 'BBQ 🍖',
+                          dbColumn: 'bbq_stock',
+                          currentStock: bbqStock,
+                          currentRow: row,
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
               ),
             ],
           ),
@@ -1042,14 +1116,18 @@ class _InventoryTab extends StatelessWidget {
 }
 
 class _StockUpdater extends StatefulWidget {
+  final int locationId;
   final String flavor;
   final String dbColumn;
   final int currentStock;
+  final Map<String, dynamic> currentRow;
 
   const _StockUpdater({
+    required this.locationId,
     required this.flavor,
     required this.dbColumn,
     required this.currentStock,
+    required this.currentRow,
     super.key,
   });
 
@@ -1064,15 +1142,17 @@ class _StockUpdaterState extends State<_StockUpdater> {
   Future<void> _adjustStock(int amount) async {
     try {
       final newStock = widget.currentStock + amount;
-      await Supabase.instance.client
-          .from('inventory')
-          .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
-          .eq('id', 1);
+      final payload = {
+        'id': widget.locationId,
+        'hot_stock': widget.currentRow['hot_stock'] ?? 0,
+        'bbq_stock': widget.currentRow['bbq_stock'] ?? 0,
+      };
+      payload[widget.dbColumn] = newStock < 0 ? 0 : newStock;
+
+      await Supabase.instance.client.from('inventory').upsert(payload);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
       }
     }
   }
@@ -1083,15 +1163,17 @@ class _StockUpdaterState extends State<_StockUpdater> {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 600), () async {
       try {
-        await Supabase.instance.client
-            .from('inventory')
-            .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
-            .eq('id', 1);
+        final payload = {
+          'id': widget.locationId,
+          'hot_stock': widget.currentRow['hot_stock'] ?? 0,
+          'bbq_stock': widget.currentRow['bbq_stock'] ?? 0,
+        };
+        payload[widget.dbColumn] = newStock < 0 ? 0 : newStock;
+
+        await Supabase.instance.client.from('inventory').upsert(payload);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
         }
       }
     });

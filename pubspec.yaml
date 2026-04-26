@@ -30,8 +30,12 @@ flutter_launcher_icons:
 flutter_native_splash:
   color: "#ffffff"
   image: "assets/logo.png"
+  color_dark: "#121212"
+  image_dark: "assets/logo.png"
   android_12:
     image: "assets/logo.png"
+    icon_background_color: "#ffffff"
+    icon_background_color_dark: "#121212"
 
 flutter:
   uses-material-design: true

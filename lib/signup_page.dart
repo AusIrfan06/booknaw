@@ -17,7 +17,7 @@ class _SignupPageState extends State<SignupPage> {
   final _passwordController = TextEditingController();
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  final _phoneController = TextEditingController(text: '+60');
+  final _phoneController = TextEditingController();
   final _staffCodeController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -39,7 +39,7 @@ class _SignupPageState extends State<SignupPage> {
       }
 
       String email = _emailController.text.trim();
-      String phone = _phoneController.text.trim();
+      String phone = '+60${_phoneController.text.trim()}';
 
       await Supabase.instance.client.auth.signUp(
         email: email,
@@ -195,6 +195,7 @@ class _SignupPageState extends State<SignupPage> {
                           icon: HugeIcons.strokeRoundedSmartPhone01,
                           isDark: isDark,
                           keyboardType: TextInputType.phone,
+                          prefixText: '+60 ',
                         ),
                         const SizedBox(height: 16),
                         _buildGlassField(
@@ -269,6 +270,7 @@ class _SignupPageState extends State<SignupPage> {
     bool obscureText = false,
     Widget? suffixIcon,
     TextInputType? keyboardType,
+    String? prefixText,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -284,6 +286,8 @@ class _SignupPageState extends State<SignupPage> {
         decoration: InputDecoration(
           labelText: label,
           labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14),
+          prefixText: prefixText,
+          prefixStyle: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontWeight: FontWeight.bold),
           prefixIcon: icon != null ? Padding(
             padding: const EdgeInsets.all(12.0),
             child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20),

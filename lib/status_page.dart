@@ -483,9 +483,7 @@ class _CustomerOrderCard extends StatelessWidget {
                       );
                       const lysaNumber = '60132163194';
                       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
-                      if (await canLaunchUrl(waUrl)) {
-                        await launchUrl(waUrl, mode: LaunchMode.externalApplication);
-                      }
+                      await launchUrl(waUrl, mode: LaunchMode.externalApplication);
                     },
                     icon: const Icon(Icons.payment),
                     label: const Text('Hubungi & Buat Bayaran'),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:hugeicons/hugeicons.dart';
 import 'home_page.dart';
@@ -27,13 +28,19 @@ class _StaffDashboardState extends State<StaffDashboard> {
     }
   }
 
-  static const _titles = ['Dashboard', 'Pesanan', 'Stok Inventori'];
+  static const _titles = [
+    'Dashboard',
+    'Pesanan',
+    'Penghantaran',
+    'Stok Inventori',
+  ];
 
   @override
   Widget build(BuildContext context) {
     final pages = [
       const _DashboardPage(),
       const _OrdersTab(),
+      const _DeliveryTab(),
       const _InventoryTab(),
     ];
 
@@ -53,10 +60,7 @@ class _StaffDashboardState extends State<StaffDashboard> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
@@ -91,6 +95,19 @@ class _StaffDashboardState extends State<StaffDashboard> {
           ),
           BottomNavigationBarItem(
             icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedDeliveryTruck01,
+              color: Colors.grey,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedDeliveryTruck01,
+              color: Color(0xFFFF5722),
+              size: 24,
+            ),
+            label: 'Hantar',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
               icon: HugeIcons.strokeRoundedPackage,
               color: Colors.grey,
               size: 24,
@@ -100,7 +117,7 @@ class _StaffDashboardState extends State<StaffDashboard> {
               color: Color(0xFFFF5722),
               size: 24,
             ),
-            label: 'Stok Inventori',
+            label: 'Stok',
           ),
         ],
       ),
@@ -181,36 +198,54 @@ class _DashboardPage extends StatelessWidget {
             stream: ordersStream,
             builder: (context, snap) {
               final orders = snap.data ?? [];
-              final pending = orders.where((o) => o['status'] != 'Delivered').length;
-              final delivered = orders.where((o) => o['status'] == 'Delivered').length;
+              final pending = orders
+                  .where((o) => o['status'] != 'Delivered')
+                  .length;
+              final delivered = orders
+                  .where((o) => o['status'] == 'Delivered')
+                  .length;
+              final paidOrders = orders.where(
+                (o) => o['payment_status'] == 'Paid',
+              );
+              final totalSales = paidOrders.fold<double>(0.0, (sum, o) {
+                final price = o['total_price'];
+                if (price is num) return sum + price.toDouble();
+                if (price is String)
+                  return sum + (double.tryParse(price) ?? 0.0);
+                return sum;
+              });
 
-              return Row(
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1.6,
                 children: [
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Jumlah Pesanan',
-                      value: '${orders.length}',
-                      icon: HugeIcons.strokeRoundedShoppingCart01,
-                      color: const Color(0xFF5C6BC0),
-                    ),
+                  _StatCard(
+                    label: 'Jumlah Pesanan',
+                    value: '${orders.length}',
+                    icon: HugeIcons.strokeRoundedShoppingCart01,
+                    color: const Color(0xFF5C6BC0),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Belum Hantar',
-                      value: '$pending',
-                      icon: HugeIcons.strokeRoundedClock01,
-                      color: const Color(0xFFE65100),
-                    ),
+                  _StatCard(
+                    label: 'Jualan (RM)',
+                    value: totalSales.toStringAsFixed(2),
+                    icon: HugeIcons.strokeRoundedWallet01,
+                    color: Colors.green,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _StatCard(
-                      label: 'Selesai',
-                      value: '$delivered',
-                      icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                      color: const Color(0xFF2E7D32),
-                    ),
+                  _StatCard(
+                    label: 'Belum Hantar',
+                    value: '$pending',
+                    icon: HugeIcons.strokeRoundedClock01,
+                    color: const Color(0xFFE65100),
+                  ),
+                  _StatCard(
+                    label: 'Selesai',
+                    value: '$delivered',
+                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                    color: const Color(0xFF2E7D32),
                   ),
                 ],
               );
@@ -243,10 +278,7 @@ class _DashboardPage extends StatelessWidget {
                     stock: hotStock,
                   ),
                   const SizedBox(height: 10),
-                  _StockSummaryTile(
-                    label: 'BBQ 🍖',
-                    stock: bbqStock,
-                  ),
+                  _StockSummaryTile(label: 'BBQ 🍖', stock: bbqStock),
                 ],
               );
             },
@@ -270,9 +302,11 @@ class _DashboardPage extends StatelessWidget {
               final orders = snap.data ?? [];
               // Only paid, not yet delivered
               final readyOrders = orders
-                  .where((o) =>
-                      (o['payment_status'] ?? '') == 'Paid' &&
-                      (o['status'] ?? '') != 'Delivered')
+                  .where(
+                    (o) =>
+                        (o['payment_status'] ?? '') == 'Paid' &&
+                        (o['status'] ?? '') != 'Delivered',
+                  )
                   .toList();
 
               if (readyOrders.isEmpty) {
@@ -281,14 +315,18 @@ class _DashboardPage extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.green.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: const Row(
                     children: [
                       Icon(Icons.check_circle_outline, color: Colors.green),
                       SizedBox(width: 12),
-                      Text('Tiada pesanan menunggu penghantaran.',
-                          style: TextStyle(color: Colors.green)),
+                      Text(
+                        'Tiada pesanan menunggu penghantaran.',
+                        style: TextStyle(color: Colors.green),
+                      ),
                     ],
                   ),
                 );
@@ -326,7 +364,9 @@ class _StatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? color.withValues(alpha: 0.15) : color.withValues(alpha: 0.08),
+        color: isDark
+            ? color.withValues(alpha: 0.15)
+            : color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: color.withValues(alpha: 0.2)),
       ),
@@ -374,7 +414,10 @@ class _StockSummaryTile extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -384,7 +427,11 @@ class _StockSummaryTile extends StatelessWidget {
             ),
             child: Text(
               isSoldOut ? 'SOLD OUT' : '$stock pek',
-              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -407,10 +454,10 @@ class _OrdersTabState extends State<_OrdersTab>
   late TabController _tabController;
 
   static const _tabs = [
-    (label: 'Semua',       icon: Icons.list_alt_rounded),
+    (label: 'Semua', icon: Icons.list_alt_rounded),
     (label: 'Belum Bayar', icon: Icons.hourglass_empty_rounded),
-    (label: 'Dibayar',     icon: Icons.payments_outlined),
-    (label: 'Selesai',     icon: Icons.check_circle_outline_rounded),
+    (label: 'Dibayar', icon: Icons.payments_outlined),
+    (label: 'Selesai', icon: Icons.check_circle_outline_rounded),
   ];
 
   @override
@@ -425,8 +472,7 @@ class _OrdersTabState extends State<_OrdersTab>
     super.dispose();
   }
 
-  List<Map<String, dynamic>> _filter(
-      List<Map<String, dynamic>> orders, int i) {
+  List<Map<String, dynamic>> _filter(List<Map<String, dynamic>> orders, int i) {
     switch (i) {
       case 1:
         return orders
@@ -434,14 +480,14 @@ class _OrdersTabState extends State<_OrdersTab>
             .toList();
       case 2:
         return orders
-            .where((o) =>
-                (o['payment_status'] ?? '') == 'Paid' &&
-                (o['status'] ?? '') != 'Delivered')
+            .where(
+              (o) =>
+                  (o['payment_status'] ?? '') == 'Paid' &&
+                  (o['status'] ?? '') != 'Delivered',
+            )
             .toList();
       case 3:
-        return orders
-            .where((o) => (o['status'] ?? '') == 'Delivered')
-            .toList();
+        return orders.where((o) => (o['status'] ?? '') == 'Delivered').toList();
       default:
         return orders;
     }
@@ -467,15 +513,17 @@ class _OrdersTabState extends State<_OrdersTab>
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white60,
             tabs: _tabs
-                .map((t) => Tab(
-                      child: Row(
-                        children: [
-                          Icon(t.icon, size: 16),
-                          const SizedBox(width: 6),
-                          Text(t.label),
-                        ],
-                      ),
-                    ))
+                .map(
+                  (t) => Tab(
+                    child: Row(
+                      children: [
+                        Icon(t.icon, size: 16),
+                        const SizedBox(width: 6),
+                        Text(t.label),
+                      ],
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -502,11 +550,16 @@ class _OrdersTabState extends State<_OrdersTab>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.inbox_outlined,
-                              size: 56, color: Colors.grey.shade400),
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 56,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 12),
-                          Text('Tiada pesanan "${_tabs[i].label}"',
-                              style: TextStyle(color: Colors.grey.shade600)),
+                          Text(
+                            'Tiada pesanan "${_tabs[i].label}"',
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
                         ],
                       ),
                     );
@@ -527,7 +580,6 @@ class _OrdersTabState extends State<_OrdersTab>
   }
 }
 
-
 class _StaffOrderCard extends StatelessWidget {
   final Map<String, dynamic> order;
 
@@ -537,7 +589,8 @@ class _StaffOrderCard extends StatelessWidget {
     try {
       await Supabase.instance.client
           .from('orders')
-          .update({'payment_status': 'Paid'}).eq('id', order['id']);
+          .update({'payment_status': 'Paid'})
+          .eq('id', order['id']);
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -570,7 +623,8 @@ class _StaffOrderCard extends StatelessWidget {
   Future<void> _tryUpdateStatus() async {
     await Supabase.instance.client
         .from('orders')
-        .update({'status': 'Delivered'}).eq('id', order['id']);
+        .update({'status': 'Delivered'})
+        .eq('id', order['id']);
   }
 
   @override
@@ -594,8 +648,8 @@ class _StaffOrderCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       color: isDelivered
           ? (isDark
-              ? Colors.green.shade900.withValues(alpha: 0.3)
-              : Colors.green.shade50)
+                ? Colors.green.shade900.withValues(alpha: 0.3)
+                : Colors.green.shade50)
           : null,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -610,7 +664,9 @@ class _StaffOrderCard extends StatelessWidget {
                   child: Text(
                     customerName,
                     style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 Text(
@@ -629,23 +685,34 @@ class _StaffOrderCard extends StatelessWidget {
             if (bbqQty > 0) Text('- BBQ x$bbqQty'),
             if (addCheese) const Text('- Cheese Dip'),
             const SizedBox(height: 8),
-            Text('Lokasi: $delivery',
-                style: const TextStyle(fontWeight: FontWeight.w500)),
-            Text('Total: RM ${totalPrice.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text(
+              'Lokasi: $delivery',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            Text(
+              'Total: RM ${totalPrice.toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 8),
             // Payment status row
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: isPaid ? Colors.green : Colors.orange,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
-                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -656,11 +723,20 @@ class _StaffOrderCard extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: () => _markPaid(context),
-                  icon: const Icon(Icons.payments_outlined, color: Colors.white, size: 18),
-                  label: const Text('Tandakan Dibayar', style: TextStyle(color: Colors.white)),
+                  icon: const Icon(
+                    Icons.payments_outlined,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'Tandakan Dibayar',
+                    style: TextStyle(color: Colors.white),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
               ),
@@ -676,11 +752,218 @@ class _StaffOrderCard extends StatelessWidget {
                     color: Colors.green,
                     size: 20,
                   ),
-                  label: const Text('Mark as Delivered',
-                      style: TextStyle(color: Colors.green)),
+                  label: const Text(
+                    'Mark as Delivered',
+                    style: TextStyle(color: Colors.green),
+                  ),
                 ),
               ),
-            ]
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+// ─── Page 2: Penghantaran ───────────────────────────────────────────────────
+
+class _DeliveryTab extends StatelessWidget {
+  const _DeliveryTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final ordersStream = Supabase.instance.client
+        .from('orders')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
+
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: ordersStream,
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final orders = snap.data ?? [];
+        final deliveries = orders
+            .where(
+              (o) =>
+                  (o['payment_status'] ?? '') == 'Paid' &&
+                  (o['status'] ?? '') != 'Delivered' &&
+                  (o['delivery_option'] as String? ?? '').startsWith(
+                    'Delivery',
+                  ),
+            )
+            .toList();
+
+        if (deliveries.isEmpty) {
+          return const Center(
+            child: Text(
+              'Tiada pesanan penghantaran yang perlu dihantar.',
+              style: TextStyle(fontSize: 15, color: Colors.grey),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: deliveries.length,
+          itemBuilder: (context, i) => _DeliveryOrderCard(order: deliveries[i]),
+        );
+      },
+    );
+  }
+}
+
+class _DeliveryOrderCard extends StatelessWidget {
+  final Map<String, dynamic> order;
+
+  const _DeliveryOrderCard({required this.order});
+
+  Future<void> _completeDeliveryAndWhatsApp(BuildContext context) async {
+    // Show confirmation dialog before sending WhatsApp
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sahkan Penghantaran'),
+        content: const Text(
+          'Anda pasti ingin selesaikan pesanan ini dan hantar mesej WhatsApp kepada pelanggan?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF25D366),
+            ),
+            child: const Text('Ya, Hantar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      // 1. Update status in Supabase
+      await Supabase.instance.client
+          .from('orders')
+          .update({'status': 'Delivered'})
+          .eq('id', order['id']);
+
+      // 2. Open WhatsApp to customer
+      String phone = order['phone_number'] ?? '';
+      // Ensure phone number starts with 6 for Malaysia if it starts with 0
+      if (phone.startsWith('0')) {
+        phone = '6$phone';
+      }
+      // Remove any non-numeric characters
+      phone = phone.replaceAll(RegExp(r'\D'), '');
+
+      final name = order['customer_name'] ?? 'Pelanggan';
+      final orderId = order['id'];
+      final waMessage = Uri.encodeComponent(
+        'Hi $name 👋\n\n'
+        'Kami dari NACHOZYYY 🌶️🧀\n'
+        'Pesanan anda (No. #$orderId) telah selamat dihantar!\n\n'
+        'Terima kasih kerana menyokong kami.',
+      );
+
+      final waUrl = Uri.parse('https://wa.me/$phone?text=$waMessage');
+      await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hotQty = order['hot_quantity_100g'] as int? ?? 0;
+    final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
+    final addCheese = order['add_cheese_dip'] as bool? ?? false;
+    final customerName = order['customer_name'] ?? 'Unknown';
+    final phone = order['phone_number'] ?? 'Unknown';
+    final delivery = order['delivery_option'] ?? 'Unknown';
+    final address = order['delivery_address'] as String?;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.delivery_dining,
+                  color: Colors.deepOrange,
+                  size: 28,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    customerName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('📱 $phone', style: const TextStyle(color: Colors.grey)),
+            const Divider(),
+            if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
+            if (bbqQty > 0) Text('- BBQ x$bbqQty'),
+            if (addCheese) const Text('- Cheese Dip'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '📍 $delivery',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  if (address != null && address.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text('🏠 $address'),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _completeDeliveryAndWhatsApp(context),
+                icon: const Icon(Icons.camera_alt, color: Colors.white),
+                label: const Text(
+                  'Selesai & Hantar Gambar',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF25D366),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -688,7 +971,7 @@ class _StaffOrderCard extends StatelessWidget {
   }
 }
 
-// ─── Page 2: Stok Inventori ───────────────────────────────────────────────────
+// ─── Page 3: Stok Inventori ───────────────────────────────────────────────────
 
 class _InventoryTab extends StatelessWidget {
   const _InventoryTab();
@@ -697,7 +980,8 @@ class _InventoryTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final inventoryStream = Supabase.instance.client
         .from('inventory')
-        .stream(primaryKey: ['id']).eq('id', 1);
+        .stream(primaryKey: ['id'])
+        .eq('id', 1);
 
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: inventoryStream,
@@ -709,8 +993,10 @@ class _InventoryTab extends StatelessWidget {
             snapshot.data == null ||
             snapshot.data!.isEmpty) {
           return Center(
-              child: Text(
-                  'Sila cipta table inventory di Supabase. Error: ${snapshot.error}'));
+            child: Text(
+              'Sila cipta table inventory di Supabase. Error: ${snapshot.error}',
+            ),
+          );
         }
 
         final inv = snapshot.data!.first;
@@ -722,14 +1008,16 @@ class _InventoryTab extends StatelessWidget {
           child: Column(
             children: [
               _StockUpdater(
-                  flavor: 'HOT & SPICYYY 🌶️',
-                  dbColumn: 'hot_stock',
-                  currentStock: hotStock),
+                flavor: 'HOT & SPICYYY 🌶️',
+                dbColumn: 'hot_stock',
+                currentStock: hotStock,
+              ),
               const SizedBox(height: 20),
               _StockUpdater(
-                  flavor: 'BBQ 🍖',
-                  dbColumn: 'bbq_stock',
-                  currentStock: bbqStock),
+                flavor: 'BBQ 🍖',
+                dbColumn: 'bbq_stock',
+                currentStock: bbqStock,
+              ),
             ],
           ),
         );
@@ -743,11 +1031,12 @@ class _StockUpdater extends StatefulWidget {
   final String dbColumn;
   final int currentStock;
 
-  const _StockUpdater(
-      {required this.flavor,
-      required this.dbColumn,
-      required this.currentStock,
-      super.key});
+  const _StockUpdater({
+    required this.flavor,
+    required this.dbColumn,
+    required this.currentStock,
+    super.key,
+  });
 
   @override
   State<_StockUpdater> createState() => _StockUpdaterState();
@@ -762,11 +1051,13 @@ class _StockUpdaterState extends State<_StockUpdater> {
       final newStock = widget.currentStock + amount;
       await Supabase.instance.client
           .from('inventory')
-          .update({widget.dbColumn: newStock < 0 ? 0 : newStock}).eq('id', 1);
+          .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
+          .eq('id', 1);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Ralat: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ralat: $e')));
       }
     }
   }
@@ -779,12 +1070,13 @@ class _StockUpdaterState extends State<_StockUpdater> {
       try {
         await Supabase.instance.client
             .from('inventory')
-            .update(
-                {widget.dbColumn: newStock < 0 ? 0 : newStock}).eq('id', 1);
+            .update({widget.dbColumn: newStock < 0 ? 0 : newStock})
+            .eq('id', 1);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text('Ralat: $e')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Ralat: $e')));
         }
       }
     });
@@ -815,8 +1107,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
           children: [
             Text(
               'Set Stok: ${widget.flavor}',
-              style:
-                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -824,8 +1115,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
               autofocus: true,
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               decoration: const InputDecoration(
                 labelText: 'Jumlah stok',
                 border: OutlineInputBorder(),
@@ -871,21 +1161,31 @@ class _StockUpdaterState extends State<_StockUpdater> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(widget.flavor,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  widget.flavor,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 if (isSoldOut)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(8)),
-                    child: const Text('SOLD OUT',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12)),
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'SOLD OUT',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -895,8 +1195,9 @@ class _StockUpdaterState extends State<_StockUpdater> {
                 _CounterButton(
                   icon: HugeIcons.strokeRoundedMinusSign,
                   color: Colors.orange,
-                  onPressed:
-                      widget.currentStock > 0 ? () => _adjustStock(-1) : null,
+                  onPressed: widget.currentStock > 0
+                      ? () => _adjustStock(-1)
+                      : null,
                 ),
                 Expanded(
                   child: GestureDetector(
@@ -924,7 +1225,9 @@ class _StockUpdaterState extends State<_StockUpdater> {
                             'pek  •  ketuk untuk edit',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                                fontSize: 11, color: Colors.grey.shade500),
+                              fontSize: 11,
+                              color: Colors.grey.shade500,
+                            ),
                           ),
                         ],
                       ),
@@ -950,13 +1253,18 @@ class _CounterButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onPressed;
 
-  const _CounterButton(
-      {required this.icon, required this.color, this.onPressed});
+  const _CounterButton({
+    required this.icon,
+    required this.color,
+    this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: onPressed != null ? color.withValues(alpha: 0.1) : Colors.grey.shade200,
+      color: onPressed != null
+          ? color.withValues(alpha: 0.1)
+          : Colors.grey.shade200,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -966,8 +1274,9 @@ class _CounterButton extends StatelessWidget {
           height: 52,
           decoration: BoxDecoration(
             border: Border.all(
-                color: onPressed != null ? color : Colors.grey.shade400,
-                width: 2),
+              color: onPressed != null ? color : Colors.grey.shade400,
+              width: 2,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(

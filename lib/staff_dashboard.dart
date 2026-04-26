@@ -4,9 +4,250 @@ import 'dart:async';
 import 'package:hugeicons/hugeicons.dart';
 import 'home_page.dart';
 
-class StaffDashboard extends StatelessWidget {
-  const StaffDashboard({super.key});
+// ─── Staff Home (Landing Page) ───────────────────────────────────────────────
 
+class StaffHomePage extends StatelessWidget {
+  const StaffHomePage({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    await Supabase.instance.client.auth.signOut();
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const HomePage()),
+        (route) => false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final email = user?.email ?? 'Staff';
+    final name = email.split('@').first;
+
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFF5722), Color(0xFFBF360C)],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // ── Header ──────────────────────────────────────────────────────
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 28, 16, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Selamat datang,',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.8),
+                              fontSize: 14,
+                            ),
+                          ),
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              '🧑‍💼  Staff NACHOZYYY',
+                              style: TextStyle(color: Colors.white, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => _logout(context),
+                      icon: const Icon(Icons.logout_rounded, color: Colors.white, size: 26),
+                      tooltip: 'Log Keluar',
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // ── Nav Cards ───────────────────────────────────────────────────
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF1A1A1A)
+                        : const Color(0xFFF7F7F7),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Menu Utama',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Dashboard card
+                        _StaffNavCard(
+                          icon: HugeIcons.strokeRoundedDashboardSquare01,
+                          iconColor: const Color(0xFF5C6BC0),
+                          bgColor: const Color(0xFFE8EAF6),
+                          darkBgColor: const Color(0xFF1E2040),
+                          title: 'Dashboard',
+                          subtitle: 'Semua pesanan & inventori dalam satu pandangan',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const StaffDashboard()),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Pesanan card
+                        _StaffNavCard(
+                          icon: HugeIcons.strokeRoundedTask01,
+                          iconColor: const Color(0xFFE65100),
+                          bgColor: const Color(0xFFFBE9E7),
+                          darkBgColor: const Color(0xFF3E1A0A),
+                          title: 'Pesanan',
+                          subtitle: 'Semak dan uruskan pesanan pelanggan',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const StaffDashboard(initialTab: 0),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Stok Inventori card
+                        _StaffNavCard(
+                          icon: HugeIcons.strokeRoundedPackage,
+                          iconColor: const Color(0xFF2E7D32),
+                          bgColor: const Color(0xFFE8F5E9),
+                          darkBgColor: const Color(0xFF0D2E10),
+                          title: 'Stok Inventori',
+                          subtitle: 'Kemaskini dan pantau stok keropok leker',
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const StaffDashboard(initialTab: 1),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StaffNavCard extends StatelessWidget {
+  final List<List<dynamic>> icon;
+  final Color iconColor;
+  final Color bgColor;
+  final Color darkBgColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _StaffNavCard({
+    required this.icon,
+    required this.iconColor,
+    required this.bgColor,
+    required this.darkBgColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Material(
+      color: isDark ? darkBgColor : bgColor,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: HugeIcon(icon: icon, color: iconColor, size: 26),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: Colors.grey.shade400),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Staff Dashboard (Tab View) ───────────────────────────────────────────────
+
+class StaffDashboard extends StatefulWidget {
+  final int initialTab;
+  const StaffDashboard({super.key, this.initialTab = 0});
+
+  @override
+  State<StaffDashboard> createState() => _StaffDashboardState();
+}
+
+class _StaffDashboardState extends State<StaffDashboard> {
   Future<void> _logout(BuildContext context) async {
     await Supabase.instance.client.auth.signOut();
     if (context.mounted) {
@@ -22,6 +263,7 @@ class StaffDashboard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialTab,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Staff Dashboard 🧑‍💼'),

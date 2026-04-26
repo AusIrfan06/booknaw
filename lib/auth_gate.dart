@@ -24,7 +24,7 @@ class AuthGate extends StatelessWidget {
         final isStaff = session.user.userMetadata?['is_staff'] == true;
         
         if (isStaff) {
-          return const StaffDashboard();
+          return const StaffHomePage();
         } else {
           return const HomePage();
         }

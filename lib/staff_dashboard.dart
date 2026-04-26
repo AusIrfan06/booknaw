@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'home_page.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
@@ -127,6 +128,20 @@ class _StaffDashboardState extends State<StaffDashboard> {
 
 // ─── Page 0: Dashboard Overview ───────────────────────────────────────────────
 
+LiquidGlassSettings _getStaffGlassSettings(bool isDark) {
+  return LiquidGlassSettings(
+    thickness: 0.1,
+    blur: 15,
+    refractiveIndex: 1.0,
+    glassColor: Colors.transparent,
+    lightAngle: 45.0,
+    lightIntensity: isDark ? 0.1 : 0.2,
+    ambientStrength: 1.0,
+    saturation: 1.0,
+    chromaticAberration: 0.0,
+  );
+}
+
 class _DashboardPage extends StatelessWidget {
   const _DashboardPage();
 
@@ -151,37 +166,59 @@ class _DashboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Welcome banner ──────────────────────────────────────────────────
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFFFF5722), Color(0xFFBF360C)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+            settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(
+                  Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.08
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                ),
               ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Selamat datang, $name 👋',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedUserCircle,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 32,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Staff NACHOZYYY',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    fontSize: 13,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selamat datang, $name 👋',
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white 
+                              : Colors.black87,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Staff NACHOZYYY',
+                          style: TextStyle(
+                            color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.white70 
+                              : Colors.black54,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
@@ -466,7 +503,7 @@ class _PasswordResetHelperState extends State<_PasswordResetHelper> {
 class _StatCard extends StatelessWidget {
   final String label;
   final String value;
-  final List<List<dynamic>> icon;
+  final dynamic icon;
   final Color color;
 
   const _StatCard({
@@ -479,38 +516,44 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isDark
-            ? color.withValues(alpha: 0.15)
-            : color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          HugeIcon(icon: icon, color: color, size: 22),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 14.0),
+      settings: _getStaffGlassSettings(isDark),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark
+              ? color.withOpacity(0.15)
+              : color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            HugeIcon(icon: icon, color: color, size: 22),
+            const SizedBox(height: 10),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -531,40 +574,46 @@ class _StockSummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isSoldOut = stock <= 0;
     final color = isSoldOut ? Colors.red : Colors.green;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              isSoldOut ? 'SOLD OUT' : '$stock $unit',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+      settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                isSoldOut ? 'SOLD OUT' : '$stock $unit',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -800,7 +849,7 @@ class _StaffOrderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final hotQty = order['hot_quantity_100g'] as int? ?? 0;
     final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
-    final addCheese = order['add_cheese_dip'] as bool? ?? false;
+    final cheeseQty = order['cheese_quantity'] as int? ?? 0;
     final totalPrice = order['total_price'] ?? 0;
     final customerName = order['customer_name'] ?? 'Unknown';
     final phone = order['phone_number'] ?? 'Unknown';
@@ -809,130 +858,141 @@ class _StaffOrderCard extends StatelessWidget {
     final paymentStatus = order['payment_status'] ?? 'Pending Payment';
     final isPaid = paymentStatus == 'Paid';
     final isDelivered = status == 'Delivered';
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      color: isDelivered
-          ? (isDark
-                ? Colors.green.shade900.withValues(alpha: 0.3)
-                : Colors.green.shade50)
-          : null,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    customerName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+      settings: _getStaffGlassSettings(isDark),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: isDelivered
+              ? (isDark
+                  ? Colors.green.shade900.withOpacity(0.3)
+                  : Colors.green.shade50.withOpacity(0.5))
+              : (isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isDelivered 
+              ? Colors.green.withOpacity(0.3) 
+              : Colors.white.withOpacity(isDark ? 0.1 : 0.5)
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      customerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  status,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isDelivered ? Colors.green : Colors.orange,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(phone, style: const TextStyle(color: Colors.grey)),
-            const Divider(),
-            if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
-            if (bbqQty > 0) Text('- BBQ x$bbqQty'),
-            if (addCheese) const Text('- Cheese Dip'),
-            const SizedBox(height: 8),
-            Text(
-              'Lokasi: $delivery',
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            Text(
-              'Total: RM ${totalPrice.toStringAsFixed(2)}',
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            // Payment status row
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isPaid ? Colors.green : Colors.orange,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
+                  Text(
+                    status,
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      color: isDelivered ? Colors.green : Colors.orange,
                     ),
                   ),
-                ),
-              ],
-            ),
-            if (!isPaid) ...[
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(phone, style: const TextStyle(color: Colors.grey)),
+              const Divider(),
+              if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
+              if (bbqQty > 0) Text('- BBQ x$bbqQty'),
+              if (cheeseQty > 0) Text('- Cheese Dip x$cheeseQty'),
               const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _markPaid(context),
-                  icon: const Icon(
-                    Icons.payments_outlined,
-                    color: Colors.white,
-                    size: 18,
+              Text(
+                'Lokasi: $delivery',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              Text(
+                'Total: RM ${totalPrice.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 8),
+              // Payment status row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isPaid ? Colors.green : Colors.orange,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  label: const Text(
-                    'Tandakan Dibayar',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                ],
+              ),
+              if (!isPaid) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _markPaid(context),
+                    icon: const Icon(
+                      Icons.payments_outlined,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'Tandakan Dibayar',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-            if (!isDelivered) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => _markDelivered(context),
-                  icon: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                    color: Colors.green,
-                    size: 20,
-                  ),
-                  label: const Text(
-                    'Mark as Delivered',
-                    style: TextStyle(color: Colors.green),
+              ],
+              if (!isDelivered) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _markDelivered(context),
+                    icon: const HugeIcon(
+                      icon: HugeIcons.strokeRoundedCheckmarkCircle01,
+                      color: Colors.green,
+                      size: 20,
+                    ),
+                    label: const Text(
+                      'Mark as Delivered',
+                      style: TextStyle(color: Colors.green),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -1470,7 +1530,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
               children: [
                 _CounterButton(
                   icon: HugeIcons.strokeRoundedMinusSign,
-                  color: Colors.orange,
+                  buttonColor: Colors.orange,
                   onPressed: widget.currentStock > 0
                       ? () => _adjustStock(-1)
                       : null,
@@ -1512,7 +1572,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
                 ),
                 _CounterButton(
                   icon: HugeIcons.strokeRoundedPlusSign,
-                  color: Colors.green,
+                  buttonColor: Colors.green,
                   onPressed: () => _adjustStock(1),
                 ),
               ],
@@ -1525,13 +1585,13 @@ class _StockUpdaterState extends State<_StockUpdater> {
 }
 
 class _CounterButton extends StatelessWidget {
-  final List<List<dynamic>> icon;
-  final Color color;
+  final dynamic icon;
+  final Color buttonColor;
   final VoidCallback? onPressed;
 
   const _CounterButton({
     required this.icon,
-    required this.color,
+    required this.buttonColor,
     this.onPressed,
   });
 
@@ -1539,7 +1599,7 @@ class _CounterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: onPressed != null
-          ? color.withValues(alpha: 0.1)
+          ? buttonColor.withOpacity(0.1)
           : Colors.grey.shade200,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
@@ -1550,7 +1610,7 @@ class _CounterButton extends StatelessWidget {
           height: 52,
           decoration: BoxDecoration(
             border: Border.all(
-              color: onPressed != null ? color : Colors.grey.shade400,
+              color: onPressed != null ? buttonColor : Colors.grey.shade400,
               width: 2,
             ),
             borderRadius: BorderRadius.circular(12),
@@ -1558,7 +1618,7 @@ class _CounterButton extends StatelessWidget {
           child: Center(
             child: HugeIcon(
               icon: icon,
-              color: onPressed != null ? color : Colors.grey,
+              color: onPressed != null ? buttonColor : Colors.grey,
               size: 24,
             ),
           ),

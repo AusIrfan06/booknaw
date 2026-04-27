@@ -9,6 +9,7 @@ import 'main.dart';
 import 'contact_page.dart';
 import 'help_center_page.dart';
 import 'all_reviews_page.dart';
+import 'staff_dashboard.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -27,6 +28,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     // Mock data for UI only
     final name = isLoggedIn ? (user!.userMetadata?['full_name'] ?? "User Name") : "Guest";
     final email = isLoggedIn ? (user!.email ?? "email@example.com") : "Log in to access more features";
+    final isStaff = isLoggedIn && (user!.userMetadata?['is_staff'] == true);
     const locationStr = "Shah Alam, Selangor";
 
     return Scaffold(
@@ -78,8 +80,22 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                  const SizedBox(height: 16),
                                  Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
                                  const SizedBox(height: 4),
+                                 if (isStaff) ...[
+                                   Container(
+                                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                     decoration: BoxDecoration(
+                                       color: const Color(0xFFFF5722),
+                                       borderRadius: BorderRadius.circular(12),
+                                     ),
+                                     child: const Text(
+                                       "STAF NACHOZYYY",
+                                       style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+                                     ),
+                                   ),
+                                   const SizedBox(height: 8),
+                                 ],
                                  Text(email, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14)),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 12),
 
                                 Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -121,6 +137,21 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                           _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan"),
                         ])),
                         const SizedBox(height: 24),
+
+                        if (isStaff) ...[
+                          _buildSectionHeader("Pengurusan"),
+                          _buildGlassSection(isDark, Column(children: [
+                            _buildSettingsTile(
+                              isDark, 
+                              HugeIcons.strokeRoundedDashboardSquare01, 
+                              "Panel Dashboard Staf",
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => const StaffDashboard()));
+                              },
+                            ),
+                          ])),
+                          const SizedBox(height: 24),
+                        ],
                       ],
 
                       _buildSectionHeader("Pilihan"),

@@ -9,6 +9,7 @@ import 'staff_dashboard.dart';
 import 'status_page.dart';
 import 'profile_page.dart';
 import 'app_logo.dart';
+import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
 class HomePage extends StatefulWidget {
@@ -411,13 +412,30 @@ class _ReviewsSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Komen Pelanggan',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Komen Pelanggan',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AllReviewsPage()),
+                );
+              },
+              child: const Text(
+                'Lihat Semua',
+                style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         SizedBox(

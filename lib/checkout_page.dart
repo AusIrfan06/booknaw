@@ -318,7 +318,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.green.withValues(alpha: 0.5), Colors.blue.withValues(alpha: 0.5)],
+                    colors: [Colors.orange.withValues(alpha: 0.5), Colors.deepOrange.withValues(alpha: 0.5)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -331,7 +331,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   settings: LiquidGlassSettings(
                     thickness: 0.1,
                     blur: 15,
-                    glassColor: Colors.white.withValues(alpha: 0.1),
+                    glassColor: Colors.orange.withValues(alpha: 0.1),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
@@ -343,16 +343,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.2),
+                                color: Colors.orange.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(Icons.qr_code_scanner, color: Colors.green, size: 20),
+                              child: const Icon(Icons.qr_code_scanner, color: Colors.orange, size: 20),
                             ),
                             const SizedBox(width: 12),
                             const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                                Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
                                 Text('Imbas QR & Bayar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                               ],
                             ),
@@ -396,12 +396,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.1),
+                            color: Colors.orange.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
                             'Sila pastikan jumlah bayaran tepat',
-                            style: TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
+                            style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500),
                           ),
                         ),
                       ],
@@ -415,7 +415,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               // Step 2: Final Confirmation
               const Row(
                 children: [
-                  Icon(Icons.whatsapp, size: 24, color: Color(0xFF25D366)),
+                  HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, size: 24, color: Color(0xFF25D366)),
                   SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

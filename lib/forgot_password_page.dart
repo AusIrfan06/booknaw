@@ -49,10 +49,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Email Dihantar! 📧'),
+            title: const Text('Email Dihantar!'),
             content: const Text(
                 'Sila semak peti masuk email anda untuk pautan tetapan semula katalaluan.\n\n'
-                '💡 Tip: Jika anda tidak menemui email, sila semak folder SPAM anda.'),
+                'Tip: Jika anda tidak menemui email, sila semak folder SPAM anda.'),
             actions: [
               TextButton(
                 onPressed: () {

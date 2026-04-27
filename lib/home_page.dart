@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Tukar Katalaluan Baru 🔑'),
+        title: const Text('Tukar Katalaluan Baru'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -148,7 +148,7 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: safeIndex == 0 ? AppBar(
-        title: const Text('NACHOZYYY 🌶️🧀'),
+        title: const Text('NACHOZYYY'),
         centerTitle: true,
         automaticallyImplyLeading: false,
       ) : null,
@@ -223,7 +223,7 @@ class _HomeTab extends StatelessWidget {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'Nachos paling rangup di alam semesta 🌌',
+                            'Nachos paling rangup di alam semesta',
                             style: TextStyle(fontSize: 14, color: Colors.white70, fontWeight: FontWeight.w500),
                           ),
                         ],
@@ -278,7 +278,7 @@ class _HomeTab extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Pilihan Hot 🔥',
+                          'Pilihan Hangat',
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87),
                         ),
                         TextButton(
@@ -290,7 +290,7 @@ class _HomeTab extends StatelessWidget {
                     const SizedBox(height: 16),
                     _buildSleekCard(
                       context,
-                      title: 'HOT & SPICYYY 🌶️',
+                      title: 'HOT & SPICYYY',
                       desc: 'Pedas gila, gerenti berpeluh!',
                       price: 'RM 10.00',
                       imageColor: Colors.redAccent,
@@ -299,7 +299,7 @@ class _HomeTab extends StatelessWidget {
                     const SizedBox(height: 16),
                     _buildSleekCard(
                       context,
-                      title: 'SMOKY BBQ 🍖',
+                      title: 'SMOKY BBQ',
                       desc: 'Rasa salai yang premium.',
                       price: 'RM 10.00',
                       imageColor: Colors.orangeAccent,

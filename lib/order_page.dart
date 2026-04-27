@@ -44,14 +44,14 @@ class _OrderPageState extends State<OrderPage> {
     if (_hotQuantity == 0 && _bbqQuantity == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sila tambah sekurang-kurangnya 1 perisa! 🌶️🍖'),
+          content: Text('Sila tambah sekurang-kurangnya 1 perisa!'),
         ),
       );
       return;
     }
     if (_deliveryOption == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila pilih cara delivery/pickup! 🚗')),
+        const SnackBar(content: Text('Sila pilih cara delivery/pickup!')),
       );
       return;
     }
@@ -208,9 +208,9 @@ class _OrderPageState extends State<OrderPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle('1. Pilih Perisa & Kuantiti ✨'),
+                _buildSectionTitle('1. Pilih Perisa & Kuantiti'),
                 _FlavorQuantityCard(
-                  title: 'HOT & SPICYYY 🌶️',
+                  title: 'HOT & SPICYYY',
                   subtitle: '(100g per pek)',
                   quantity: _hotQuantity,
                   maxStock: hotStock,
@@ -223,7 +223,7 @@ class _OrderPageState extends State<OrderPage> {
                 ),
                 const SizedBox(height: 12),
                 _FlavorQuantityCard(
-                  title: 'BBQ 🍖',
+                  title: 'BBQ',
                   subtitle: '(100g per pek)',
                   quantity: _bbqQuantity,
                   maxStock: bbqStock,
@@ -236,9 +236,9 @@ class _OrderPageState extends State<OrderPage> {
                 ),
                 const SizedBox(height: 24),
 
-                _buildSectionTitle('2. Add-on Padu 🤤'),
+                _buildSectionTitle('2. Add-on Padu'),
                 _FlavorQuantityCard(
-                  title: 'Cheese Dip 🧀',
+                  title: 'Cheese Dip',
                   subtitle: '(+ RM 1.00 per unit)',
                   quantity: _cheeseQuantity,
                   maxStock: cheeseStock,
@@ -251,7 +251,7 @@ class _OrderPageState extends State<OrderPage> {
                 ),
                 const SizedBox(height: 24),
 
-                _buildSectionTitle('3. Delivery / Pickup 🚗'),
+                _buildSectionTitle('3. Delivery / Pickup'),
 
                 // ── Step 1: Pickup or Delivery ───────────────────────────
                 Row(

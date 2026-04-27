@@ -199,7 +199,7 @@ class _DashboardPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Selamat datang, $name 👋',
+                              'Selamat datang, $name',
                               style: TextStyle(
                                 color: Theme.of(context).brightness == Brightness.dark 
                                   ? Colors.white 
@@ -329,21 +329,21 @@ class _DashboardPage extends StatelessWidget {
                     childAspectRatio: 2.2,
                     children: [
                       _ModernStockCard(
-                        label: 'HOT & SPICYYY 🌶️',
+                        label: 'HOT & SPICYYY',
                         stock: hotTotal,
                         icon: HugeIcons.strokeRoundedFire,
                         color: Colors.redAccent,
                         maxStock: 500,
                       ),
                       _ModernStockCard(
-                        label: 'SMOKY BBQ 🍖',
+                        label: 'SMOKY BBQ',
                         stock: bbqTotal,
                         icon: HugeIcons.strokeRoundedPackage,
                         color: Colors.orangeAccent,
                         maxStock: 500,
                       ),
                       _ModernStockCard(
-                        label: 'CHEESE DIP 🧀',
+                        label: 'CHEESE DIP',
                         stock: cheeseTotal,
                         icon: HugeIcons.strokeRoundedPackage,
                         color: Colors.amber,
@@ -363,7 +363,7 @@ class _DashboardPage extends StatelessWidget {
               const SizedBox(height: 24),
 
               const Text(
-                'Sedia Untuk Penghantaran 🚚',
+                'Sedia Untuk Penghantaran',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 14),
@@ -464,7 +464,7 @@ class _PasswordResetHelperState extends State<_PasswordResetHelper> {
                   size: 24),
               SizedBox(width: 10),
               Text(
-                'Bantuan Reset Kata Laluan 🔑',
+                'Bantuan Reset Kata Laluan',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
@@ -1032,7 +1032,7 @@ class _StaffOrderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
+                      isPaid ? 'Dibayar' : 'Belum Bayar',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
@@ -1224,8 +1224,8 @@ class _DeliveryOrderCard extends StatelessWidget {
       final orderId = order['id'];
       
       final msg = isDelivered
-          ? 'Hi $name 👋\n\nKami dari NACHOZYYY 🌶️🧀\nPesanan anda (No. #$orderId) telah selamat dihantar!\n\nTerima kasih kerana menyokong kami. (Gambar bukti penghantaran disertakan di bawah 👇)'
-          : 'Hi $name 👋\n\nKami dari NACHOZYYY 🌶️🧀\nPesanan anda (No. #$orderId) sedang dihantar ke lokasi anda! 🛵💨\n\nSila bersedia untuk menerima pesanan anda sebentar lagi.';
+          ? 'Hi $name\n\nKami dari NACHOZYYY\nPesanan anda (No. #$orderId) telah selamat dihantar!\n\nTerima kasih kerana menyokong kami. (Gambar bukti penghantaran disertakan di bawah)'
+          : 'Hi $name\n\nKami dari NACHOZYYY\nPesanan anda (No. #$orderId) sedang dihantar ke lokasi anda!\n\nSila bersedia untuk menerima pesanan anda sebentar lagi.';
 
       final waMessage = Uri.encodeComponent(msg);
       final waUrl = Uri.parse('https://wa.me/$phone?text=$waMessage');
@@ -1281,7 +1281,7 @@ class _DeliveryOrderCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text('📱 $phone', style: const TextStyle(color: Colors.grey)),
+            Text(phone, style: const TextStyle(color: Colors.grey)),
             const Divider(),
             if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
             if (bbqQty > 0) Text('- BBQ x$bbqQty'),
@@ -1297,12 +1297,12 @@ class _DeliveryOrderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '📍 $delivery',
+                    delivery,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   if (address != null && address.isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text('🏠 $address'),
+                    Text(address),
                   ],
                 ],
               ),
@@ -1392,7 +1392,7 @@ class _InventoryTab extends StatelessWidget {
                 children: [
                   // ── TOTAL STOCK SECTION ─────────────────────────────────────
                   const Text(
-                    'Ringkasan Keseluruhan 📊',
+                    'Ringkasan Keseluruhan',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -1423,7 +1423,7 @@ class _InventoryTab extends StatelessWidget {
 
                   // ── BY STORE SECTION ────────────────────────────────────────
                   const Text(
-                    'Pecahan Mengikut Stor 🏪',
+                    'Pecahan Mengikut Stor',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
@@ -1456,7 +1456,7 @@ class _InventoryTab extends StatelessWidget {
                           ),
                           _StockUpdater(
                             locationId: loc['id'] as int,
-                            flavor: 'HOT & SPICYYY 🌶️',
+                            flavor: 'HOT & SPICYYY',
                             dbColumn: 'hot_stock',
                             currentStock: hotStock,
                             currentRow: row,
@@ -1464,7 +1464,7 @@ class _InventoryTab extends StatelessWidget {
                           const SizedBox(height: 12),
                           _StockUpdater(
                             locationId: loc['id'] as int,
-                            flavor: 'BBQ 🍖',
+                            flavor: 'BBQ',
                             dbColumn: 'bbq_stock',
                             currentStock: bbqStock,
                             currentRow: row,
@@ -1472,7 +1472,7 @@ class _InventoryTab extends StatelessWidget {
                           const SizedBox(height: 12),
                           _StockUpdater(
                             locationId: loc['id'] as int,
-                            flavor: 'Cheese Dip 🧀',
+                            flavor: 'Cheese Dip',
                             dbColumn: 'cheese_stock',
                             currentStock: cheeseStock,
                             currentRow: row,

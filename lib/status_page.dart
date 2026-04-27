@@ -65,7 +65,7 @@ class _StatusPageState extends State<StatusPage>
     if (user == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Pesanan Saya 📦'),
+          title: const Text('Pesanan Saya'),
           automaticallyImplyLeading: false,
         ),
         body: Center(
@@ -118,7 +118,7 @@ class _StatusPageState extends State<StatusPage>
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pesanan Saya 📦'),
+        title: const Text('Pesanan Saya'),
         automaticallyImplyLeading: false,
         bottom: TabBar(
           controller: _tabController,
@@ -222,7 +222,7 @@ class _CustomerOrderCard extends StatelessWidget {
 
     // Payment pill colour
     Color payColor = isPaid ? Colors.green : Colors.orange;
-    String payLabel = isPaid ? '💰 Dibayar' : '⏳ Belum Bayar';
+    String payLabel = isPaid ? 'Dibayar' : 'Belum Bayar';
 
     // Delivery pill colour
     Color delColor;
@@ -233,10 +233,10 @@ class _CustomerOrderCard extends StatelessWidget {
       delLabel = '✅ Telah Dihantar';
     } else if (isOutForDelivery) {
       delColor = Colors.orange;
-      delLabel = '🛵 Sedang Dihantar';
+      delLabel = 'Sedang Dihantar';
     } else {
       delColor = Colors.grey;
-      delLabel = isPaid ? '🚚 Sedang Diproses' : '⏳ Belum Bayar';
+      delLabel = isPaid ? 'Sedang Diproses' : 'Belum Bayar';
     }
 
     return InkWell(
@@ -304,11 +304,11 @@ class _CustomerOrderCard extends StatelessWidget {
 
               // Items
               if (hotQty > 0)
-                _row('HOT & SPICYYY 🌶️', '$hotQty pek', isDark),
+                _row('HOT & SPICYYY', '$hotQty pek', isDark),
               if (bbqQty > 0)
-                _row('BBQ 🍖', '$bbqQty pek', isDark),
+                _row('BBQ', '$bbqQty pek', isDark),
               if (addCheese)
-                _row('Cheese Dip 🧀', 'Ya', isDark),
+                _row('Cheese Dip', 'Ya', isDark),
 
               const SizedBox(height: 12),
 
@@ -365,10 +365,10 @@ class _CustomerOrderCard extends StatelessWidget {
       delLabel = '✅ Telah Dihantar';
     } else if (isOutForDelivery) {
       delColor = Colors.orange;
-      delLabel = '🛵 Sedang Dihantar';
+      delLabel = 'Sedang Dihantar';
     } else {
       delColor = Colors.grey;
-      delLabel = isPaid ? '🚚 Sedang Diproses' : '⏳ Belum Bayar';
+      delLabel = isPaid ? 'Sedang Diproses' : 'Belum Bayar';
     }
 
     String dateStr = '-';
@@ -426,7 +426,7 @@ class _CustomerOrderCard extends StatelessWidget {
                             color: primary, size: 32),
                       ),
                       const SizedBox(height: 10),
-                      Text('NACHOZYYY 🌶️🧀',
+                      Text('NACHOZYYY',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -442,13 +442,13 @@ class _CustomerOrderCard extends StatelessWidget {
                 _dashedDivider(),
 
                 // Order info
-                _receiptRow('📌 No. Pesanan', '#$orderId'),
-                _receiptRow('📅 Tarikh', dateStr),
-                _receiptRow('👤 Nama', customerName),
-                _receiptRow('📱 No. Tel', phone),
+                _receiptRow('No. Pesanan', '#$orderId'),
+                _receiptRow('Tarikh', dateStr),
+                _receiptRow('Nama', customerName),
+                _receiptRow('No. Tel', phone),
                 if (address != null && address.isNotEmpty)
-                  _receiptRow('🏠 Alamat', address),
-                _receiptRow('📍 Lokasi', delivery),
+                  _receiptRow('Alamat', address),
+                _receiptRow('Lokasi', delivery),
                 _dashedDivider(),
 
                 // Items
@@ -461,13 +461,13 @@ class _CustomerOrderCard extends StatelessWidget {
                           fontSize: 12)),
                 ),
                 if (hotQty > 0)
-                  _receiptRow('HOT & SPICYYY 🌶️',
+                  _receiptRow('HOT & SPICYYY',
                       '${hotQty}x  @RM5.00  =  RM${(hotQty * 5.0).toStringAsFixed(2)}'),
                 if (bbqQty > 0)
-                  _receiptRow('BBQ 🍖',
+                  _receiptRow('BBQ',
                       '${bbqQty}x  @RM5.00  =  RM${(bbqQty * 5.0).toStringAsFixed(2)}'),
                 if (addCheese)
-                  _receiptRow('Cheese Dip 🧀', 'RM1.00'),
+                  _receiptRow('Cheese Dip', 'RM1.00'),
                 _dashedDivider(),
 
                 // Total
@@ -492,7 +492,7 @@ class _CustomerOrderCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _statusBadge(
-                        isPaid ? '💰 Dibayar' : '⏳ Belum Bayar',
+                        isPaid ? 'Dibayar' : 'Belum Bayar',
                         isPaid ? Colors.green : Colors.orange,
                       ),
                     ),
@@ -517,14 +517,14 @@ class _CustomerOrderCard extends StatelessWidget {
                       final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
                       
                       final waMessage = Uri.encodeComponent(
-                        'Assalamualaikum Lysa 🙋 Saya nak buat bayaran untuk pesanan (No. #$orderId)!\n\n'
-                        '👤 Nama: $customerName\n'
-                        '📱 No. Tel: $phone\n'
-                        '🛒 Pesanan: $items\n'
-                        '📍 Lokasi: $delivery\n'
-                        '${address != null && address.isNotEmpty ? "🏠 Alamat: $address\n" : ""}'
-                        '💰 Jumlah: RM ${totalPrice.toStringAsFixed(2)}\n\n'
-                        'Sila semak resit pembayaran saya ya! Terima kasih 🙏',
+                        'Assalamualaikum Lysa Saya nak buat bayaran untuk pesanan (No. #$orderId)!\n\n'
+                        'Nama: $customerName\n'
+                        'No. Tel: $phone\n'
+                        'Pesanan: $items\n'
+                        'Lokasi: $delivery\n'
+                        '${address != null && address.isNotEmpty ? "Alamat: $address\n" : ""}'
+                        'Jumlah: RM ${totalPrice.toStringAsFixed(2)}\n\n'
+                        'Sila semak resit pembayaran saya ya! Terima kasih',
                       );
                       const lysaNumber = '60132163194';
                       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
@@ -546,7 +546,7 @@ class _CustomerOrderCard extends StatelessWidget {
                 ],
                 Center(
                   child: Text(
-                    'Terima kasih kerana menyokong kami! 💛',
+                    'Terima kasih kerana menyokong kami!',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                         color: Colors.grey.shade500, fontSize: 12),

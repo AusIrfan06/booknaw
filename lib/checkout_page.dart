@@ -84,14 +84,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final location = widget.deliveryOption;
 
       final waMessage = Uri.encodeComponent(
-        'Assalamualaikum Lysa 🙋 Saya baru buat pesanan NACHOZYYY dan dah buat bayaran!\n\n'
-        '👤 Nama: $name\n'
-        '📱 No. Tel: $phone\n'
-        '🛒 Pesanan: $items\n'
-        '📍 Lokasi: $location\n'
-        '${_isDelivery ? "🏠 Alamat: ${_addressController.text.trim()}\n" : ""}'
-        '💰 Jumlah: $total\n\n'
-        'Sila semak resit pembayaran saya ya! Terima kasih 🙏',
+        'Assalamualaikum Lysa Saya baru buat pesanan NACHOZYYY dan dah buat bayaran!\n\n'
+        'Nama: $name\n'
+        'No. Tel: $phone\n'
+        'Pesanan: $items\n'
+        'Lokasi: $location\n'
+        '${_isDelivery ? "Alamat: ${_addressController.text.trim()}\n" : ""}'
+        'Jumlah: $total\n\n'
+        'Sila semak resit pembayaran saya ya! Terima kasih',
       );
       const lysaNumber = '60132163194'; // Lysa - Beta & Gamma
       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
@@ -132,7 +132,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Pesanan Berjaya! 🎉',
+              'Pesanan Berjaya!',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),

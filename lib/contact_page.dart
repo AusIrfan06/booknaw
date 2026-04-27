@@ -96,7 +96,7 @@ class ContactPage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'WhatsApp kami terus! Kami sedia membantu anda. 👇',
+                'WhatsApp kami terus! Kami sedia membantu anda.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -158,7 +158,7 @@ class ContactPage extends StatelessWidget {
                       const Icon(Icons.favorite_rounded, color: Color(0xFFFF5722), size: 48),
                       const SizedBox(height: 16),
                       Text(
-                        'Terima kasih kerana menyokong projek ENT300 kami! Kami sangat menghargainya! 💛',
+                        'Terima kasih kerana menyokong projek ENT300 kami! Kami sangat menghargainya!',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,

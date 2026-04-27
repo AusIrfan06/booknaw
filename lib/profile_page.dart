@@ -11,6 +11,7 @@ import 'help_center_page.dart';
 import 'all_reviews_page.dart';
 import 'staff_dashboard.dart';
 import 'account_details_page.dart';
+import 'privacy_safety_page.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   final bool showAppBar;
@@ -80,7 +81,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                    ),
                                  ),
                                  const SizedBox(height: 16),
-                                 Text(name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+                                 Text(
+                                   name, 
+                                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87),
+                                   textAlign: TextAlign.center,
+                                   maxLines: 1,
+                                   overflow: TextOverflow.ellipsis,
+                                 ),
                                  const SizedBox(height: 4),
                                  if (isStaff) ...[
                                    Container(
@@ -96,7 +103,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                    ),
                                    const SizedBox(height: 8),
                                  ],
-                                 Text(email, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14)),
+                                 Text(
+                                   email, 
+                                   style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14),
+                                   textAlign: TextAlign.center,
+                                   maxLines: 1,
+                                   overflow: TextOverflow.ellipsis,
+                                 ),
                                 const SizedBox(height: 12),
 
                               ]
@@ -121,7 +134,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                           _buildDivider(isDark),
                           _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Maklumat Peribadi"),
                           _buildDivider(isDark),
-                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan"),
+                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan", onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacySafetyPage()));
+                          }),
                         ])),
                         const SizedBox(height: 24),
 

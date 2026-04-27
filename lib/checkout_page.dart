@@ -349,12 +349,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               child: const Icon(Icons.qr_code_scanner, color: Colors.orange, size: 20),
                             ),
                             const SizedBox(width: 12),
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                                Text('Tangkap Layar QR Code', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              ],
+                            Expanded(
+                              child: const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                                  Text(
+                                    'Tangkap Layar QR Code', 
+                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -417,12 +424,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 children: [
                   HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, size: 24, color: Color(0xFF25D366)),
                   SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Langkah 2 & 3', style: TextStyle(fontSize: 10, color: Color(0xFF25D366), fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                      Text('Hantar Pesanan & Bukti', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Langkah 2 & 3', style: TextStyle(fontSize: 10, color: Color(0xFF25D366), fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                        Text(
+                          'Hantar Pesanan & Bukti', 
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

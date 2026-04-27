@@ -1107,7 +1107,7 @@ class _StaffOrderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      isPaid ? 'Dibayar' : 'Belum Bayar',
+                      isPaid ? (isDelivered ? 'Telah Bayar' : 'Dibayar') : 'Belum Bayar',
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,

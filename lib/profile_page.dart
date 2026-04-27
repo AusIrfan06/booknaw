@@ -8,6 +8,7 @@ import 'login_page.dart';
 import 'main.dart';
 import 'contact_page.dart';
 import 'help_center_page.dart';
+import 'all_reviews_page.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -47,8 +48,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       body: Stack(
         children: [
           // Background blobs
-          Positioned(top: -100, right: -50, child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFF5722).withOpacity(isDark ? 0.05 : 0.1)))),
-          Positioned(bottom: -50, left: -50, child: Container(width: 250, height: 250, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.amber.withOpacity(isDark ? 0.05 : 0.1)))),
+          Positioned(top: -100, right: -50, child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0xFFFF5722).withValues(alpha: isDark ? 0.05 : 0.1)))),
+          Positioned(bottom: -50, left: -50, child: Container(width: 250, height: 250, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.amber.withValues(alpha: isDark ? 0.05 : 0.1)))),
 
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -67,7 +68,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(4),
-                                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? const Color(0xFFFF5722).withOpacity(0.5) : Colors.grey.withOpacity(0.3), width: 2)),
+                                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isLoggedIn ? const Color(0xFFFF5722).withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.3), width: 2)),
                                   child: CircleAvatar(
                                      radius: 50,
                                      backgroundColor: isDark ? Colors.white10 : Colors.black12,
@@ -83,7 +84,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                 Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                     decoration: BoxDecoration(
-                                        color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                                        color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                                         borderRadius: BorderRadius.circular(20)
                                     ),
                                     child: const Row(
@@ -135,7 +136,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         }),
                         _buildDivider(isDark),
                         _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Hubungi Kami", onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactPage()));
                         }),
                       ])),
                       const SizedBox(height: 40),
@@ -169,7 +170,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0), settings: _getGlassSettings(isDark),
         child: Container(
           width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16),
-          decoration: BoxDecoration(color: color.withOpacity(isDark ? 0.1 : 0.15), borderRadius: BorderRadius.circular(24), border: Border.all(color: color.withOpacity(isDark ? 0.3 : 0.5), width: 1.0)),
+          decoration: BoxDecoration(color: color.withValues(alpha: isDark ? 0.1 : 0.15), borderRadius: BorderRadius.circular(24), border: Border.all(color: color.withValues(alpha: isDark ? 0.3 : 0.5), width: 1.0)),
           child: Center(child: Text(label, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold))),
         ),
       ),
@@ -180,7 +181,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     return GlassContainer(
       useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0), settings: _getGlassSettings(isDark),
       child: Container(
-        decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4), borderRadius: BorderRadius.circular(24.0), border: Border.all(color: Colors.white.withOpacity(isDark ? 0.15 : 0.6), width: 1.0), boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.05), blurRadius: 16, offset: const Offset(0, 6))]),
+        decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(24.0), border: Border.all(color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.6), width: 1.0), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05), blurRadius: 16, offset: const Offset(0, 6))]),
         child: child,
       ),
     );
@@ -200,7 +201,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(children: [
-            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: isDark ? Colors.white : Colors.black87, size: 20)),
+            Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: isDark ? Colors.white : Colors.black87, size: 20)),
             const SizedBox(width: 16),
             Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
             if (trailing != null) trailing,
@@ -225,7 +226,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04),
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: HugeIcon(
@@ -258,12 +259,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget _buildToggleTile(bool isDark, dynamic icon, String title, bool value) => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(children: [
-        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20)),
+        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20)),
         const SizedBox(width: 16),
         Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
         Switch.adaptive(value: value, activeColor: const Color(0xFFFF5722), onChanged: (v) {})
       ])
   );
 
-  Widget _buildDivider(bool isDark) => Padding(padding: const EdgeInsets.only(left: 60, right: 16), child: Divider(height: 1, color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)));
+  Widget _buildDivider(bool isDark) => Padding(padding: const EdgeInsets.only(left: 60, right: 16), child: Divider(height: 1, color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)));
 }

@@ -347,7 +347,7 @@ class _OrderPageState extends State<OrderPage> {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.amber.shade900.withOpacity(0.3)
+                        ? Colors.amber.shade900.withValues(alpha: 0.3)
                         : Colors.amber.shade100,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -449,15 +449,15 @@ class _FlavorQuantityCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: isSoldOut
-              ? (isDark ? Colors.grey.shade900.withOpacity(0.5) : Colors.grey.shade300.withOpacity(0.5))
+              ? (isDark ? Colors.grey.shade900.withValues(alpha: 0.5) : Colors.grey.shade300.withValues(alpha: 0.5))
               : (isSelected
-                    ? Theme.of(context).colorScheme.primary.withOpacity(0.1)
-                    : (isDark ? Colors.grey.shade800.withOpacity(0.3) : Colors.grey.shade200.withOpacity(0.5))),
+                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
+                    : (isDark ? Colors.grey.shade800.withValues(alpha: 0.3) : Colors.grey.shade200.withValues(alpha: 0.5))),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected && !isSoldOut
                 ? Theme.of(context).colorScheme.primary
-                : (isDark ? Colors.grey.shade600.withOpacity(0.3) : Colors.grey.shade400.withOpacity(0.3)),
+                : (isDark ? Colors.grey.shade600.withValues(alpha: 0.3) : Colors.grey.shade400.withValues(alpha: 0.3)),
             width: 2,
           ),
         ),
@@ -516,7 +516,7 @@ class _FlavorQuantityCard extends StatelessWidget {
                         : (isSelected
                               ? Theme.of(
                                   context,
-                                ).colorScheme.primary.withOpacity(0.8)
+                                ).colorScheme.primary.withValues(alpha: 0.8)
                               : (isDark ? Colors.white54 : Colors.black54)),
                   ),
                 ),
@@ -593,7 +593,7 @@ class _TypeButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.12) : Colors.transparent,
+          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: selected ? color : Colors.grey.shade400,
@@ -615,7 +615,7 @@ class _TypeButton extends StatelessWidget {
               sublabel,
               style: TextStyle(
                 fontSize: 11,
-                color: selected ? color.withOpacity(0.8) : Colors.grey,
+                color: selected ? color.withValues(alpha: 0.8) : Colors.grey,
               ),
             ),
           ],
@@ -651,7 +651,7 @@ class _ZoneChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? color.withOpacity(0.12) : Colors.transparent,
+          color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: selected ? color : Colors.grey.shade400,

@@ -203,8 +203,8 @@ class _HomeTab extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: isDark 
-                            ? [const Color(0xFFFF5722).withOpacity(0.3), const Color(0xFF1E1E1E)] 
-                            : [const Color(0xFFFF5722).withOpacity(0.8), const Color(0xFFFF9800).withOpacity(0.6)],
+                            ? [const Color(0xFFFF5722).withValues(alpha: 0.3), const Color(0xFF1E1E1E)] 
+                            : [const Color(0xFFFF5722).withValues(alpha: 0.8), const Color(0xFFFF9800).withValues(alpha: 0.6)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -243,13 +243,13 @@ class _HomeTab extends StatelessWidget {
                           useOwnLayer: true,
                           quality: GlassQuality.standard,
                           shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-                          settings: LiquidGlassSettings(thickness: 0.15, blur: 20, glassColor: Colors.white.withOpacity(0.1)),
+                          settings: LiquidGlassSettings(thickness: 0.15, blur: 20, glassColor: Colors.white.withValues(alpha: 0.1)),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                             decoration: BoxDecoration(
-                              color: Colors.amber.withOpacity(0.9),
+                              color: Colors.amber.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(20),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))],
+                              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 5))],
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
@@ -353,9 +353,9 @@ class _HomeTab extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.6),
+            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.3)),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -363,9 +363,9 @@ class _HomeTab extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: imageColor.withOpacity(0.2),
+                  color: imageColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: imageColor.withOpacity(0.3)),
+                  border: Border.all(color: imageColor.withValues(alpha: 0.3)),
                 ),
                 child: Center(
                   child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 32),
@@ -474,7 +474,7 @@ class _ReviewsSection extends StatelessWidget {
                       settings: LiquidGlassSettings(
                         thickness: 0.1,
                         blur: 10,
-                        glassColor: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+                        glassColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.all(16),

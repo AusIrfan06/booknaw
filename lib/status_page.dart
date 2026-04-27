@@ -261,7 +261,7 @@ class _CustomerOrderCard extends StatelessWidget {
         child: Card(
           elevation: 0,
           margin: const EdgeInsets.only(bottom: 14),
-          color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           child: Padding(
             padding: const EdgeInsets.all(16),
@@ -284,7 +284,7 @@ class _CustomerOrderCard extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: isDark
-                          ? Colors.amber.shade900.withOpacity(0.3)
+                          ? Colors.amber.shade900.withValues(alpha: 0.3)
                           : Colors.amber.shade100,
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -441,7 +441,7 @@ class _CustomerOrderCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: primary.withOpacity(0.1),
+                          color: primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(Icons.receipt_long_rounded,
@@ -626,8 +626,8 @@ class _CustomerOrderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -661,8 +661,8 @@ class _CustomerOrderCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        border: Border.all(color: color.withOpacity(0.4)),
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

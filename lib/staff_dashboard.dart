@@ -178,12 +178,12 @@ class _DashboardPage extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 
                       Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.08
                     ),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
                     ),
                   ),
                   child: Row(
@@ -459,7 +459,7 @@ class _StockPopup extends StatelessWidget {
         settings: _getStaffGlassSettings(isDark),
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+            color: isDark ? const Color(0xFF1E1E1E).withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
@@ -469,7 +469,7 @@ class _StockPopup extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.3),
+                  color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -481,7 +481,7 @@ class _StockPopup extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFF5722).withOpacity(0.1),
+                        color: const Color(0xFFFF5722).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: Color(0xFFFF5722), size: 24),
@@ -572,9 +572,9 @@ class _StockUpdateRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
@@ -602,9 +602,9 @@ class _StockUpdateRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+          color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
         ),
         child: Icon(icon, size: 18),
       ),
@@ -639,10 +639,10 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isDark
-              ? color.withOpacity(0.15)
-              : color.withOpacity(0.08),
+              ? color.withValues(alpha: 0.15)
+              : color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,9 +722,9 @@ class _ModernStockCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.5),
+            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -735,7 +735,7 @@ class _ModernStockCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.15),
+                      color: color.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: HugeIcon(icon: icon, color: color, size: 20),
@@ -759,7 +759,7 @@ class _ModernStockCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: statusColor.withOpacity(0.15),
+                            color: statusColor.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -1033,14 +1033,14 @@ class _StaffOrderCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: isDelivered
               ? (isDark
-                  ? Colors.green.shade900.withOpacity(0.3)
-                  : Colors.green.shade50.withOpacity(0.5))
-              : (isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4)),
+                  ? Colors.green.shade900.withValues(alpha: 0.3)
+                  : Colors.green.shade50.withValues(alpha: 0.5))
+              : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4)),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isDelivered 
-              ? Colors.green.withOpacity(0.3) 
-              : Colors.white.withOpacity(isDark ? 0.1 : 0.5)
+              ? Colors.green.withValues(alpha: 0.3) 
+              : Colors.white.withValues(alpha: isDark ? 0.1 : 0.5)
           ),
         ),
         child: Padding(
@@ -1493,9 +1493,9 @@ class _InventoryTab extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+                        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1847,7 +1847,7 @@ class _CounterButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: onPressed != null
-          ? buttonColor.withOpacity(0.1)
+          ? buttonColor.withValues(alpha: 0.1)
           : Colors.grey.shade200,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(

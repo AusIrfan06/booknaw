@@ -54,7 +54,7 @@ class ContactPage extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05),
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
               ),
               child: Center(
                 child: HugeIcon(
@@ -149,9 +149,9 @@ class ContactPage extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF5722).withOpacity(0.1),
+                    color: const Color(0xFFFF5722).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFFFF5722).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
@@ -197,18 +197,18 @@ class ContactPage extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.5)),
+              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.5)),
             ),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF25D366).withOpacity(0.1),
+                    color: const Color(0xFF25D366).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF25D366).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFF25D366).withValues(alpha: 0.3)),
                   ),
                   child: const HugeIcon(
                     icon: HugeIcons.strokeRoundedWhatsapp,
@@ -243,7 +243,7 @@ class ContactPage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF5722).withOpacity(0.1),
+                    color: const Color(0xFFFF5722).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const HugeIcon(

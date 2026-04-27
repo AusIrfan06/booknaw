@@ -219,7 +219,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 child: Card(
                   elevation: 0,
                   margin: EdgeInsets.zero,
-                  color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -247,9 +247,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.deepOrange.withOpacity(0.1),
+                      color: Colors.deepOrange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.deepOrange.withOpacity(0.2)),
+                      border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.2)),
                     ),
                     child: const Row(
                       children: [

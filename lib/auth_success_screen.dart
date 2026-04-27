@@ -116,13 +116,13 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                   ),
                   decoration: BoxDecoration(
                     color: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.white.withOpacity(0.4),
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : Colors.white.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(32),
                     border: Border.all(
                       color: isDark
-                          ? Colors.white.withOpacity(0.2)
-                          : Colors.white.withOpacity(0.5),
+                          ? Colors.white.withValues(alpha: 0.2)
+                          : Colors.white.withValues(alpha: 0.5),
                     ),
                   ),
                   child: Column(
@@ -131,10 +131,10 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFF5722).withOpacity(0.2),
+                          color: const Color(0xFFFF5722).withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: const Color(0xFFFF5722).withOpacity(0.5),
+                            color: const Color(0xFFFF5722).withValues(alpha: 0.5),
                             width: 2,
                           ),
                         ),

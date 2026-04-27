@@ -147,11 +147,11 @@ class _HomePageState extends State<HomePage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: safeIndex == 0 ? AppBar(
         title: const Text('NACHOZYYY 🌶️🧀'),
         centerTitle: true,
         automaticallyImplyLeading: false,
-      ),
+      ) : null,
       body: IndexedStack(index: safeIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: safeIndex,

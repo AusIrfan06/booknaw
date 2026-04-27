@@ -46,14 +46,6 @@ class _AddReviewPageState extends State<AddReviewPage> {
       return;
     }
 
-    // Double check status before submitting
-    if (widget.order['status'] != 'Delivered') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hanya pesanan yang telah selesai boleh direview!'), backgroundColor: Colors.red),
-      );
-      return;
-    }
-
     setState(() => _isUploading = true);
 
     try {
@@ -64,23 +56,33 @@ class _AddReviewPageState extends State<AddReviewPage> {
         final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_mediaFile!.path.split('/').last}';
         final path = 'reviews/$fileName';
 
-        await Supabase.instance.client.storage
-            .from('reviews')
-            .upload(path, _mediaFile!);
-        mediaUrl = Supabase.instance.client.storage
-            .from('reviews')
-            .getPublicUrl(path);
+        try {
+          // Attempt Storage Upload
+          await Supabase.instance.client.storage
+              .from('reviews')
+              .upload(path, _mediaFile!);
+          
+          mediaUrl = Supabase.instance.client.storage
+              .from('reviews')
+              .getPublicUrl(path);
+        } catch (storageErr) {
+          throw Exception('Gagal memuat naik gambar: Sila pastikan bucket "reviews" wujud di Supabase Storage dan ditetapkan kepada Public. (Ralat: $storageErr)');
+        }
       }
 
-      await Supabase.instance.client.from('reviews').insert({
-        'user_id': user?.id,
-        'order_id': widget.order['id'],
-        'customer_name': user?.userMetadata?['full_name'] ?? 'Pelanggan',
-        'rating': _rating,
-        'comment': _commentController.text.trim(),
-        'image_url': mediaUrl,
-        'is_video': _isVideo,
-      });
+      try {
+        // Attempt Database Insert
+        await Supabase.instance.client.from('reviews').insert({
+          'user_id': user?.id,
+          'order_id': int.tryParse(widget.order['id'].toString()),
+          'customer_name': user?.userMetadata?['full_name'] ?? 'Pelanggan',
+          'rating': _rating,
+          'comment': _commentController.text.trim(),
+          'image_url': mediaUrl,
+        });
+      } catch (dbErr) {
+        throw Exception('Gagal menyimpan ke database: Sila pastikan table "reviews" anda mempunyai column yang betul. (Ralat: $dbErr)');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -94,7 +96,11 @@ class _AddReviewPageState extends State<AddReviewPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', '')), 
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
+          ),
         );
       }
     } finally {
@@ -113,7 +119,6 @@ class _AddReviewPageState extends State<AddReviewPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Order Info Summary
             _buildOrderInfo(isDark),
             const SizedBox(height: 32),
 
@@ -155,7 +160,6 @@ class _AddReviewPageState extends State<AddReviewPage> {
             ),
             const SizedBox(height: 24),
 
-            // Media Preview
             if (_mediaFile != null) ...[
               Stack(
                 children: [

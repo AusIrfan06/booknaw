@@ -320,16 +320,36 @@ class _DashboardPage extends StatelessWidget {
                   final bbqTotal = data.fold<int>(0, (sum, row) => sum + (row['bbq_stock'] as int? ?? 0));
                   final cheeseTotal = data.fold<int>(0, (sum, row) => sum + (row['cheese_stock'] as int? ?? 0));
 
-                  return Column(
+                  return GridView.count(
+                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 1,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 2.2,
                     children: [
-                      _StockSummaryTile(
-                        label: 'Jumlah Keseluruhan HOT & SPICYYY 🌶️',
+                      _ModernStockCard(
+                        label: 'HOT & SPICYYY 🌶️',
                         stock: hotTotal,
+                        icon: HugeIcons.strokeRoundedFire,
+                        color: Colors.redAccent,
+                        maxStock: 500,
                       ),
-                      const SizedBox(height: 10),
-                      _StockSummaryTile(label: 'Jumlah Keseluruhan BBQ 🍖', stock: bbqTotal),
-                      const SizedBox(height: 10),
-                      _StockSummaryTile(label: 'Jumlah Keseluruhan Cheese Dip 🧀', stock: cheeseTotal, unit: 'unit'),
+                      _ModernStockCard(
+                        label: 'SMOKY BBQ 🍖',
+                        stock: bbqTotal,
+                        icon: HugeIcons.strokeRoundedPackage,
+                        color: Colors.orangeAccent,
+                        maxStock: 500,
+                      ),
+                      _ModernStockCard(
+                        label: 'CHEESE DIP 🧀',
+                        stock: cheeseTotal,
+                        icon: HugeIcons.strokeRoundedPackage,
+                        color: Colors.amber,
+                        unit: 'unit',
+                        maxStock: 1000,
+                      ),
                     ],
                   );
                 },
@@ -564,57 +584,125 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _StockSummaryTile extends StatelessWidget {
+class _ModernStockCard extends StatelessWidget {
   final String label;
   final int stock;
   final String unit;
+  final dynamic icon;
+  final Color color;
+  final int maxStock;
 
-  const _StockSummaryTile({
+  const _ModernStockCard({
     required this.label,
     required this.stock,
     this.unit = 'pek',
+    required this.icon,
+    required this.color,
+    required this.maxStock,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isSoldOut = stock <= 0;
-    final color = isSoldOut ? Colors.red : Colors.green;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final double percent = (stock / maxStock).clamp(0.0, 1.0);
+    
+    Color statusColor;
+    String statusText;
+    if (stock <= 0) {
+      statusColor = Colors.red;
+      statusText = 'Habis';
+    } else if (stock < 50) {
+      statusColor = Colors.orange;
+      statusText = 'Rendah';
+    } else {
+      statusColor = Colors.green;
+      statusText = 'Tinggi';
+    }
+
     return GlassContainer(
       useOwnLayer: true,
       quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
-      settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
+      shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+      settings: _getStaffGlassSettings(isDark),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          color: isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                isSoldOut ? 'SOLD OUT' : '$stock $unit',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: HugeIcon(icon: icon, color: color, size: 20),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          statusText,
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$stock',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                Text(
+                  unit,
+                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: percent,
+                backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+                minHeight: 4,
               ),
             ),
           ],

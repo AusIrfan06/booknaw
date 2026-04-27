@@ -291,8 +291,8 @@ class _HomeTab extends StatelessWidget {
                     _buildSleekCard(
                       context,
                       title: 'HOT & SPICYYY',
-                      desc: 'Pedas gila, gerenti berpeluh!',
-                      price: 'RM 10.00',
+                      desc: 'Pedas gila, gerenti berpeluh! (100g)',
+                      price: 'RM 5.00',
                       imageColor: Colors.redAccent,
                       onTap: onOrder,
                     ),
@@ -300,8 +300,8 @@ class _HomeTab extends StatelessWidget {
                     _buildSleekCard(
                       context,
                       title: 'SMOKY BBQ',
-                      desc: 'Rasa salai yang premium.',
-                      price: 'RM 10.00',
+                      desc: 'Rasa salai yang premium. (100g)',
+                      price: 'RM 5.00',
                       imageColor: Colors.orangeAccent,
                       onTap: onOrder,
                     ),

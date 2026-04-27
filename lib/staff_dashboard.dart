@@ -334,6 +334,7 @@ class _DashboardPage extends StatelessWidget {
                         icon: HugeIcons.strokeRoundedFire,
                         color: Colors.redAccent,
                         maxStock: 500,
+                        onTap: () => _showStockUpdatePopup(context, 'HOT & SPICYYY', 'hot_stock'),
                       ),
                       _ModernStockCard(
                         label: 'SMOKY BBQ',
@@ -341,6 +342,7 @@ class _DashboardPage extends StatelessWidget {
                         icon: HugeIcons.strokeRoundedPackage,
                         color: Colors.orangeAccent,
                         maxStock: 500,
+                        onTap: () => _showStockUpdatePopup(context, 'SMOKY BBQ', 'bbq_stock'),
                       ),
                       _ModernStockCard(
                         label: 'CHEESE DIP',
@@ -349,6 +351,7 @@ class _DashboardPage extends StatelessWidget {
                         color: Colors.amber,
                         unit: 'unit',
                         maxStock: 1000,
+                        onTap: () => _showStockUpdatePopup(context, 'CHEESE DIP', 'cheese_stock'),
                       ),
                     ],
                   );
@@ -423,7 +426,197 @@ class _DashboardPage extends StatelessWidget {
       ),
     );
   }
+
+  void _showStockUpdatePopup(BuildContext context, String flavorLabel, String dbColumn) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _StockPopup(flavorLabel: flavorLabel, dbColumn: dbColumn),
+    );
+  }
 }
+
+class _StockPopup extends StatelessWidget {
+  final String flavorLabel;
+  final String dbColumn;
+
+  const _StockPopup({required this.flavorLabel, required this.dbColumn});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final inventoryStream = Supabase.instance.client
+        .from('inventory')
+        .stream(primaryKey: ['id'])
+        .order('id');
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      maxChildSize: 0.9,
+      minChildSize: 0.4,
+      builder: (_, controller) => GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(
+          borderRadius: 32.0,
+        ),
+        settings: _getStaffGlassSettings(isDark),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF5722).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: Color(0xFFFF5722), size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Kemaskini Stok', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                          Text(flavorLabel, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Divider(height: 1),
+              Expanded(
+                child: StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: inventoryStream,
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                    final data = snapshot.data!;
+                    
+                    return ListView.builder(
+                      controller: controller,
+                      padding: const EdgeInsets.all(24),
+                      itemCount: _inventoryLocations.length,
+                      itemBuilder: (context, index) {
+                        final loc = _inventoryLocations[index];
+                        final row = data.firstWhere((r) => r['id'] == loc['id'], orElse: () => {});
+                        final currentStock = row[dbColumn] as int? ?? 0;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: _StockUpdateRow(
+                            locName: loc['name'] as String,
+                            locationId: loc['id'] as int,
+                            dbColumn: dbColumn,
+                            currentStock: currentStock,
+                            currentRow: row,
+                            unit: flavorLabel.contains('CHEESE') ? 'unit' : 'pek',
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StockUpdateRow extends StatelessWidget {
+  final String locName;
+  final int locationId;
+  final String dbColumn;
+  final int currentStock;
+  final Map<String, dynamic> currentRow;
+  final String unit;
+
+  const _StockUpdateRow({
+    required this.locName,
+    required this.locationId,
+    required this.dbColumn,
+    required this.currentStock,
+    required this.currentRow,
+    required this.unit,
+  });
+
+  Future<void> _update(int amount) async {
+    final newStock = (currentStock + amount).clamp(0, 9999);
+    final payload = Map<String, dynamic>.from(currentRow);
+    payload['id'] = locationId;
+    payload[dbColumn] = newStock;
+    await Supabase.instance.client.from('inventory').upsert(payload);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(locName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                Text('$currentStock $unit', style: TextStyle(color: currentStock < 10 ? Colors.red : Colors.grey, fontSize: 13)),
+              ],
+            ),
+          ),
+          _adjustBtn(Icons.remove, () => _update(-10), isDark),
+          const SizedBox(width: 8),
+          _adjustBtn(Icons.add, () => _update(10), isDark),
+        ],
+      ),
+    );
+  }
+
+  Widget _adjustBtn(IconData icon, VoidCallback onTap, bool isDark) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withOpacity(0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+        ),
+        child: Icon(icon, size: 18),
+      ),
+    );
+  }
+}
+
 
 class _PasswordResetHelper extends StatefulWidget {
   const _PasswordResetHelper();
@@ -592,6 +785,8 @@ class _ModernStockCard extends StatelessWidget {
   final Color color;
   final int maxStock;
 
+  final VoidCallback? onTap;
+
   const _ModernStockCard({
     required this.label,
     required this.stock,
@@ -599,6 +794,7 @@ class _ModernStockCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.maxStock,
+    this.onTap,
   });
 
   @override
@@ -619,93 +815,97 @@ class _ModernStockCard extends StatelessWidget {
       statusText = 'Tinggi';
     }
 
-    return GlassContainer(
-      useOwnLayer: true,
-      quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-      settings: _getStaffGlassSettings(isDark),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+        settings: _getStaffGlassSettings(isDark),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withOpacity(0.03) : Colors.white.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isDark ? Colors.white.withOpacity(0.05) : Colors.black.withOpacity(0.05)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: HugeIcon(icon: icon, color: color, size: 20),
                   ),
-                  child: HugeIcon(icon: icon, color: color, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(6),
+                        const SizedBox(height: 2),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: statusColor.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
+                          ),
                         ),
-                        child: Text(
-                          statusText,
-                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: statusColor),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$stock',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: isDark ? Colors.white : Colors.black87,
-                  ),
-                ),
-                Text(
-                  unit,
-                  style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: percent,
-                backgroundColor: isDark ? Colors.white10 : Colors.black12,
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-                minHeight: 4,
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '$stock',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    unit,
+                    style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: percent,
+                  backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                  minHeight: 4,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

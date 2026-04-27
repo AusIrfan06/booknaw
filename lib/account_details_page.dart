@@ -3,8 +3,72 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
-class AccountDetailsPage extends StatelessWidget {
+class AccountDetailsPage extends StatefulWidget {
   const AccountDetailsPage({super.key});
+
+  @override
+  State<AccountDetailsPage> createState() => _AccountDetailsPageState();
+}
+
+class _AccountDetailsPageState extends State<AccountDetailsPage> {
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  bool _isLoading = false;
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      _nameController.text = user.userMetadata?['full_name'] ?? "";
+      _phoneController.text = user.userMetadata?['phone'] ?? "";
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    setState(() => _isLoading = true);
+    try {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user == null) return;
+
+      final name = _nameController.text.trim();
+      final phone = _phoneController.text.trim();
+
+      // Update auth metadata
+      await Supabase.instance.client.auth.updateUser(
+        UserAttributes(
+          data: {
+            'full_name': name,
+            'phone': phone,
+          },
+        ),
+      );
+
+      // Update public.users table
+      await Supabase.instance.client.from('users').upsert({
+        'id': user.id,
+        'full_name': name,
+        'phone': phone,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        setState(() => _isEditing = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profil berjaya dikemaskini!'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +79,6 @@ class AccountDetailsPage extends StatelessWidget {
       return const Scaffold(body: Center(child: Text("Sila log masuk.")));
     }
 
-    final name = user.userMetadata?['full_name'] ?? "N/A";
     final email = user.email ?? "N/A";
     final isStaff = user.userMetadata?['is_staff'] == true;
     final createdAt = user.createdAt;
@@ -42,6 +105,13 @@ class AccountDetailsPage extends StatelessWidget {
           ),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          if (!_isEditing)
+            IconButton(
+              icon: HugeIcon(icon: HugeIcons.strokeRoundedEdit01, color: const Color(0xFFFF5722), size: 24),
+              onPressed: () => setState(() => _isEditing = true),
+            ),
+        ],
       ),
       body: Stack(
         children: [
@@ -79,17 +149,15 @@ class AccountDetailsPage extends StatelessWidget {
 
                   _buildDetailSection(
                     isDark,
-                    "Informasi Peribadi",
+                    "Informasi Utama",
                     [
-                      _buildDetailTile(isDark, HugeIcons.strokeRoundedUser, "Nama Penuh", name),
+                      _isEditing 
+                        ? _buildEditableTile(isDark, HugeIcons.strokeRoundedUser, "Nama Penuh", _nameController)
+                        : _buildDetailTile(isDark, HugeIcons.strokeRoundedUser, "Nama Penuh", _nameController.text),
+                      _isEditing
+                        ? _buildEditableTile(isDark, HugeIcons.strokeRoundedSmartPhone01, "No. Telefon", _phoneController, keyboardType: TextInputType.phone)
+                        : _buildDetailTile(isDark, HugeIcons.strokeRoundedSmartPhone01, "No. Telefon", _phoneController.text),
                       _buildDetailTile(isDark, HugeIcons.strokeRoundedMail01, "E-mel", email),
-                      _buildDetailTile(
-                        isDark, 
-                        HugeIcons.strokeRoundedUserCircle, 
-                        "Peranan", 
-                        isStaff ? "Staf Nachozyyy" : "Pelanggan",
-                        accentColor: isStaff ? const Color(0xFFFF5722) : Colors.blueAccent,
-                      ),
                     ],
                   ),
                   
@@ -97,33 +165,49 @@ class AccountDetailsPage extends StatelessWidget {
 
                   _buildDetailSection(
                     isDark,
-                    "Keselamatan & Sistem",
+                    "Butiran Sistem",
                     [
+                      _buildDetailTile(
+                        isDark, 
+                        HugeIcons.strokeRoundedUserCircle, 
+                        "Peranan", 
+                        isStaff ? "Staf Nachozyyy" : "Pelanggan",
+                        accentColor: isStaff ? const Color(0xFFFF5722) : Colors.blueAccent,
+                      ),
                       _buildDetailTile(
                         isDark, 
                         HugeIcons.strokeRoundedClock01, 
                         "Ahli Sejak", 
                         _formatDate(createdAt),
                       ),
-                      _buildDetailTile(
-                        isDark, 
-                        HugeIcons.strokeRoundedCheckmarkCircle01, 
-                        "ID Akaun", 
-                        user.id.substring(0, 8).toUpperCase(),
-                      ),
                     ],
                   ),
 
-                  const SizedBox(height: 40),
-                  
-                  Text(
-                    "Butiran ini digunakan untuk pengurusan pesanan dan profil anda. Sila hubungi sokongan jika anda ingin menukar e-mel.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? Colors.white38 : Colors.black38,
+                  if (_isEditing) ...[
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _updateProfile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF5722),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          elevation: 0,
+                        ),
+                        child: _isLoading 
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text("Simpan Perubahan", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
                     ),
-                  ),
+                    TextButton(
+                      onPressed: () => setState(() => _isEditing = false),
+                      child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                    ),
+                  ],
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
@@ -241,13 +325,10 @@ class AccountDetailsPage extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 Text(
-                  value,
+                  value.isEmpty ? "Tiada" : value,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -255,6 +336,31 @@ class AccountDetailsPage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditableTile(bool isDark, dynamic icon, String label, TextEditingController controller, {TextInputType? keyboardType}) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: keyboardType,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                labelText: label,
+                labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+                border: InputBorder.none,
+                isDense: true,
+              ),
             ),
           ),
         ],

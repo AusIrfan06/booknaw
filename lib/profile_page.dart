@@ -133,8 +133,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const AccountDetailsPage()));
                           }),
                           _buildDivider(isDark),
-                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Maklumat Peribadi"),
-                          _buildDivider(isDark),
                           _buildSettingsTile(isDark, HugeIcons.strokeRoundedLock, "Privasi & Keselamatan", onTap: () {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacySafetyPage()));
                           }),

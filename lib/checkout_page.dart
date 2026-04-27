@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CheckoutPage extends StatefulWidget {
   final int hotQuantity;
@@ -30,6 +32,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   bool _isLoading = false;
+  File? _receiptFile;
+  final _picker = ImagePicker();
 
   @override
   void initState() {
@@ -42,6 +46,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
+  Future<void> _pickReceipt() async {
+    final XFile? file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (file != null) {
+      setState(() => _receiptFile = File(file.path));
+    }
+  }
+
   bool get _isDelivery => widget.deliveryOption.startsWith('Delivery');
 
   Future<void> _submitOrder() async {
@@ -50,6 +61,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isLoading = true);
 
     try {
+      String? receiptUrl;
+      if (_receiptFile != null) {
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_receipt.jpg';
+        final path = 'receipts/$fileName';
+        await Supabase.instance.client.storage.from('media').upload(path, _receiptFile!);
+        receiptUrl = Supabase.instance.client.storage.from('media').getPublicUrl(path);
+      }
+
       await Supabase.instance.client.from('orders').insert({
         'user_id': Supabase.instance.client.auth.currentUser?.id,
         'customer_name': _nameController.text,
@@ -61,6 +80,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
+        'receipt_url': receiptUrl,
       });
 
       // Determine locId from delivery option
@@ -304,6 +324,42 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   validator: (val) => val == null || val.trim().isEmpty ? 'Sila masukkan alamat penghantaran' : null,
                 ),
               ],
+              const SizedBox(height: 32),
+
+              const Text('Bukti Pembayaran (Opsional)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Muat naik resit/gambar bukti pembayaran di sini.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+
+              GestureDetector(
+                onTap: _pickReceipt,
+                child: Container(
+                  height: 150,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3), style: BorderStyle.solid),
+                  ),
+                  child: _receiptFile != null 
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_receiptFile!, fit: BoxFit.cover)),
+                          Positioned(right: 8, top: 8, child: CircleAvatar(backgroundColor: Colors.black54, child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => setState(() => _receiptFile = null)))),
+                        ],
+                      )
+                    : const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
+                          SizedBox(height: 8),
+                          Text('Klik untuk muat naik resit', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+                ),
+              ),
+
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitOrder,

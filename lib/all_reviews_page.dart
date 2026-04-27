@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'add_review_page.dart';
 
 class AllReviewsPage extends StatelessWidget {
   const AllReviewsPage({super.key});
@@ -8,6 +9,9 @@ class AllReviewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final user = Supabase.instance.client.auth.currentUser;
+    final isLoggedIn = user != null;
+
     final reviewsStream = Supabase.instance.client
         .from('reviews')
         .stream(primaryKey: ['id'])
@@ -110,6 +114,14 @@ class AllReviewsPage extends StatelessWidget {
           );
         },
       ),
+      floatingActionButton: isLoggedIn ? FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddReviewPage()));
+        },
+        backgroundColor: const Color(0xFFFF5722),
+        icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
+        label: const Text('Tambah Review', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ) : null,
     );
   }
 

@@ -41,10 +41,10 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   void _proceedToCheckout() {
-    if (_hotQuantity == 0 && _bbqQuantity == 0) {
+    if (_hotQuantity == 0 && _bbqQuantity == 0 && _cheeseQuantity == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Sila tambah sekurang-kurangnya 1 perisa!'),
+          content: Text('Sila tambah sekurang-kurangnya 1 item (Nachos atau Cheese Dip)!'),
         ),
       );
       return;

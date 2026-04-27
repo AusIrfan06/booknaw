@@ -39,7 +39,14 @@ class _SignupPageState extends State<SignupPage> {
 
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan email atau no. telefon!')),
+        const SnackBar(content: Text('Sila masukkan alamat email!')),
+      );
+      return;
+    }
+
+    if (phoneInput.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sila masukkan no. telefon!')),
       );
       return;
     }
@@ -58,15 +65,7 @@ class _SignupPageState extends State<SignupPage> {
         isStaff = true;
       }
 
-      // Support phone-only signup by converting to fake email
-      if (RegExp(r'^[0-9]+$').hasMatch(email)) {
-        // Strip leading zero if present for the fake email
-        String cleanPhone = email;
-        if (cleanPhone.startsWith('0')) {
-          cleanPhone = cleanPhone.substring(1);
-        }
-        email = '$cleanPhone@nachos.com';
-      }
+
 
       // Format phone correctly: strip leading zero and remove all spaces
       String cleanPhoneInput = phoneInput.replaceAll(RegExp(r'\s+'), '');
@@ -217,7 +216,7 @@ class _SignupPageState extends State<SignupPage> {
                         const SizedBox(height: 16),
                         _buildGlassField(
                           controller: _emailController,
-                          label: 'Email atau No. Telefon',
+                          label: 'Email',
                           icon: HugeIcons.strokeRoundedMail01,
                           isDark: isDark,
                           keyboardType: TextInputType.emailAddress,

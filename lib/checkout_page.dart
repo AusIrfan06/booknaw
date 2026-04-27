@@ -32,8 +32,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   bool _isLoading = false;
-  File? _receiptFile;
-  final _picker = ImagePicker();
 
   @override
   void initState() {
@@ -46,12 +44,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  Future<void> _pickReceipt() async {
-    final XFile? file = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-    if (file != null) {
-      setState(() => _receiptFile = File(file.path));
-    }
-  }
 
   bool get _isDelivery => widget.deliveryOption.startsWith('Delivery');
 
@@ -61,14 +53,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isLoading = true);
 
     try {
-      String? receiptUrl;
-      if (_receiptFile != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_receipt.jpg';
-        final path = 'receipts/$fileName';
-        await Supabase.instance.client.storage.from('media').upload(path, _receiptFile!);
-        receiptUrl = Supabase.instance.client.storage.from('media').getPublicUrl(path);
-      }
-
       final response = await Supabase.instance.client.from('orders').insert({
         'user_id': Supabase.instance.client.auth.currentUser?.id,
         'customer_name': _nameController.text,
@@ -80,7 +64,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
-        'receipt_url': receiptUrl,
       }).select().single();
 
       final orderId = response['id'];
@@ -125,8 +108,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'Lokasi: $location\n'
         '${_isDelivery ? "Alamat: ${_addressController.text.trim()}\n" : ""}'
         'Jumlah: $total\n\n'
-        '${receiptUrl != null ? "Bukti Pembayaran: $receiptUrl\n\n" : ""}'
-        'Sila semak resit pembayaran saya ya! Terima kasih',
+        '*(Sila sertakan gambar resit selepas ini)*\n\n'
+        'Terima kasih!',
       );
       const lysaNumber = '60132163194'; // Lysa - Beta & Gamma
       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
@@ -429,96 +412,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
               const SizedBox(height: 32),
 
-              // Step 2: Receipt Upload
+              // Step 2: Final Confirmation
               const Row(
                 children: [
-                  Icon(Icons.receipt_long, size: 24, color: Colors.orange),
+                  Icon(Icons.whatsapp, size: 24, color: Color(0xFF25D366)),
                   SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Langkah 2', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                      Text('Muat Naik Resit', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Langkah 2', style: TextStyle(fontSize: 10, color: Color(0xFF25D366), fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      Text('Hantar Resit ke WhatsApp', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               const Text(
-                'Selepas bayaran dibuat, sila muat naik resit di bawah sebagai bukti.',
+                'Selepas menekan butang di bawah, anda akan dibawa ke WhatsApp. Sila lampirkan (attach) gambar resit anda di sana.',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-
-              GestureDetector(
-                onTap: _pickReceipt,
-                child: Container(
-                  height: 160,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _receiptFile != null ? Colors.green.withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.3),
-                      style: BorderStyle.solid,
-                      width: 2,
-                    ),
-                  ),
-                  child: _receiptFile != null 
-                    ? Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(14), 
-                            child: Image.file(_receiptFile!, fit: BoxFit.cover),
-                          ),
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              gradient: LinearGradient(
-                                colors: [Colors.black.withValues(alpha: 0.4), Colors.transparent],
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            right: 12, 
-                            top: 12, 
-                            child: IconButton.filled(
-                              icon: const Icon(Icons.close, color: Colors.white, size: 20), 
-                              onPressed: () => setState(() => _receiptFile = null),
-                              style: IconButton.styleFrom(backgroundColor: Colors.black54),
-                            ),
-                          ),
-                          const Center(
-                            child: Icon(Icons.check_circle, color: Colors.white, size: 48),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.cloud_upload_outlined, color: Colors.grey, size: 32),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Klik untuk muat naik resit pembayaran',
-                            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-                          ),
-                          const Text(
-                            'Format: JPG, PNG (Max 5MB)',
-                            style: TextStyle(color: Colors.grey, fontSize: 10),
-                          ),
-                        ],
-                      ),
-                ),
               ),
 
               const SizedBox(height: 40),

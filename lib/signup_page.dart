@@ -24,9 +24,29 @@ class _SignupPageState extends State<SignupPage> {
   bool _obscureStaffCode = true;
 
   Future<void> _signUp() async {
-    if (_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty) {
+    String firstName = _firstNameController.text.trim();
+    String lastName = _lastNameController.text.trim();
+    String email = _emailController.text.trim();
+    String phoneInput = _phoneController.text.trim();
+    String password = _passwordController.text;
+
+    if (firstName.isEmpty || lastName.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sila masukkan nama pertama dan nama akhir!')),
+      );
+      return;
+    }
+
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sila masukkan email atau no. telefon!')),
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Katalaluan mestilah sekurang-kurangnya 6 aksara!')),
       );
       return;
     }
@@ -34,20 +54,34 @@ class _SignupPageState extends State<SignupPage> {
     setState(() => _isLoading = true);
     try {
       bool isStaff = false;
-      if (_staffCodeController.text.trim() == 'STAFFENT300') {
+      if (_staffCodeController.text.trim().toUpperCase() == 'STAFFENT300') {
         isStaff = true;
       }
 
-      String email = _emailController.text.trim();
-      String phone = '+60${_phoneController.text.trim()}';
+      // Support phone-only signup by converting to fake email
+      if (RegExp(r'^[0-9]+$').hasMatch(email)) {
+        // Strip leading zero if present for the fake email
+        String cleanPhone = email;
+        if (cleanPhone.startsWith('0')) {
+          cleanPhone = cleanPhone.substring(1);
+        }
+        email = '$cleanPhone@nachos.com';
+      }
+
+      // Format phone correctly: strip leading zero from input
+      String cleanPhoneInput = phoneInput;
+      if (cleanPhoneInput.startsWith('0')) {
+        cleanPhoneInput = cleanPhoneInput.substring(1);
+      }
+      String phone = '+60$cleanPhoneInput';
 
       await Supabase.instance.client.auth.signUp(
         email: email,
-        password: _passwordController.text,
+        password: password,
         data: {
-          'first_name': _firstNameController.text.trim(),
-          'last_name': _lastNameController.text.trim(),
-          'full_name': '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}',
+          'first_name': firstName,
+          'last_name': lastName,
+          'full_name': '$firstName $lastName',
           'is_staff': isStaff,
           'phone': phone,
         },
@@ -183,7 +217,7 @@ class _SignupPageState extends State<SignupPage> {
                         const SizedBox(height: 16),
                         _buildGlassField(
                           controller: _emailController,
-                          label: 'Email',
+                          label: 'Email atau No. Telefon',
                           icon: HugeIcons.strokeRoundedMail01,
                           isDark: isDark,
                           keyboardType: TextInputType.emailAddress,

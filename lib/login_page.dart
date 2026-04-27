@@ -28,7 +28,11 @@ class _LoginPageState extends State<LoginPage> {
       
       // If it looks like a phone number (only digits), convert to fake email
       if (RegExp(r'^[0-9]+$').hasMatch(identifier)) {
-        identifier = '$identifier@nachos.com';
+        String cleanPhone = identifier;
+        if (cleanPhone.startsWith('0')) {
+          cleanPhone = cleanPhone.substring(1);
+        }
+        identifier = '$cleanPhone@nachos.com';
       }
 
       final res = await Supabase.instance.client.auth.signInWithPassword(

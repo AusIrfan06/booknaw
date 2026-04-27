@@ -326,9 +326,76 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ],
               const SizedBox(height: 32),
 
-              const Text('Bukti Pembayaran (Opsional)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Langkah 1: Imbas QR & Bayar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              const Text('Muat naik resit/gambar bukti pembayaran di sini.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const Text('Sila imbas kod QR di bawah untuk membuat pembayaran melalui DuitNow atau TNG eWallet.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const SizedBox(height: 16),
+              
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/qr_payment.png',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 200,
+                              height: 200,
+                              color: Colors.grey[200],
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.qr_code_2, size: 60, color: Colors.grey),
+                                  SizedBox(height: 8),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    child: Text(
+                                      'Sila letakkan gambar qr_payment.png dalam folder assets',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(fontSize: 10, color: Colors.grey),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'NACHOZYY ENTERPRISE',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                      const Text(
+                        'DuitNow / QR Pay',
+                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 32),
+              const Text('Langkah 2: Muat Naik Bukti Pembayaran', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('Selepas berjaya membayar, muat naik resit/gambar bukti pembayaran di sini.', style: TextStyle(fontSize: 12, color: Colors.grey)),
               const SizedBox(height: 16),
 
               GestureDetector(

@@ -95,7 +95,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final location = widget.deliveryOption;
 
       final waMessage = Uri.encodeComponent(
-        'Assalamualaikum Lysa Saya baru buat pesanan NACHOZYYY dan dah buat bayaran!\n\n'
+        'Assalamualaikum Lysa Saya baru buat pesanan NACHOZYY!\n\n'
         'Nama: $name\n'
         'No. Tel: $phone\n'
         'Pesanan: $items\n'

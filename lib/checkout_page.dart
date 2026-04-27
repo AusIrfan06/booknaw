@@ -44,7 +44,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-
   bool get _isDelivery => widget.deliveryOption.startsWith('Delivery');
 
   Future<void> _submitOrder() async {
@@ -98,23 +97,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
       final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
       final total = 'RM ${widget.totalPrice.toStringAsFixed(2)}';
       final location = widget.deliveryOption;
+      final address = _isDelivery ? _addressController.text.trim() : 'Pickup';
 
       final waMessage = Uri.encodeComponent(
-        'Assalamualaikum Lysa Saya baru buat pesanan NACHOZYY!\n\n'
-        '*ID Pesanan: #$orderId*\n'
+        'Assalamualaikum Lysa Saya nak order Nachozy!\n\n'
+        'No. Pesanan: #$orderId\n'
         'Nama: $name\n'
         'No. Tel: $phone\n'
         'Pesanan: $items\n'
         'Lokasi: $location\n'
-        '${_isDelivery ? "Alamat: ${_addressController.text.trim()}\n" : ""}'
+        'Alamat: $address\n'
         'Jumlah: $total\n\n'
-        '*(Sila sertakan gambar resit selepas ini)*\n\n'
-        'Terima kasih!',
+        'Saya akan hantar bukti pembayaran sekejap lagi ya! Terima kasih',
       );
-      const lysaNumber = '60132163194'; // Lysa - Beta & Gamma
+      const lysaNumber = '60132163194';
       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
 
-      _showPaymentSheet(context, waUrl, orderId.toString());
+      _showSuccessDialog(orderId, waUrl);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -126,28 +125,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  void _showPaymentSheet(BuildContext context, Uri waUrl, String orderId) {
-    showModalBottomSheet(
+  void _showSuccessDialog(dynamic orderId, Uri waUrl) {
+    showDialog(
       context: context,
-      isDismissible: false,
-      enableDrag: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 60,
-              height: 60,
-              decoration: const BoxDecoration(
-                color: Color(0xFFE8F5E9),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_circle, color: Colors.green, size: 36),
-            ),
+            const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
             const SizedBox(height: 16),
             Text(
               'Pesanan #$orderId Berjaya!',
@@ -198,6 +185,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Bayaran & Maklumat')),
       body: SingleChildScrollView(
@@ -207,275 +197,101 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 16),
-              GlassContainer(
-                useOwnLayer: true,
-                quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
-                settings: LiquidGlassSettings(
-                  thickness: 0.05,
-                  blur: 10,
-                  refractiveIndex: 1.0,
-                  glassColor: Colors.transparent,
-                  lightAngle: 45.0,
-                  lightIntensity: 0.1,
-                  ambientStrength: 1.0,
-                  saturation: 1.0,
-                  chromaticAberration: 0.0,
-                ),
-                child: Card(
-                  elevation: 0,
-                  margin: EdgeInsets.zero,
-                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, size: 40),
-                        const SizedBox(height: 8),
-                        const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        const Divider(),
-                        if (widget.hotQuantity > 0) _buildSummaryRow('HOT & SPICYYY', '${widget.hotQuantity} pek'),
-                        if (widget.bbqQuantity > 0) _buildSummaryRow('BBQ', '${widget.bbqQuantity} pek'),
-                        if (widget.cheeseQuantity > 0) _buildSummaryRow('Cheese Dip', '${widget.cheeseQuantity} unit'),
-                        _buildSummaryRow('Lokasi', widget.deliveryOption),
-                        const Divider(),
-                        _buildSummaryRow('Jumlah Bayaran', 'RM ${widget.totalPrice.toStringAsFixed(2)}', isBold: true),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Maklumat Hubungan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.deepOrange.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.deepOrange.withValues(alpha: 0.2)),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.edit, size: 12, color: Colors.deepOrange),
-                        SizedBox(width: 4),
-                        Text(
-                          'Boleh diubah',
-                          style: TextStyle(fontSize: 11, color: Colors.deepOrange, fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Sila sahkan maklumat anda di bawah. Anda boleh menukar nama atau no. telefon jika perlu.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              // --- Order Summary Card ---
+              _buildModernSummary(isDark),
+              
+              const SizedBox(height: 32),
+
+              // --- Contact Info Header ---
+              _buildSectionHeader(
+                icon: HugeIcons.strokeRoundedUser,
+                title: 'Maklumat Peribadi',
+                isDark: isDark,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              
+              _buildTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Penuh',
-                  prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: Colors.grey, size: 20),
-                  border: OutlineInputBorder(),
-                ),
+                label: 'Nama Penuh',
+                icon: HugeIcons.strokeRoundedUser,
+                isDark: isDark,
                 validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              _buildTextField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'No. Telefon (WhatsApp)',
-                  prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedSmartPhone01, color: Colors.grey, size: 20),
-                  border: OutlineInputBorder(),
-                ),
+                label: 'No. Telefon (WhatsApp)',
+                icon: HugeIcons.strokeRoundedSmartPhone01,
+                isDark: isDark,
                 keyboardType: TextInputType.phone,
                 validator: (val) => val == null || val.isEmpty ? 'Sila masukkan no. telefon' : null,
               ),
               if (_isDelivery) ...[
                 const SizedBox(height: 16),
-                TextFormField(
+                _buildTextField(
                   controller: _addressController,
-                  decoration: const InputDecoration(
-                    labelText: 'Alamat Penghantaran',
-                    hintText: 'Cth: Blok B, Bilik 203, UiTM...',
-                    prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedMapsLocation01, color: Colors.grey, size: 20),
-                    border: OutlineInputBorder(),
-                  ),
+                  label: 'Alamat Penghantaran',
+                  icon: HugeIcons.strokeRoundedMapsLocation01,
+                  isDark: isDark,
                   maxLines: 2,
-                  validator: (val) => val == null || val.trim().isEmpty ? 'Sila masukkan alamat penghantaran' : null,
+                  validator: (val) => val == null || val.trim().isEmpty ? 'Sila masukkan alamat' : null,
                 ),
               ],
-              const SizedBox(height: 32),
-
-              // Step 1: Payment Selection & QR
-              Container(
-                padding: const EdgeInsets.all(2),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.orange.withValues(alpha: 0.5), Colors.deepOrange.withValues(alpha: 0.5)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(26),
-                ),
-                child: GlassContainer(
-                  useOwnLayer: true,
-                  quality: GlassQuality.standard,
-                  shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
-                  settings: LiquidGlassSettings(
-                    thickness: 0.1,
-                    blur: 15,
-                    glassColor: Colors.orange.withValues(alpha: 0.1),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.2),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.qr_code_scanner, color: Colors.orange, size: 20),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                                  Text(
-                                    'Tangkap Layar QR Code', 
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.1),
-                                blurRadius: 15,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.asset(
-                              'assets/qr_payment.png',
-                              width: 220,
-                              height: 220,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'SITI FARHANA ALLYSA BINTI MD FADLI',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
-                          textAlign: TextAlign.center,
-                        ),
-                        const Text(
-                          'DuitNow / QR Pay',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: const Text(
-                            'Sila tangkap layar (screenshot) QR di bawah',
-                            style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Step 2: Final Confirmation
-              const Row(
-                children: [
-                  HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, size: 24, color: Color(0xFF25D366)),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Langkah 2 & 3', style: TextStyle(fontSize: 10, color: Color(0xFF25D366), fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                        Text(
-                          'Hantar Pesanan & Bukti', 
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '1. Tekan butang di bawah untuk hantar pesanan ke WhatsApp.\n'
-                '2. Kemudian, lampirkan (attach) gambar resit yang telah dibayar di sana.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
 
               const SizedBox(height: 40),
-              
-              // Submit Button
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitOrder,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  elevation: 8,
-                  shadowColor: Colors.green.withValues(alpha: 0.4),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-                child: _isLoading 
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      ) 
-                    : const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.send_rounded),
-                          SizedBox(width: 12),
-                          Text('Sahkan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
+
+              // --- Step 1: Payment ---
+              _buildStepHeader(
+                step: 'Langkah 1',
+                title: 'Tangkap Layar QR Code',
+                icon: Icons.qr_code_scanner_rounded,
+                color: primaryColor,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              _buildQRCodeSection(isDark, primaryColor),
+
+              const SizedBox(height: 40),
+
+              // --- Step 2 & 3: WhatsApp ---
+              _buildStepHeader(
+                step: 'Langkah 2 & 3',
+                title: 'Hantar Pesanan & Bukti',
+                icon: HugeIcons.strokeRoundedWhatsapp,
+                color: const Color(0xFF25D366),
+              ),
+              const SizedBox(height: 12),
+              const Padding(
+                padding: EdgeInsets.only(left: 48),
+                child: Text(
+                  '1. Tekan butang di bawah untuk hantar pesanan.\n2. Kemudian, lampirkan (attach) gambar resit di WhatsApp.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // --- Submit Button ---
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _submitOrder,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 4,
+                    shadowColor: primaryColor.withValues(alpha: 0.4),
+                  ),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
+                          'Sahkan & Pesan Sekarang',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -483,21 +299,211 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {bool isBold = false}) {
+  Widget _buildModernSummary(bool isDark) {
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+      settings: LiquidGlassSettings(
+        thickness: 0.1, blur: 15, refractiveIndex: 1.0,
+        glassColor: Colors.transparent,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Color(0xFFFF5722), size: 24),
+                const SizedBox(width: 12),
+                const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const Divider(height: 32),
+            if (widget.hotQuantity > 0) _buildSummaryRow('HOT & SPICYYY', '${widget.hotQuantity} pek'),
+            if (widget.bbqQuantity > 0) _buildSummaryRow('BBQ', '${widget.bbqQuantity} pek'),
+            if (widget.cheeseQuantity > 0) _buildSummaryRow('Cheese Dip', '${widget.cheeseQuantity} unit'),
+            _buildSummaryRow('Lokasi', widget.deliveryOption),
+            const Divider(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Total Bayaran', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  'RM ${widget.totalPrice.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFFF5722)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader({required dynamic icon, required String title, required bool isDark}) {
+    return Row(
+      children: [
+        HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 24),
+        const SizedBox(width: 12),
+        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildStepHeader({required String step, required String title, required dynamic icon, required Color color}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: icon is IconData 
+            ? Icon(icon, color: color, size: 24)
+            : HugeIcon(icon: icon, color: color, size: 24),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                step,
+                style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+              ),
+              Text(
+                title,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQRCodeSection(bool isDark, Color primaryColor) {
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+      settings: LiquidGlassSettings(
+        thickness: 0.1, blur: 20, 
+        glassColor: primaryColor.withValues(alpha: 0.05),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/qr_payment.png',
+                  width: 220,
+                  height: 220,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'SITI FARHANA ALLYSA BINTI MD FADLI',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'DuitNow / QR Pay',
+              style: TextStyle(color: Colors.grey, fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Sila ambil tangkap layar (screenshot) QR ini',
+                style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required dynamic icon,
+    required bool isDark,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      validator: validator,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Padding(
+          padding: const EdgeInsets.all(12),
+          child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20),
+        ),
+        filled: true,
+        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFFF5722), width: 1),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Expanded(
-            child: Text(label,
-                style: TextStyle(
-                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-          ),
-          const SizedBox(width: 8),
-          Text(value,
-              style: TextStyle(
-                  fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         ],
       ),
     );

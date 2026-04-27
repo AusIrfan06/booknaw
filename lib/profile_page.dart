@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_page.dart';
 import 'main.dart';
 import 'contact_page.dart';
+import 'help_center_page.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -129,10 +130,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
                       _buildSectionHeader("Sokongan"),
                       _buildGlassSection(isDark, Column(children: [
-                        _buildSettingsTile(isDark, HugeIcons.strokeRoundedCustomerService, "Pusat Bantuan"),
+                        _buildSettingsTile(isDark, HugeIcons.strokeRoundedCustomerService, "Pusat Bantuan", onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpCenterScreen()));
+                        }),
                         _buildDivider(isDark),
                         _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Hubungi Kami", onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactPage()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactUsScreen()));
                         }),
                       ])),
                       const SizedBox(height: 40),

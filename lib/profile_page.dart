@@ -10,9 +10,11 @@ import 'contact_page.dart';
 import 'help_center_page.dart';
 import 'all_reviews_page.dart';
 import 'staff_dashboard.dart';
+import 'account_details_page.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
-  const ProfileSettingsScreen({super.key});
+  final bool showAppBar;
+  const ProfileSettingsScreen({super.key, this.showAppBar = true});
 
   @override
   State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
@@ -33,7 +35,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: widget.showAppBar ? AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -46,7 +48,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
           statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
         ),
-      ),
+      ) : null,
       body: Stack(
         children: [
           // Background blobs
@@ -130,7 +132,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       if (isLoggedIn) ...[
                         _buildSectionHeader("Akaun"),
                         _buildGlassSection(isDark, Column(children: [
-                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedUserEdit01, "Butiran Akaun"),
+                          _buildSettingsTile(isDark, HugeIcons.strokeRoundedUserEdit01, "Butiran Akaun", onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => const AccountDetailsPage()));
+                          }),
                           _buildDivider(isDark),
                           _buildSettingsTile(isDark, HugeIcons.strokeRoundedUser, "Maklumat Peribadi"),
                           _buildDivider(isDark),
@@ -138,20 +142,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         ])),
                         const SizedBox(height: 24),
 
-                        if (isStaff) ...[
-                          _buildSectionHeader("Pengurusan"),
-                          _buildGlassSection(isDark, Column(children: [
-                            _buildSettingsTile(
-                              isDark, 
-                              HugeIcons.strokeRoundedDashboardSquare01, 
-                              "Panel Dashboard Staf",
-                              onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => const StaffDashboard()));
-                              },
-                            ),
-                          ])),
-                          const SizedBox(height: 24),
-                        ],
+                        const SizedBox(height: 24),
                       ],
 
                       _buildSectionHeader("Pilihan"),

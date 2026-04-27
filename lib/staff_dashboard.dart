@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'home_page.dart';
+import 'profile_page.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
@@ -34,6 +35,7 @@ class _StaffDashboardState extends State<StaffDashboard> {
     'Pesanan',
     'Penghantaran',
     'Stok Inventori',
+    'Profil',
   ];
 
   @override
@@ -43,23 +45,13 @@ class _StaffDashboardState extends State<StaffDashboard> {
       const _OrdersTab(),
       const _DeliveryTab(),
       const _InventoryTab(),
+      const ProfileSettingsScreen(showAppBar: false),
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: Text(_titles[_currentIndex]),
         automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedLogout01,
-              color: Colors.white,
-              size: 24,
-            ),
-            onPressed: () => _logout(context),
-            tooltip: 'Log Keluar',
-          ),
-        ],
       ),
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: BottomNavigationBar(
@@ -119,6 +111,19 @@ class _StaffDashboardState extends State<StaffDashboard> {
               size: 24,
             ),
             label: 'Stok',
+          ),
+          BottomNavigationBarItem(
+            icon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUser,
+              color: Colors.grey,
+              size: 24,
+            ),
+            activeIcon: HugeIcon(
+              icon: HugeIcons.strokeRoundedUser,
+              color: Color(0xFFFF5722),
+              size: 24,
+            ),
+            label: 'Profil',
           ),
         ],
       ),

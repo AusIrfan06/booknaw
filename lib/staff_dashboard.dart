@@ -1374,27 +1374,60 @@ class _InventoryTab extends StatelessWidget {
         }
 
         final data = snapshot.data ?? [];
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return DefaultTabController(
-          length: 4,
-          child: Column(
-            children: [
-              Container(
-                color: Theme.of(context).colorScheme.surface,
-                child: const TabBar(
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  tabs: [
-                    Tab(text: 'Alpha'),
-                    Tab(text: 'Beta'),
-                    Tab(text: 'Gamma'),
-                    Tab(text: 'NR'),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: _inventoryLocations.map((loc) {
+        // Calculate Totals
+        int totalHot = data.fold<int>(0, (sum, r) => sum + (r['hot_stock'] as int? ?? 0));
+        int totalBBQ = data.fold<int>(0, (sum, r) => sum + (r['bbq_stock'] as int? ?? 0));
+        int totalCheese = data.fold<int>(0, (sum, r) => sum + (r['cheese_stock'] as int? ?? 0));
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          physics: const BouncingScrollPhysics(),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // ── TOTAL STOCK SECTION ─────────────────────────────────────
+                  const Text(
+                    'Ringkasan Keseluruhan 📊',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  GlassContainer(
+                    useOwnLayer: true,
+                    quality: GlassQuality.standard,
+                    shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+                    settings: _getStaffGlassSettings(isDark),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: isDark ? Colors.white.withOpacity(0.1) : Colors.black.withOpacity(0.05)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildTotalStat(context, 'HOT', totalHot, Colors.redAccent),
+                          _buildTotalStat(context, 'BBQ', totalBBQ, Colors.orangeAccent),
+                          _buildTotalStat(context, 'CHEESE', totalCheese, Colors.amber),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // ── BY STORE SECTION ────────────────────────────────────────
+                  const Text(
+                    'Pecahan Mengikut Stor 🏪',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  ..._inventoryLocations.map((loc) {
                     final row = data.firstWhere(
                       (r) => r['id'] == loc['id'],
                       orElse: () => <String, dynamic>{},
@@ -1403,42 +1436,75 @@ class _InventoryTab extends StatelessWidget {
                     final bbqStock = row['bbq_stock'] as int? ?? 0;
                     final cheeseStock = row['cheese_stock'] as int? ?? 0;
 
-                    return ListView(
-                      padding: const EdgeInsets.all(16.0),
-                      children: [
-                        _StockUpdater(
-                          locationId: loc['id'] as int,
-                          flavor: 'HOT & SPICYYY 🌶️',
-                          dbColumn: 'hot_stock',
-                          currentStock: hotStock,
-                          currentRow: row,
-                        ),
-                        const SizedBox(height: 20),
-                        _StockUpdater(
-                          locationId: loc['id'] as int,
-                          flavor: 'BBQ 🍖',
-                          dbColumn: 'bbq_stock',
-                          currentStock: bbqStock,
-                          currentRow: row,
-                        ),
-                        const SizedBox(height: 20),
-                        _StockUpdater(
-                          locationId: loc['id'] as int,
-                          flavor: 'Cheese Dip 🧀',
-                          dbColumn: 'cheese_stock',
-                          currentStock: cheeseStock,
-                          currentRow: row,
-                          unit: 'unit',
-                        ),
-                      ],
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8, bottom: 12),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.storefront_rounded, size: 20, color: Color(0xFFFF5722)),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Cawangan: ${loc['name']}',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _StockUpdater(
+                            locationId: loc['id'] as int,
+                            flavor: 'HOT & SPICYYY 🌶️',
+                            dbColumn: 'hot_stock',
+                            currentStock: hotStock,
+                            currentRow: row,
+                          ),
+                          const SizedBox(height: 12),
+                          _StockUpdater(
+                            locationId: loc['id'] as int,
+                            flavor: 'BBQ 🍖',
+                            dbColumn: 'bbq_stock',
+                            currentStock: bbqStock,
+                            currentRow: row,
+                          ),
+                          const SizedBox(height: 12),
+                          _StockUpdater(
+                            locationId: loc['id'] as int,
+                            flavor: 'Cheese Dip 🧀',
+                            dbColumn: 'cheese_stock',
+                            currentStock: cheeseStock,
+                            currentRow: row,
+                            unit: 'unit',
+                          ),
+                        ],
+                      ),
                     );
-                  }).toList(),
-                ),
+                  }),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTotalStat(BuildContext context, String label, int value, Color color) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '$value',
+          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color),
+        ),
+      ],
     );
   }
 }

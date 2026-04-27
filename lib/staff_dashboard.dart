@@ -360,11 +360,6 @@ class _DashboardPage extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // ── Password Reset Helper ───────────────────────────────────────────
-              const _PasswordResetHelper(),
-
-              const SizedBox(height: 24),
-
               const Text(
                 'Sedia Untuk Penghantaran',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
@@ -618,105 +613,6 @@ class _StockUpdateRow extends StatelessWidget {
 }
 
 
-class _PasswordResetHelper extends StatefulWidget {
-  const _PasswordResetHelper();
-
-  @override
-  State<_PasswordResetHelper> createState() => _PasswordResetHelperState();
-}
-
-class _PasswordResetHelperState extends State<_PasswordResetHelper> {
-  final _phoneController = TextEditingController();
-  String _foundEmail = '';
-
-  void _lookupUser() {
-    final phone = _phoneController.text.trim();
-    if (phone.isEmpty) return;
-    setState(() {
-      _foundEmail = '$phone@nachos.com';
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.blueGrey.shade50,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blueGrey.shade100),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              HugeIcon(
-                  icon: HugeIcons.strokeRoundedLockPassword,
-                  color: Colors.blueGrey,
-                  size: 24),
-              SizedBox(width: 10),
-              Text(
-                'Bantuan Reset Kata Laluan',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Untuk pengguna No. Telefon, staff perlu reset secara manual di Supabase Dashboard.',
-            style: TextStyle(fontSize: 13, color: Colors.black87),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _phoneController,
-            decoration: InputDecoration(
-              hintText: 'Masukkan No. Tel Pelanggan...',
-              prefixIcon: const Icon(Icons.phone_iphone, size: 20),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: _lookupUser,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-            ),
-            keyboardType: TextInputType.phone,
-          ),
-          if (_foundEmail.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Login ID Pelanggan:',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  Text(_foundEmail,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue)),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Langkah Seterusnya:\n1. Buka Supabase Dashboard\n2. Cari ID di atas dalam menu "Authentication"\n3. Klik "Edit User" -> "Change Password"',
-                    style: TextStyle(fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
 
 class _StatCard extends StatelessWidget {
   final String label;
@@ -800,7 +696,7 @@ class _ModernStockCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final double percent = (stock / maxStock).clamp(0.0, 1.0);
+    final double percent = (stock / 100).clamp(0.0, 1.0);
     
     Color statusColor;
     String statusText;

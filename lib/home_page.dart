@@ -46,17 +46,17 @@ class _HomePageState extends State<HomePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Tukar Katalaluan Baru'),
+        title: const Text('Tukar Kata Laluan Baru'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Sila masukkan katalaluan baru anda.'),
+            const Text('Sila masukkan kata laluan baru anda.'),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               obscureText: true,
               decoration: const InputDecoration(
-                labelText: 'Katalaluan Baru',
+                labelText: 'Kata Laluan Baru',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
                 if (mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Katalaluan berjaya ditukar!')),
+                    const SnackBar(content: Text('Kata laluan berjaya ditukar!')),
                   );
                 }
               } catch (e) {

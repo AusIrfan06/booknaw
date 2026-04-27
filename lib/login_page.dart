@@ -181,7 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(height: 16),
                         _buildGlassField(
                           controller: _passwordController,
-                          label: 'Katalaluan',
+                          label: 'Kata Laluan',
                           icon: HugeIcons.strokeRoundedLockPassword,
                           isDark: isDark,
                           obscureText: _obscurePassword,
@@ -204,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                               );
                             },
                             child: const Text(
-                              'Lupa Katalaluan?',
+                              'Lupa Kata Laluan?',
                               style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
                             ),
                           ),

@@ -53,7 +53,7 @@ class _SignupPageState extends State<SignupPage> {
 
     if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Katalaluan mestilah sekurang-kurangnya 6 aksara!')),
+        const SnackBar(content: Text('Kata laluan mestilah sekurang-kurangnya 6 aksara!')),
       );
       return;
     }
@@ -233,7 +233,7 @@ class _SignupPageState extends State<SignupPage> {
                         const SizedBox(height: 16),
                         _buildGlassField(
                           controller: _passwordController,
-                          label: 'Katalaluan (Min 6)',
+                          label: 'Kata Laluan (Min 6)',
                           icon: HugeIcons.strokeRoundedLockPassword,
                           isDark: isDark,
                           obscureText: _obscurePassword,

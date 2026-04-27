@@ -36,7 +36,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           builder: (context) => AlertDialog(
             title: const Text('Email Dihantar!'),
             content: const Text(
-                'Sila semak peti masuk email anda untuk pautan tetapan semula katalaluan.\n\n'
+                'Sila semak peti masuk email anda untuk pautan tetapan semula kata laluan.\n\n'
                 'Tip: Jika anda tidak menemui email, sila semak folder SPAM anda.'),
             actions: [
               TextButton(
@@ -70,7 +70,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lupa Katalaluan')),
+      appBar: AppBar(title: const Text('Lupa Kata Laluan')),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -79,12 +79,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               const AppLogo(size: 80),
               const SizedBox(height: 24),
               const Text(
-                'Tetapkan Semula Katalaluan',
+                'Tetapkan Semula Kata Laluan',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               const Text(
-                'Masukkan email anda dan kami akan hantar pautan untuk menukar katalaluan baru.',
+                'Masukkan email anda dan kami akan hantar pautan untuk menukar kata laluan baru.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey),
               ),

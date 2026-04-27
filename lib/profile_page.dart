@@ -99,23 +99,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                                  Text(email, style: TextStyle(color: isDark ? Colors.white70 : Colors.grey, fontSize: 14)),
                                 const SizedBox(height: 12),
 
-                                Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                        color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-                                        borderRadius: BorderRadius.circular(20)
-                                    ),
-                                    child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          HugeIcon(icon: HugeIcons.strokeRoundedLocation01, color: const Color(0xFFFF5722), size: 14),
-                                          SizedBox(width: 4),
-                                          Text(locationStr, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                          SizedBox(width: 6),
-                                          Icon(Icons.refresh_rounded, color: Colors.grey, size: 12),
-                                        ]
-                                    )
-                                ),
                               ]
                           )
                       ),

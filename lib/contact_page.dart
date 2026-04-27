@@ -29,6 +29,37 @@ class ContactPage extends StatelessWidget {
     );
   }
 
+  Widget _buildBackgroundGlows(bool isDark) {
+    return Stack(
+      children: [
+        Positioned(
+          top: -50,
+          right: -100,
+          child: Container(
+            width: 350,
+            height: 350,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFFF5722).withValues(alpha: isDark ? 0.08 : 0.15),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 100,
+          left: -100,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.amber.withValues(alpha: isDark ? 0.06 : 0.12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -40,220 +71,192 @@ class ContactPage extends StatelessWidget {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          'Hubungi Kami',
+          "Hubungi Kami",
           style: TextStyle(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
             color: isDark ? Colors.white : Colors.black87,
           ),
         ),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(50),
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
-              ),
-              child: Center(
-                child: HugeIcon(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  color: isDark ? Colors.white : Colors.black87,
-                  size: 22,
-                ),
+        leading: IconButton(
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: isDark ? Colors.white70 : Colors.black54,
+            size: 24,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: Stack(
+        children: [
+          _buildBackgroundGlows(isDark),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Hubungi Kami",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "Ada soalan atau nak order manual? WhatsApp kami terus!",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  _buildModernContactCard(
+                    isDark: isDark,
+                    name: 'Yan',
+                    location: 'Alpha',
+                    onTap: () => _launchWhatsApp('wa.me/601112769605'),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  _buildModernContactCard(
+                    isDark: isDark,
+                    name: 'Izzah',
+                    location: 'Beta',
+                    onTap: () => _launchWhatsApp('wa.me/60102531607'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildModernContactCard(
+                    isDark: isDark,
+                    name: 'Lysa',
+                    location: 'Beta & Gamma',
+                    onTap: () => _launchWhatsApp('wa.me/60132163194'),
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildModernContactCard(
+                    isDark: isDark,
+                    name: 'Alya',
+                    location: 'NR',
+                    onTap: () => _launchWhatsApp('wa.me/60199973803'),
+                  ),
+                  const SizedBox(height: 40),
+
+                  GlassContainer(
+                    useOwnLayer: true,
+                    quality: GlassQuality.standard,
+                    shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+                    settings: _getGlassSettings(isDark),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF5722).withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: const Color(0xFFFF5722).withValues(alpha: 0.1),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.favorite_rounded, color: Color(0xFFFF5722), size: 40),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Terima kasih kerana menyokong projek ENT300 kami! Kami sangat menghargainya!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ),
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF121212), const Color(0xFF1E1E1E)]
-              : [const Color(0xFFFFF3E0), const Color(0xFFFFE0B2)],
-          ),
-        ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(24, 120, 24, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Ada soalan atau nak order manual?',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'WhatsApp kami terus! Kami sedia membantu anda.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.white70 : Colors.black54,
-                ),
-              ),
-              const SizedBox(height: 40),
-              
-              _buildModernContactCard(
-                context: context,
-                isDark: isDark,
-                name: 'Yan',
-                location: 'Alpha',
-                onTap: () => _launchWhatsApp('wa.me/601112769605'),
-              ),
-              const SizedBox(height: 16),
-              
-              _buildModernContactCard(
-                context: context,
-                isDark: isDark,
-                name: 'Izzah',
-                location: 'Beta',
-                onTap: () => _launchWhatsApp('wa.me/60102531607'),
-              ),
-              const SizedBox(height: 16),
-
-              _buildModernContactCard(
-                context: context,
-                isDark: isDark,
-                name: 'Lysa',
-                location: 'Beta & Gamma',
-                onTap: () => _launchWhatsApp('wa.me/60132163194'),
-              ),
-              const SizedBox(height: 16),
-
-              _buildModernContactCard(
-                context: context,
-                isDark: isDark,
-                name: 'Alya',
-                location: 'NR',
-                onTap: () => _launchWhatsApp('wa.me/60199973803'),
-              ),
-              const SizedBox(height: 40),
-
-              GlassContainer(
-                useOwnLayer: true,
-                quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
-                settings: _getGlassSettings(isDark),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF5722).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.3)),
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.favorite_rounded, color: Color(0xFFFF5722), size: 48),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Terima kasih kerana menyokong projek ENT300 kami! Kami sangat menghargainya!',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildModernContactCard({
-    required BuildContext context,
     required bool isDark,
     required String name,
     required String location,
     required VoidCallback onTap,
   }) {
-    return GlassContainer(
-      useOwnLayer: true,
-      quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-      settings: _getGlassSettings(isDark),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.5)),
+    const whatsAppColor = Color(0xFF25D366);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+        settings: _getGlassSettings(isDark),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.6),
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF25D366).withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF25D366).withValues(alpha: 0.3)),
-                  ),
-                  child: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedWhatsapp,
-                    color: Color(0xFF25D366),
-                    size: 28,
-                  ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: whatsAppColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : Colors.black87,
-                        ),
+                child: const HugeIcon(
+                  icon: HugeIcons.strokeRoundedWhatsapp,
+                  color: whatsAppColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Kawasan: $location',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                        ),
+                    ),
+                    Text(
+                      'Kawasan: $location',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark ? Colors.white54 : Colors.black54,
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "Mula sembang sekarang",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: whatsAppColor,
+                      ),
+                    ),
+                  ],
                 ),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFF5722).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedArrowRight01,
-                    color: Color(0xFFFF5722),
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

@@ -12,40 +12,22 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final _identifierController = TextEditingController();
+  final _emailController = TextEditingController();
   bool _isLoading = false;
-  bool _isPhone = false;
 
   Future<void> _resetPassword() async {
-    final identifier = _identifierController.text.trim();
-    if (identifier.isEmpty) {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sila masukkan ${_isPhone ? "nombor telefon" : "email"} anda!')),
+        const SnackBar(content: Text('Sila masukkan alamat email anda!')),
       );
-      return;
-    }
-
-    if (_isPhone) {
-      // Logic for Phone users: Contact Admin via WhatsApp
-      final message = Uri.encodeComponent(
-          "Hi Ipan, saya terlupa katalaluan untuk akaun Nachozyyy saya (No. Tel: $identifier). Boleh bantu saya set semula?");
-      final url = "https://wa.me/601115892468?text=$message"; // Using Ipan's number
-      try {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak dapat membuka WhatsApp.')),
-          );
-        }
-      }
       return;
     }
 
     setState(() => _isLoading = true);
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
-        identifier,
+        email,
         redirectTo: 'https://booknaw.pages.dev/reset-password',
       );
       if (mounted) {
@@ -81,7 +63,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   void dispose() {
-    _identifierController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -100,46 +82,27 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 'Tetapkan Semula Katalaluan',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ChoiceChip(
-                    label: const Text('Email'),
-                    selected: !_isPhone,
-                    onSelected: (val) => setState(() => _isPhone = !val),
-                  ),
-                  const SizedBox(width: 12),
-                  ChoiceChip(
-                    label: const Text('No. Telefon'),
-                    selected: _isPhone,
-                    onSelected: (val) => setState(() => _isPhone = val),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Text(
-                _isPhone
-                    ? 'Pengguna No. Telefon perlu hubungi Admin via WhatsApp untuk set semula akaun.'
-                    : 'Masukkan email anda dan kami akan hantar pautan untuk menukar katalaluan baru.',
+              const SizedBox(height: 16),
+              const Text(
+                'Masukkan email anda dan kami akan hantar pautan untuk menukar katalaluan baru.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey),
+                style: TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 32),
               TextField(
-                controller: _identifierController,
-                decoration: InputDecoration(
-                  labelText: _isPhone ? 'No. Telefon' : 'Email',
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
                   prefixIcon: Padding(
-                    padding: const EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(12.0),
                     child: HugeIcon(
-                        icon: _isPhone ? HugeIcons.strokeRoundedSmartPhone01 : HugeIcons.strokeRoundedMail01,
+                        icon: HugeIcons.strokeRoundedMail01,
                         color: Colors.grey,
                         size: 20),
                   ),
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(),
                 ),
-                keyboardType: _isPhone ? TextInputType.phone : TextInputType.emailAddress,
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -148,7 +111,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _resetPassword,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isPhone ? Colors.green : Colors.deepOrange,
+                    backgroundColor: Colors.deepOrange,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -156,8 +119,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : Text(_isPhone ? 'Hubungi Ipan di WhatsApp' : 'Hantar Pautan Reset',
-                          style: const TextStyle(fontSize: 16)),
+                      : const Text('Hantar Pautan Reset',
+                          style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

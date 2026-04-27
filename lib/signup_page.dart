@@ -74,7 +74,7 @@ class _SignupPageState extends State<SignupPage> {
       }
       String phone = '+60$cleanPhoneInput';
 
-      await Supabase.instance.client.auth.signUp(
+      final authRes = await Supabase.instance.client.auth.signUp(
         email: email,
         password: password,
         data: {
@@ -85,6 +85,21 @@ class _SignupPageState extends State<SignupPage> {
           'phone': phone,
         },
       );
+      
+      final userId = authRes.user?.id;
+      if (userId != null) {
+        // Create user record for future lookups (like phone login)
+        await Supabase.instance.client.from('users').upsert({
+          'id': userId,
+          'email': email,
+          'phone': phone,
+          'full_name': '$firstName $lastName',
+          'first_name': firstName,
+          'last_name': lastName,
+          'is_staff': isStaff,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      }
       
       if (mounted) {
         Navigator.pushReplacement(

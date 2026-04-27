@@ -163,12 +163,6 @@ class _PrivacySafetyPageState extends State<PrivacySafetyPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 40),
-                    _buildSectionHeader("Aktiviti Akaun"),
-                    const SizedBox(height: 12),
-                    _buildInfoTile(isDark, HugeIcons.strokeRoundedShield01, "Akaun Dilindungi", "Sistem kami menggunakan enkripsi standard industri."),
-                    const SizedBox(height: 12),
-                    _buildInfoTile(isDark, HugeIcons.strokeRoundedCirclePassword, "Sesi Aktif", "Anda sedang log masuk pada peranti ini."),
                   ],
                 ),
               ),
@@ -191,31 +185,6 @@ class _PrivacySafetyPageState extends State<PrivacySafetyPage> {
     );
   }
 
-  Widget _buildInfoTile(bool isDark, dynamic icon, String title, String subtitle) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
-      ),
-      child: Row(
-        children: [
-          HugeIcon(icon: icon, color: Colors.grey, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                Text(subtitle, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildBackgroundGlows(bool isDark) {
     return Stack(

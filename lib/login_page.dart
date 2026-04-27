@@ -23,47 +23,116 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signIn() async {
     setState(() => _isLoading = true);
+    final rawIdentifier = _emailController.text.trim();
+    final password = _passwordController.text;
+
     try {
-      String identifier = _emailController.text.trim();
-      
-      // If it looks like a phone number (only digits), convert to fake email
-      if (RegExp(r'^[0-9]+$').hasMatch(identifier)) {
-        String cleanPhone = identifier;
-        if (cleanPhone.startsWith('0')) {
-          cleanPhone = cleanPhone.substring(1);
+      // 1. Try as-entered (Email or Username)
+      try {
+        final res = await Supabase.instance.client.auth.signInWithPassword(
+          email: rawIdentifier,
+          password: password,
+        );
+        if (mounted) _handleSignInSuccess(res);
+        return;
+      } catch (e) {
+        final isDigits = RegExp(r'^[0-9]+$').hasMatch(rawIdentifier);
+        if (!isDigits || !e.toString().contains('invalid_credentials')) {
+          rethrow;
         }
-        identifier = '$cleanPhone@nachos.com';
       }
 
-      final res = await Supabase.instance.client.auth.signInWithPassword(
-        email: identifier,
-        password: _passwordController.text,
-      );
-      
-      if (mounted) {
-        final meta = res.session?.user.userMetadata;
-        final isStaff = meta?['is_staff'] == true;
-        final firstName = meta?['first_name'] ?? identifier.split('@').first;
-        
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AuthSuccessScreen(
-              name: firstName,
-              isStaff: isStaff,
-            ),
-          ),
-        );
+      // 2. Prepare phone variations
+      String cleanPhone = rawIdentifier;
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = cleanPhone.substring(1);
       }
+      final variations = [
+        '+60$cleanPhone', // Standard: +6011...
+        '60$cleanPhone',  // 6011...
+        rawIdentifier,    // 011...
+      ];
+
+      // 3. Try searching users for each variation
+      for (var phone in variations) {
+        try {
+          final profileData = await Supabase.instance.client
+              .from('users')
+              .select('email')
+              .eq('phone', phone)
+              .maybeSingle();
+          
+          if (profileData != null && profileData['email'] != null) {
+            final res = await Supabase.instance.client.auth.signInWithPassword(
+              email: profileData['email'],
+              password: password,
+            );
+            if (mounted) _handleSignInSuccess(res);
+            return;
+          }
+        } catch (_) {}
+      }
+
+      // 4. Try fake email formats
+      final fakeEmails = [
+        '$cleanPhone@nachos.com',
+        '$rawIdentifier@nachos.com',
+      ];
+      for (var email in fakeEmails) {
+        try {
+          final res = await Supabase.instance.client.auth.signInWithPassword(
+            email: email,
+            password: password,
+          );
+          if (mounted) _handleSignInSuccess(res);
+          return;
+        } catch (_) {}
+      }
+
+      // 5. Try native phone login for each variation
+      for (var phone in variations) {
+        try {
+          final res = await Supabase.instance.client.auth.signInWithPassword(
+            phone: phone,
+            password: password,
+          );
+          if (mounted) _handleSignInSuccess(res);
+          return;
+        } catch (_) {}
+      }
+
+      throw Exception('Maklumat log masuk tidak sah. Sila pastikan e-mel/no. telefon dan kata laluan adalah betul.');
+
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat log masuk: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Ralat: ${e.toString().replaceAll('Exception: ', '')}'), 
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _handleSignInSuccess(AuthResponse res) {
+    final meta = res.session?.user.userMetadata;
+    final isStaff = meta?['is_staff'] == true;
+    final email = res.session?.user.email ?? '';
+    final firstName = meta?['first_name'] ?? email.split('@').first;
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AuthSuccessScreen(
+          name: firstName,
+          isStaff: isStaff,
+        ),
+      ),
+    );
   }
 
   @override

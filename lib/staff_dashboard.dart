@@ -153,8 +153,8 @@ class _DashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final email = user?.email ?? 'Staff';
-    final name = email.split('@').first;
+    final meta = user?.userMetadata;
+    final name = meta?['full_name'] ?? user?.email?.split('@').first ?? 'Staff';
 
     final ordersStream = Supabase.instance.client
         .from('orders')
@@ -205,6 +205,8 @@ class _DashboardPage extends StatelessWidget {
                           children: [
                             Text(
                               'Selamat datang, $name',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: Theme.of(context).brightness == Brightness.dark 
                                   ? Colors.white 
@@ -264,7 +266,7 @@ class _DashboardPage extends StatelessWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                       maxCrossAxisExtent: 250,
-                      mainAxisExtent: 110,
+                      mainAxisExtent: 130, // Increased to fix overflow
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),

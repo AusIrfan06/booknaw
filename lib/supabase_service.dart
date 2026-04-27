@@ -3,20 +3,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupabaseService {
   static final client = Supabase.instance.client;
 
-  /// Fetches the profile of the current user from the public.profiles table.
+  /// Fetches the profile of the current user from the public.users table.
   static Future<Map<String, dynamic>?> getCurrentProfile() async {
     final user = client.auth.currentUser;
     if (user == null) return null;
 
     try {
       final response = await client
-          .from('profiles')
+          .from('users')
           .select()
           .eq('id', user.id)
           .single();
       return response;
     } catch (e) {
-      print('Error fetching profile: $e');
+      print('Error fetching user: $e');
       return null;
     }
   }
@@ -40,9 +40,9 @@ class SupabaseService {
     };
 
     try {
-      await client.from('profiles').update(updates).eq('id', user.id);
+      await client.from('users').update(updates).eq('id', user.id);
     } catch (e) {
-      print('Error updating profile: $e');
+      print('Error updating user: $e');
       rethrow;
     }
   }
@@ -52,7 +52,7 @@ class SupabaseService {
     try {
       final response = await client
           .from('orders')
-          .select('*, profiles(full_name)')
+          .select('*, users(full_name)')
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {

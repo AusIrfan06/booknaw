@@ -12,6 +12,7 @@ import 'all_reviews_page.dart';
 import 'staff_dashboard.dart';
 import 'account_details_page.dart';
 import 'privacy_safety_page.dart';
+import 'home_page.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   final bool showAppBar;
@@ -164,7 +165,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       if (isLoggedIn) ...[
                         _buildGlassButton(isDark, "Log Keluar", Colors.redAccent, () async {
                           await Supabase.instance.client.auth.signOut();
-                          if (mounted) Navigator.pop(context);
+                          if (mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              context, 
+                              MaterialPageRoute(builder: (context) => const HomePage()), 
+                              (route) => false
+                            );
+                          }
                         }),
                         const SizedBox(height: 40),
                       ],

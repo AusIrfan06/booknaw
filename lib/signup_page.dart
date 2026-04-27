@@ -68,8 +68,8 @@ class _SignupPageState extends State<SignupPage> {
         email = '$cleanPhone@nachos.com';
       }
 
-      // Format phone correctly: strip leading zero from input
-      String cleanPhoneInput = phoneInput;
+      // Format phone correctly: strip leading zero and remove all spaces
+      String cleanPhoneInput = phoneInput.replaceAll(RegExp(r'\s+'), '');
       if (cleanPhoneInput.startsWith('0')) {
         cleanPhoneInput = cleanPhoneInput.substring(1);
       }

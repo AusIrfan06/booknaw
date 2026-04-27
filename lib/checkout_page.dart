@@ -31,6 +31,17 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final _addressController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final meta = user.userMetadata;
+      _nameController.text = meta?['full_name'] ?? '';
+      _phoneController.text = meta?['phone'] ?? '';
+    }
+  }
+
   bool get _isDelivery => widget.deliveryOption.startsWith('Delivery');
 
   Future<void> _submitOrder() async {
@@ -229,7 +240,35 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              const Text('Maklumat Hubungan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Maklumat Hubungan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.deepOrange.withOpacity(0.2)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.edit, size: 12, color: Colors.deepOrange),
+                        SizedBox(width: 4),
+                        Text(
+                          'Boleh diubah',
+                          style: TextStyle(fontSize: 11, color: Colors.deepOrange, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Sila sahkan maklumat anda di bawah. Anda boleh menukar nama atau no. telefon jika perlu.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _nameController,

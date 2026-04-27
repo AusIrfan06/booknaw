@@ -1111,32 +1111,6 @@ class _StaffOrderCard extends StatelessWidget {
     }
   }
 
-  Future<void> _markDelivered(BuildContext context) async {
-    try {
-      await _tryUpdateStatus();
-    } catch (e) {
-      await Future.delayed(const Duration(seconds: 1));
-      try {
-        await _tryUpdateStatus();
-      } catch (e2) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tiada Internet! Sila semak sambungan anda.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _tryUpdateStatus() async {
-    await Supabase.instance.client
-        .from('orders')
-        .update({'status': 'Delivered'})
-        .eq('id', order['id']);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1262,24 +1236,6 @@ class _StaffOrderCard extends StatelessWidget {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                  ),
-                ),
-              ],
-              if (!isDelivered) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => _markDelivered(context),
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                      color: Colors.green,
-                      size: 20,
-                    ),
-                    label: const Text(
-                      'Mark as Delivered',
-                      style: TextStyle(color: Colors.green),
                     ),
                   ),
                 ),
@@ -1439,6 +1395,27 @@ class _DeliveryOrderCard extends StatelessWidget {
     }
   }
 
+  Future<void> _markAsDelivered(BuildContext context) async {
+    try {
+      await Supabase.instance.client
+          .from('orders')
+          .update({'status': 'Delivered'})
+          .eq('id', order['id']);
+      
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pesanan telah ditanda sebagai Selesai.'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hotQty = order['hot_quantity_100g'] as int? ?? 0;
@@ -1508,7 +1485,23 @@ class _DeliveryOrderCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            if (!isOutForDelivery)
+            if (delivery.toLowerCase().contains('pickup'))
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _markAsDelivered(context),
+                  icon: const Icon(Icons.check_circle, color: Colors.white),
+                  label: const Text(
+                    'Telah Diambil (Mark as Delivered)',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              )
+            else if (!isOutForDelivery)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(

@@ -315,6 +315,8 @@ class _HomeTab extends StatelessWidget {
                       onTap: onOrder,
                     ),
                     const SizedBox(height: 32),
+                    const _ReviewsSection(),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -391,5 +393,159 @@ class _HomeTab extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _ReviewsSection extends StatelessWidget {
+  const _ReviewsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final reviewsStream = Supabase.instance.client
+        .from('reviews')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .limit(10);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Komen Pelanggan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: isDark ? Colors.white : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 180,
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: reviewsStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final reviews = snapshot.data ?? [];
+              if (reviews.isEmpty) {
+                return Center(
+                  child: Text(
+                    'Belum ada review lagi. Jadi yang pertama!',
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
+                );
+              }
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: reviews.length,
+                itemBuilder: (context, index) {
+                  final review = reviews[index];
+                  final rating = review['rating'] as int? ?? 5;
+                  final imageUrl = review['image_url'] as String?;
+
+                  return Container(
+                    width: 280,
+                    margin: const EdgeInsets.only(right: 16),
+                    child: GlassContainer(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+                      settings: LiquidGlassSettings(
+                        thickness: 0.1,
+                        blur: 10,
+                        glassColor: isDark ? Colors.white.withOpacity(0.05) : Colors.white.withOpacity(0.4),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    review['customer_name'] ?? 'Pelanggan',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Row(
+                                  children: List.generate(5, (i) {
+                                    return Icon(
+                                      i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                                      color: Colors.amber,
+                                      size: 14,
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (imageUrl != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 12),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.network(
+                                          imageUrl,
+                                          width: 60,
+                                          height: 60,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Container(
+                                            width: 60, height: 60, color: Colors.grey.shade300,
+                                            child: const Icon(Icons.image_not_supported, size: 20),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  Expanded(
+                                    child: Text(
+                                      review['comment'] ?? 'Tiada komen.',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark ? Colors.white70 : Colors.black87,
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _formatDate(review['created_at']),
+                              style: TextStyle(fontSize: 10, color: Colors.grey.shade500),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return '';
+    try {
+      final dt = DateTime.parse(dateStr).toLocal();
+      return '${dt.day}/${dt.month}/${dt.year}';
+    } catch (_) {
+      return '';
+    }
   }
 }

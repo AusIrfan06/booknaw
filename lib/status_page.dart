@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'login_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'review_page.dart';
 
 class StatusPage extends StatefulWidget {
   const StatusPage({super.key});
@@ -332,6 +333,27 @@ class _CustomerOrderCard extends StatelessWidget {
                           fontSize: 11, color: Colors.grey.shade400)),
                 ],
               ),
+              if (isDelivered) ...[
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewPage(order: order),
+                      ),
+                    ),
+                    icon: const Icon(Icons.rate_review_outlined, size: 18),
+                    label: const Text('Berikan Review'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

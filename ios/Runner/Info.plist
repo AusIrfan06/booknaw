@@ -58,5 +58,11 @@
 		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Kami memerlukan akses ke galeri anda untuk memuat naik gambar review.</string>
+		<key>NSCameraUsageDescription</key>
+		<string>Kami memerlukan akses ke kamera anda untuk mengambil gambar review.</string>
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Kami memerlukan akses ke mikrofon anda.</string>
 	</dict>
 </plist>

@@ -353,7 +353,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                                Text('Imbas QR & Bayar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                Text('Tangkap Layar QR Code', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ],
@@ -400,7 +400,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: const Text(
-                            'Sila pastikan jumlah bayaran tepat',
+                            'Sila tangkap layar (screenshot) QR di bawah',
                             style: TextStyle(fontSize: 11, color: Colors.orange, fontWeight: FontWeight.w500),
                           ),
                         ),
@@ -420,15 +420,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Langkah 2', style: TextStyle(fontSize: 10, color: Color(0xFF25D366), fontWeight: FontWeight.bold, letterSpacing: 1.2)),
-                      Text('Hantar Resit ke WhatsApp', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('Langkah 2 & 3', style: TextStyle(fontSize: 10, color: Color(0xFF25D366), fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      Text('Hantar Pesanan & Bukti', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               const Text(
-                'Selepas menekan butang di bawah, anda akan dibawa ke WhatsApp. Sila lampirkan (attach) gambar resit anda di sana.',
+                '1. Tekan butang di bawah untuk hantar pesanan ke WhatsApp.\n'
+                '2. Kemudian, lampirkan (attach) gambar resit yang telah dibayar di sana.',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
 

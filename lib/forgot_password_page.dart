@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'app_logo.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
@@ -19,32 +19,34 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan alamat email anda!')),
+        const SnackBar(content: Text('Sila masukkan e-mel anda!')),
       );
       return;
     }
 
     setState(() => _isLoading = true);
+
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         email,
-        redirectTo: 'https://booknaw.pages.dev/reset-password',
+        redirectTo: 'io.supabase.booknaw://reset-password/',
       );
+
       if (mounted) {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Email Dihantar!'),
-            content: const Text(
-                'Sila semak peti masuk email anda untuk pautan tetapan semula kata laluan.\n\n'
-                'Tip: Jika anda tidak menemui email, sila semak folder SPAM anda.'),
+            backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('E-mel Dihantar', style: TextStyle(fontWeight: FontWeight.bold)),
+            content: const Text('Sila semak peti masuk e-mel anda untuk pautan tetapan semula kata laluan.'),
             actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Close dialog
+                  Navigator.pop(context); // Back to login
                 },
-                child: const Text('OK'),
+                child: const Text('OK', style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -62,71 +64,186 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Lupa Kata Laluan')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            children: [
-              const AppLogo(size: 80),
-              const SizedBox(height: 24),
-              const Text(
-                'Tetapkan Semula Kata Laluan',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Masukkan email anda dan kami akan hantar pautan untuk menukar kata laluan baru.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
-              ),
-              const SizedBox(height: 32),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  prefixIcon: Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedMail01,
-                        color: Colors.grey,
-                        size: 20),
-                  ),
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _resetPassword,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepOrange,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Hantar Pautan Reset',
-                          style: TextStyle(fontSize: 16)),
-                ),
-              ),
-            ],
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: isDark ? Colors.white70 : Colors.black54,
+            size: 24,
           ),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
+      body: Stack(
+        children: [
+          _buildBackgroundGlows(isDark),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+              child: Column(
+                children: [
+                  const SizedBox(height: 20),
+                  const AppLogo(size: 80),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Lupa Kata Laluan?',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Jangan risau! Masukkan e-mel anda dan kami akan hantarkan pautan untuk menetapkan semula kata laluan anda.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black54,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+
+                  GlassContainer(
+                    useOwnLayer: true,
+                    quality: GlassQuality.standard,
+                    shape: LiquidRoundedSuperellipse(borderRadius: 32.0),
+                    settings: LiquidGlassSettings(
+                      thickness: 0.1, blur: 15, refractiveIndex: 1.0,
+                      glassColor: Colors.transparent, lightAngle: 45.0,
+                      lightIntensity: isDark ? 0.1 : 0.2, ambientStrength: 1.0,
+                      saturation: 1.0, chromaticAberration: 0.0,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: isDark ? 0.15 : 0.6),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildTextField(
+                            controller: _emailController,
+                            label: 'Alamat E-mel',
+                            icon: HugeIcons.strokeRoundedMail01,
+                            isDark: isDark,
+                            keyboardType: TextInputType.emailAddress,
+                          ),
+                          const SizedBox(height: 32),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _resetPassword,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF5722),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                elevation: 0,
+                              ),
+                              child: _isLoading 
+                                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : const Text('Hantar Pautan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Kembali ke Log Masuk',
+                      style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required dynamic icon,
+    required bool isDark,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? Colors.black26 : Colors.white.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: TextField(
+            controller: controller,
+            keyboardType: keyboardType,
+            style: const TextStyle(fontSize: 16),
+            decoration: InputDecoration(
+              prefixIcon: Padding(
+                padding: const EdgeInsets.all(12),
+                child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20),
+              ),
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              hintText: 'Masukkan e-mel anda',
+              hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.6), fontSize: 14),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBackgroundGlows(bool isDark) {
+    return Stack(
+      children: [
+        Positioned(
+          top: -100,
+          right: -100,
+          child: Container(
+            width: 400,
+            height: 400,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFFF5722).withValues(alpha: isDark ? 0.05 : 0.1),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -150,
+          left: -150,
+          child: Container(
+            width: 500,
+            height: 500,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.orange.withValues(alpha: isDark ? 0.03 : 0.08),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

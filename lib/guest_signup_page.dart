@@ -75,7 +75,12 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const AuthSuccessScreen(isSignup: true)),
+          MaterialPageRoute(
+            builder: (context) => AuthSuccessScreen(
+              name: 'Tetamu $cleanPhoneInput',
+              isStaff: false,
+            ),
+          ),
         );
       }
     } catch (e) {

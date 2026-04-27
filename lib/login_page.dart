@@ -5,6 +5,7 @@ import 'signup_page.dart';
 import 'home_page.dart';
 import 'staff_dashboard.dart';
 import 'guest_signup_page.dart';
+import 'forgot_password_page.dart';
 import 'app_logo.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 
@@ -158,6 +159,18 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: HugeIcon(
+            icon: HugeIcons.strokeRoundedArrowLeft01,
+            color: isDark ? Colors.white70 : Colors.black54,
+            size: 24,
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: Stack(
         children: [
           // Background glows
@@ -235,7 +248,22 @@ class _LoginPageState extends State<LoginPage> {
                             isDark: isDark,
                             isPassword: true,
                           ),
-                          const SizedBox(height: 32),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                                );
+                              },
+                              child: const Text(
+                                'Lupa Kata Laluan?',
+                                style: TextStyle(color: Color(0xFFFF5722), fontSize: 13, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           
                           // Login Button
                           SizedBox(

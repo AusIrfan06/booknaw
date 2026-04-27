@@ -18,9 +18,7 @@ class AllReviewsPage extends StatelessWidget {
         .order('created_at', ascending: false);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Semua Review Pelanggan'),
-      ),
+      appBar: AppBar(title: const Text('Semua Review Pelanggan')),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: reviewsStream,
         builder: (context, snapshot) {
@@ -48,7 +46,9 @@ class AllReviewsPage extends StatelessWidget {
                   settings: LiquidGlassSettings(
                     thickness: 0.1,
                     blur: 10,
-                    glassColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
+                    glassColor: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.white.withValues(alpha: 0.4),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -60,12 +60,17 @@ class AllReviewsPage extends StatelessWidget {
                           children: [
                             Text(
                               review['customer_name'] ?? 'Pelanggan',
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                             Row(
                               children: List.generate(5, (i) {
                                 return Icon(
-                                  i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                                  i < rating
+                                      ? Icons.star_rounded
+                                      : Icons.star_outline_rounded,
                                   color: Colors.amber,
                                   size: 18,
                                 );
@@ -88,7 +93,10 @@ class AllReviewsPage extends StatelessWidget {
                                   width: double.infinity,
                                   height: 200,
                                   color: Colors.grey.shade300,
-                                  child: const Icon(Icons.image_not_supported, size: 40),
+                                  child: const Icon(
+                                    Icons.image_not_supported,
+                                    size: 40,
+                                  ),
                                 ),
                               ),
                             ),
@@ -103,7 +111,10 @@ class AllReviewsPage extends StatelessWidget {
                         const SizedBox(height: 12),
                         Text(
                           _formatDate(review['created_at']),
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey.shade500,
+                          ),
                         ),
                       ],
                     ),
@@ -114,14 +125,6 @@ class AllReviewsPage extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: isLoggedIn ? FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddReviewPage()));
-        },
-        backgroundColor: const Color(0xFFFF5722),
-        icon: const Icon(Icons.add_comment_rounded, color: Colors.white),
-        label: const Text('Tambah Review', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-      ) : null,
     );
   }
 

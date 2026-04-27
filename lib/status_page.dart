@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'login_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'review_page.dart';
+import 'add_review_page.dart';
 
 class StatusPage extends StatefulWidget {
   const StatusPage({super.key});
@@ -341,7 +342,7 @@ class _CustomerOrderCard extends StatelessWidget {
                     onPressed: () => Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ReviewPage(order: order),
+                        builder: (context) => AddReviewPage(order: order),
                       ),
                     ),
                     icon: const Icon(Icons.rate_review_outlined, size: 18),

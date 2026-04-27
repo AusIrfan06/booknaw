@@ -69,7 +69,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         receiptUrl = Supabase.instance.client.storage.from('media').getPublicUrl(path);
       }
 
-      await Supabase.instance.client.from('orders').insert({
+      final response = await Supabase.instance.client.from('orders').insert({
         'user_id': Supabase.instance.client.auth.currentUser?.id,
         'customer_name': _nameController.text,
         'phone_number': _phoneController.text,
@@ -81,7 +81,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
         'receipt_url': receiptUrl,
-      });
+      }).select().single();
+
+      final orderId = response['id'];
 
       // Determine locId from delivery option
       int locId = 1;
@@ -116,18 +118,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       final waMessage = Uri.encodeComponent(
         'Assalamualaikum Lysa Saya baru buat pesanan NACHOZYY!\n\n'
+        '*ID Pesanan: #$orderId*\n'
         'Nama: $name\n'
         'No. Tel: $phone\n'
         'Pesanan: $items\n'
         'Lokasi: $location\n'
         '${_isDelivery ? "Alamat: ${_addressController.text.trim()}\n" : ""}'
         'Jumlah: $total\n\n'
+        '${receiptUrl != null ? "Bukti Pembayaran: $receiptUrl\n\n" : ""}'
         'Sila semak resit pembayaran saya ya! Terima kasih',
       );
       const lysaNumber = '60132163194'; // Lysa - Beta & Gamma
       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
 
-      _showPaymentSheet(context, waUrl);
+      _showPaymentSheet(context, waUrl, orderId.toString());
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -139,7 +143,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  void _showPaymentSheet(BuildContext context, Uri waUrl) {
+  void _showPaymentSheet(BuildContext context, Uri waUrl, String orderId) {
     showModalBottomSheet(
       context: context,
       isDismissible: false,
@@ -162,9 +166,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
               child: const Icon(Icons.check_circle, color: Colors.green, size: 36),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Pesanan Berjaya!',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              'Pesanan #$orderId Berjaya!',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
@@ -326,119 +330,226 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ],
               const SizedBox(height: 32),
 
-              const Text('Langkah 1: Imbas QR & Bayar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text('Sila imbas kod QR di bawah untuk membuat pembayaran melalui DuitNow atau TNG eWallet.', style: TextStyle(fontSize: 12, color: Colors.grey)),
-              const SizedBox(height: 16),
-              
-              Center(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+              // Step 1: Payment Selection & QR
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.withValues(alpha: 0.5), Colors.blue.withValues(alpha: 0.5)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.asset(
-                          'assets/qr_payment.png',
-                          width: 200,
-                          height: 200,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 200,
-                              height: 200,
-                              color: Colors.grey[200],
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.qr_code_2, size: 60, color: Colors.grey),
-                                  SizedBox(height: 8),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(horizontal: 8),
-                                    child: Text(
-                                      'Sila letakkan gambar qr_payment.png dalam folder assets',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontSize: 10, color: Colors.grey),
-                                    ),
-                                  ),
-                                ],
+                  borderRadius: BorderRadius.circular(26),
+                ),
+                child: GlassContainer(
+                  useOwnLayer: true,
+                  quality: GlassQuality.standard,
+                  shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+                  settings: LiquidGlassSettings(
+                    thickness: 0.1,
+                    blur: 15,
+                    glassColor: Colors.white.withValues(alpha: 0.1),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
                               ),
-                            );
-                          },
+                              child: const Icon(Icons.qr_code_scanner, color: Colors.green, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Langkah 1', style: TextStyle(fontSize: 10, color: Colors.green, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                                Text('Imbas QR & Bayar', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'NACHOZYY ENTERPRISE',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      const Text(
-                        'DuitNow / QR Pay',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              'assets/qr_payment.png',
+                              width: 220,
+                              height: 220,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'SITI FARHANA ALLYSA BINTI MD FADLI',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, letterSpacing: 0.5),
+                          textAlign: TextAlign.center,
+                        ),
+                        const Text(
+                          'DuitNow / QR Pay',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            'Sila pastikan jumlah bayaran tepat',
+                            style: TextStyle(fontSize: 11, color: Colors.blue, fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
 
               const SizedBox(height: 32),
-              const Text('Langkah 2: Muat Naik Bukti Pembayaran', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+              // Step 2: Receipt Upload
+              const Row(
+                children: [
+                  Icon(Icons.receipt_long, size: 24, color: Colors.orange),
+                  SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Langkah 2', style: TextStyle(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                      Text('Muat Naik Resit', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
               const SizedBox(height: 8),
-              const Text('Selepas berjaya membayar, muat naik resit/gambar bukti pembayaran di sini.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const Text(
+                'Selepas bayaran dibuat, sila muat naik resit di bawah sebagai bukti.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
               const SizedBox(height: 16),
 
               GestureDetector(
                 onTap: _pickReceipt,
                 child: Container(
-                  height: 150,
+                  height: 160,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.withValues(alpha: 0.3), style: BorderStyle.solid),
+                    color: Colors.grey.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _receiptFile != null ? Colors.green.withValues(alpha: 0.5) : Colors.grey.withValues(alpha: 0.3),
+                      style: BorderStyle.solid,
+                      width: 2,
+                    ),
                   ),
                   child: _receiptFile != null 
                     ? Stack(
                         fit: StackFit.expand,
                         children: [
-                          ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.file(_receiptFile!, fit: BoxFit.cover)),
-                          Positioned(right: 8, top: 8, child: CircleAvatar(backgroundColor: Colors.black54, child: IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => setState(() => _receiptFile = null)))),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(14), 
+                            child: Image.file(_receiptFile!, fit: BoxFit.cover),
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              gradient: LinearGradient(
+                                colors: [Colors.black.withValues(alpha: 0.4), Colors.transparent],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 12, 
+                            top: 12, 
+                            child: IconButton.filled(
+                              icon: const Icon(Icons.close, color: Colors.white, size: 20), 
+                              onPressed: () => setState(() => _receiptFile = null),
+                              style: IconButton.styleFrom(backgroundColor: Colors.black54),
+                            ),
+                          ),
+                          const Center(
+                            child: Icon(Icons.check_circle, color: Colors.white, size: 48),
+                          ),
                         ],
                       )
-                    : const Column(
+                    : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_a_photo_outlined, color: Colors.grey, size: 40),
-                          SizedBox(height: 8),
-                          Text('Klik untuk muat naik resit', style: TextStyle(color: Colors.grey)),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.cloud_upload_outlined, color: Colors.grey, size: 32),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Klik untuk muat naik resit pembayaran',
+                            style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
+                          ),
+                          const Text(
+                            'Format: JPG, PNG (Max 5MB)',
+                            style: TextStyle(color: Colors.grey, fontSize: 10),
+                          ),
                         ],
                       ),
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
+              
+              // Submit Button
               ElevatedButton(
                 onPressed: _isLoading ? null : _submitOrder,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
+                  elevation: 8,
+                  shadowColor: Colors.green.withValues(alpha: 0.4),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
                 child: _isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white) 
-                    : const Text('Confirm & Submit Order', style: TextStyle(fontSize: 18)),
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      ) 
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.send_rounded),
+                          SizedBox(width: 12),
+                          Text('Sahkan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

@@ -11,14 +11,14 @@
     "categories": ["food", "business", "shopping"],
     "screenshots": [
         {
-            "src": "favicon.png",
+            "src": "https://wazeallszgpiasinsjzi.supabase.co/storage/v1/object/public/assets/logo.png",
             "sizes": "512x512",
             "type": "image/png",
             "form_factor": "wide",
             "label": "Nachozyyy Home Screen"
         },
         {
-            "src": "favicon.png",
+            "src": "https://wazeallszgpiasinsjzi.supabase.co/storage/v1/object/public/assets/logo.png",
             "sizes": "512x512",
             "type": "image/png",
             "form_factor": "narrow",
@@ -27,23 +27,23 @@
     ],
     "icons": [
         {
-            "src": "icons/Icon-192.png",
+            "src": "https://wazeallszgpiasinsjzi.supabase.co/storage/v1/object/public/assets/logo.png",
             "sizes": "192x192",
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-512.png",
+            "src": "https://wazeallszgpiasinsjzi.supabase.co/storage/v1/object/public/assets/logo.png",
             "sizes": "512x512",
             "type": "image/png"
         },
         {
-            "src": "icons/Icon-maskable-192.png",
+            "src": "https://wazeallszgpiasinsjzi.supabase.co/storage/v1/object/public/assets/logo.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable"
         },
         {
-            "src": "icons/Icon-maskable-512.png",
+            "src": "https://wazeallszgpiasinsjzi.supabase.co/storage/v1/object/public/assets/logo.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

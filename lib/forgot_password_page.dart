@@ -44,7 +44,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     setState(() => _isLoading = true);
     try {
-      await Supabase.instance.client.auth.resetPasswordForEmail(identifier);
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        identifier,
+        redirectTo: 'https://booknaw.pages.dev/reset-password',
+      );
       if (mounted) {
         showDialog(
           context: context,

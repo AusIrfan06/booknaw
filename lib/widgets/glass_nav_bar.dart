@@ -35,9 +35,12 @@ class GlassNavigationBar extends StatelessWidget {
       opacity: isKeyboardOpen ? 0.0 : 1.0,
       child: isKeyboardOpen
           ? const SizedBox.shrink()
-          : Padding(
-        padding: EdgeInsets.only(left: 14, right: 14, bottom: adjustedBottomPadding, top: 10),
-        child: GlassContainer(
+          : Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Padding(
+                  padding: EdgeInsets.only(left: 14, right: 14, bottom: adjustedBottomPadding, top: 10),
+                  child: GlassContainer(
           useOwnLayer: true,
           quality: GlassQuality.standard,
           shape: LiquidRoundedSuperellipse(borderRadius: 50.0),
@@ -166,6 +169,8 @@ class GlassNavigationBar extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  ),
+);
+}
 }

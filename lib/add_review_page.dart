@@ -21,7 +21,39 @@ class _AddReviewPageState extends State<AddReviewPage> {
   final _commentController = TextEditingController();
   XFile? _selectedFile;
   bool _isUploading = false;
+  bool _alreadyReviewed = false;
+  bool _isLoadingCheck = true;
   final _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkExistingReview();
+  }
+
+  Future<void> _checkExistingReview() async {
+    try {
+      final orderId = int.tryParse(widget.order['id'].toString());
+      if (orderId == null) return;
+
+      final existing = await Supabase.instance.client
+          .from('reviews')
+          .select('id')
+          .eq('order_id', orderId)
+          .maybeSingle();
+      
+      if (existing != null) {
+        setState(() {
+          _alreadyReviewed = true;
+          _isLoadingCheck = false;
+        });
+      } else {
+        setState(() => _isLoadingCheck = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingCheck = false);
+    }
+  }
 
   Future<void> _pickImage() async {
     final XFile? file = await _picker.pickImage(
@@ -41,10 +73,30 @@ class _AddReviewPageState extends State<AddReviewPage> {
       return;
     }
 
+    if (_alreadyReviewed) {
+      showGlassToast(context, 'Anda telah pun memberi review untuk pesanan ini.', isError: true);
+      return;
+    }
+
     setState(() => _isUploading = true);
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
+      
+      // Double check existence before insert
+      final orderId = int.tryParse(widget.order['id'].toString());
+      if (orderId == null) throw 'ID Pesanan tidak sah.';
+
+      final existing = await Supabase.instance.client
+          .from('reviews')
+          .select('id')
+          .eq('order_id', orderId)
+          .maybeSingle();
+      
+      if (existing != null) {
+        throw 'Anda telah pun memberi review untuk pesanan ini.';
+      }
+
       String? mediaUrl;
 
       // 1. Upload Media if selected
@@ -68,9 +120,6 @@ class _AddReviewPageState extends State<AddReviewPage> {
       }
 
       // 2. Save to Database
-      final orderId = int.tryParse(widget.order['id'].toString());
-      if (orderId == null) throw 'ID Pesanan tidak sah.';
-
       await Supabase.instance.client.from('reviews').insert({
         'order_id': orderId,
         'user_id': user?.id,
@@ -96,6 +145,46 @@ class _AddReviewPageState extends State<AddReviewPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoadingCheck) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Tambah Review')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_alreadyReviewed) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Tambah Review')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                const SizedBox(height: 16),
+                const Text(
+                  'Review Dihantar',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Anda telah pun memberikan review untuk pesanan ini. Terima kasih!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Kembali'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tambah Review')),

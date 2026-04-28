@@ -242,32 +242,28 @@ class _CustomerOrderCard extends StatelessWidget {
       delLabel = isPaid ? 'Sedang Diproses' : 'Belum Bayar';
     }
 
-    return InkWell(
-      onTap: () => _showReceipt(context),
-      borderRadius: BorderRadius.circular(14),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: InkWell(
+        onTap: () => _showReceipt(context),
+        borderRadius: BorderRadius.circular(14),
       child: GlassContainer(
         useOwnLayer: true,
         quality: GlassQuality.standard,
         shape: LiquidRoundedSuperellipse(borderRadius: 14.0),
         settings: LiquidGlassSettings(
-          thickness: 0.05,
-          blur: 10,
+          thickness: 0.1,
+          blur: 15,
           refractiveIndex: 1.0,
-          glassColor: Colors.transparent,
+          glassColor: isDark 
+              ? const Color(0xFFFF5722).withValues(alpha: 0.1) 
+              : const Color(0xFFFF5722).withValues(alpha: 0.05),
           lightAngle: 45.0,
           lightIntensity: 0.1,
-          ambientStrength: 1.0,
-          saturation: 1.0,
-          chromaticAberration: 0.0,
         ),
-        child: Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 14),
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
               // Top row: name + total
@@ -337,32 +333,49 @@ class _CustomerOrderCard extends StatelessWidget {
               ),
               if (isDelivered) ...[
                 const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AddReviewPage(order: order),
+                FutureBuilder<bool>(
+                  future: Supabase.instance.client
+                      .from('reviews')
+                      .select('id')
+                      .eq('order_id', order['id'])
+                      .maybeSingle()
+                      .then((val) => val != null),
+                  builder: (context, snapshot) {
+                    final hasReview = snapshot.data ?? false;
+                    
+                    return SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: hasReview 
+                          ? null 
+                          : () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddReviewPage(order: order),
+                              ),
+                            ),
+                        icon: Icon(
+                          hasReview ? Icons.check_circle_outline : Icons.rate_review_outlined, 
+                          size: 18,
+                        ),
+                        label: Text(hasReview ? 'Review Telah Dihantar' : 'Berikan Review'),
+                        style: OutlinedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
-                    ),
-                    icon: const Icon(Icons.rate_review_outlined, size: 18),
-                    label: const Text('Berikan Review'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
-              ],
             ],
-          ),
+          ],
         ),
       ),
     ),
-    );
-  }
+  ),
+);
+}
 
   void _showReceipt(BuildContext context) {
     final hotQty = order['hot_quantity_100g'] as int? ?? 0;

@@ -275,7 +275,9 @@ class _AddReviewPageState extends State<AddReviewPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white10 : Colors.grey.shade100,
+        color: isDark 
+            ? const Color(0xFFFF5722).withValues(alpha: 0.1) 
+            : const Color(0xFFFF5722).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),

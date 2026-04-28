@@ -47,8 +47,8 @@ class AllReviewsPage extends StatelessWidget {
                     thickness: 0.1,
                     blur: 10,
                     glassColor: isDark
-                        ? Colors.white.withValues(alpha: 0.05)
-                        : Colors.white.withValues(alpha: 0.4),
+                        ? const Color(0xFFFF5722).withValues(alpha: 0.1)
+                        : const Color(0xFFFF5722).withValues(alpha: 0.05),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),

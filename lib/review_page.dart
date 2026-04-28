@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,7 +18,7 @@ class ReviewPage extends StatefulWidget {
 class _ReviewPageState extends State<ReviewPage> {
   int _rating = 5;
   final _commentController = TextEditingController();
-  File? _image;
+  XFile? _image;
   bool _isUploading = false;
   final _picker = ImagePicker();
 
@@ -28,7 +28,7 @@ class _ReviewPageState extends State<ReviewPage> {
       imageQuality: 70,
     );
     if (pickedFile != null) {
-      setState(() => _image = File(pickedFile.path));
+      setState(() => _image = pickedFile);
     }
   }
 
@@ -46,9 +46,11 @@ class _ReviewPageState extends State<ReviewPage> {
         final fileName = 'review_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final path = '${user.id}/$fileName';
         
+        final fileBytes = await _image!.readAsBytes();
+
         await Supabase.instance.client.storage
             .from('reviews')
-            .upload(path, _image!);
+            .uploadBinary(path, fileBytes);
         
         imageUrl = Supabase.instance.client.storage
             .from('reviews')
@@ -156,7 +158,9 @@ class _ReviewPageState extends State<ReviewPage> {
                 child: _image != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(_image!, fit: BoxFit.cover),
+                        child: kIsWeb 
+                          ? Image.network(_image!.path, fit: BoxFit.cover)
+                          : Image.network(_image!.path, fit: BoxFit.cover),
                       )
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,

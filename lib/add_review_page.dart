@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -18,7 +18,7 @@ class AddReviewPage extends StatefulWidget {
 class _AddReviewPageState extends State<AddReviewPage> {
   int _rating = 5;
   final _commentController = TextEditingController();
-  File? _mediaFile;
+  XFile? _selectedFile;
   bool _isVideo = false;
   bool _isUploading = false;
   final _picker = ImagePicker();
@@ -33,7 +33,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
     if (file != null) {
       setState(() {
-        _mediaFile = File(file.path);
+        _selectedFile = file;
         _isVideo = video;
       });
     }
@@ -51,15 +51,17 @@ class _AddReviewPageState extends State<AddReviewPage> {
       final user = Supabase.instance.client.auth.currentUser;
       String? mediaUrl;
 
-      if (_mediaFile != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_mediaFile!.path.split('/').last}';
+      if (_selectedFile != null) {
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_selectedFile!.name}';
         final path = 'reviews/$fileName';
 
         try {
+          final fileBytes = await _selectedFile!.readAsBytes();
+          
           // Attempt Storage Upload
           await Supabase.instance.client.storage
               .from('reviews')
-              .upload(path, _mediaFile!);
+              .uploadBinary(path, fileBytes);
           
           mediaUrl = Supabase.instance.client.storage
               .from('reviews')
@@ -148,7 +150,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
             ),
             const SizedBox(height: 24),
 
-            if (_mediaFile != null) ...[
+            if (_selectedFile != null) ...[
               Stack(
                 children: [
                   ClipRRect(
@@ -166,18 +168,25 @@ class _AddReviewPageState extends State<AddReviewPage> {
                               ),
                             ),
                           )
-                        : Image.file(
-                            _mediaFile!,
-                            height: 200,
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                        : kIsWeb 
+                          ? Image.network(
+                              _selectedFile!.path,
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.network( // In mobile, XFile.path works with Image.network for local assets sometimes, but safer to use memory if needed. 
+                              _selectedFile!.path, // Actually for XFile, Image.network(path) works on web for blob urls.
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
                   ),
                   Positioned(
                     right: 8,
                     top: 8,
                     child: IconButton(
-                      onPressed: () => setState(() => _mediaFile = null),
+                      onPressed: () => setState(() => _selectedFile = null),
                       icon: const CircleAvatar(
                         backgroundColor: Colors.red,
                         radius: 14,

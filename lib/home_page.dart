@@ -12,6 +12,8 @@ import 'app_logo.dart';
 import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
+import 'widgets/glass_nav_bar.dart';
+import 'widgets/nav_item.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -124,21 +126,18 @@ class _HomePageState extends State<HomePage> {
     final safeIndex = _currentIndex.clamp(0, pages.length - 1);
 
     final navItems = [
-      const BottomNavigationBarItem(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedHome01, color: Colors.grey, size: 24),
-        activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedHome01, color: Color(0xFFFF5722), size: 24),
-        label: 'Utama',
+      const NavItem(
+        icon: HugeIcons.strokeRoundedHome01,
+        title: 'Utama',
       ),
       if (isLoggedIn)
-        const BottomNavigationBarItem(
-          icon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: Colors.grey, size: 24),
-          activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: Color(0xFFFF5722), size: 24),
-          label: 'Status',
+        const NavItem(
+          icon: HugeIcons.strokeRoundedTask01,
+          title: 'Status',
         ),
-      const BottomNavigationBarItem(
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: Colors.grey, size: 24),
-        activeIcon: HugeIcon(icon: HugeIcons.strokeRoundedUser, color: Color(0xFFFF5722), size: 24),
-        label: 'Profil',
+      const NavItem(
+        icon: HugeIcons.strokeRoundedUser,
+        title: 'Profil',
       ),
     ];
 
@@ -148,12 +147,11 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         automaticallyImplyLeading: false,
       ) : null,
+      extendBody: true,
       body: IndexedStack(index: safeIndex, children: pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: safeIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
+      bottomNavigationBar: GlassNavigationBar(
+        selectedIndex: safeIndex,
+        onItemSelected: (i) => setState(() => _currentIndex = i),
         items: navItems,
       ),
     );

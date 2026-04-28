@@ -7,6 +7,8 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
 import 'utils/glass_toast.dart';
+import 'widgets/glass_nav_bar.dart';
+import 'widgets/nav_item.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
@@ -54,77 +56,31 @@ class _StaffDashboardState extends State<StaffDashboard> {
         title: Text(_titles[_currentIndex]),
         automaticallyImplyLeading: false,
       ),
+      extendBody: true,
       body: IndexedStack(index: _currentIndex, children: pages),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Colors.grey,
+      bottomNavigationBar: GlassNavigationBar(
+        selectedIndex: _currentIndex,
+        onItemSelected: (i) => setState(() => _currentIndex = i),
         items: const [
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedDashboardSquare01,
-              color: Colors.grey,
-              size: 24,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedDashboardSquare01,
-              color: Color(0xFFFF5722),
-              size: 24,
-            ),
-            label: 'Dashboard',
+          NavItem(
+            icon: HugeIcons.strokeRoundedDashboardSquare01,
+            title: 'Dash',
           ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedTask01,
-              color: Colors.grey,
-              size: 24,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedTask01,
-              color: Color(0xFFFF5722),
-              size: 24,
-            ),
-            label: 'Pesanan',
+          NavItem(
+            icon: HugeIcons.strokeRoundedTask01,
+            title: 'Pesanan',
           ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedDeliveryTruck01,
-              color: Colors.grey,
-              size: 24,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedDeliveryTruck01,
-              color: Color(0xFFFF5722),
-              size: 24,
-            ),
-            label: 'Hantar',
+          NavItem(
+            icon: HugeIcons.strokeRoundedDeliveryTruck01,
+            title: 'Hantar',
           ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedPackage,
-              color: Colors.grey,
-              size: 24,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedPackage,
-              color: Color(0xFFFF5722),
-              size: 24,
-            ),
-            label: 'Stok',
+          NavItem(
+            icon: HugeIcons.strokeRoundedPackage,
+            title: 'Stok',
           ),
-          BottomNavigationBarItem(
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: Colors.grey,
-              size: 24,
-            ),
-            activeIcon: HugeIcon(
-              icon: HugeIcons.strokeRoundedUser,
-              color: Color(0xFFFF5722),
-              size: 24,
-            ),
-            label: 'Profil',
+          NavItem(
+            icon: HugeIcons.strokeRoundedUser,
+            title: 'Profil',
           ),
         ],
       ),

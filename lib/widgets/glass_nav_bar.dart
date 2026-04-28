@@ -35,7 +35,8 @@ class GlassNavigationBar extends StatelessWidget {
       opacity: isKeyboardOpen ? 0.0 : 1.0,
       child: isKeyboardOpen
           ? const SizedBox.shrink()
-          : Center(
+          : Align(
+              alignment: Alignment.bottomCenter,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: Padding(

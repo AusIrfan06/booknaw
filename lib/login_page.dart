@@ -107,7 +107,7 @@ class _LoginPageState extends State<LoginPage> {
 
     } catch (e) {
       if (mounted) {
-        showGlassToast(context, 'Ralat: ${e.toString().replaceAll('Exception: ', '')}', isError: true);
+        showGlassToast(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -121,7 +121,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) _handleSignInSuccess(res);
     } catch (e) {
       if (mounted) {
-        showGlassToast(context, 'Ralat masuk sebagai tetamu: ${e.toString()}', isError: true);
+        showGlassToast(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

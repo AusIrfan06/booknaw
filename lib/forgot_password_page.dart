@@ -53,7 +53,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       }
     } catch (e) {
       if (mounted) {
-        showGlassToast(context, 'Ralat: $e', isError: true);
+        showGlassToast(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

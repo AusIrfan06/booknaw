@@ -107,7 +107,7 @@ class _SignupPageState extends State<SignupPage> {
       }
     } catch (e) {
       if (mounted) {
-        showGlassToast(context, 'Ralat daftar: $e', isError: true);
+        showGlassToast(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -29,9 +29,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     final isLoggedIn = user != null;
     
-    // Mock data for UI only
-    final name = isLoggedIn ? (user!.userMetadata?['full_name'] ?? "User Name") : "Guest";
-    final email = isLoggedIn ? (user!.email ?? "email@example.com") : "Log in to access more features";
+    // Data untuk UI sahaja
+    final name = isLoggedIn ? (user!.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
+    final email = isLoggedIn ? (user!.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
     final isStaff = isLoggedIn && (user!.userMetadata?['is_staff'] == true);
     const locationStr = "Shah Alam, Selangor";
 

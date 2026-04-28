@@ -11,7 +11,8 @@ class AccountDetailsPage extends StatefulWidget {
 }
 
 class _AccountDetailsPageState extends State<AccountDetailsPage> {
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isLoading = false;
   bool _isEditing = false;
@@ -21,7 +22,20 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
     super.initState();
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
-      _nameController.text = user.userMetadata?['full_name'] ?? "";
+      String fullName = user.userMetadata?['full_name'] ?? "";
+      String firstName = user.userMetadata?['first_name'] ?? "";
+      String lastName = user.userMetadata?['last_name'] ?? "";
+
+      if (firstName.isNotEmpty) {
+        _firstNameController.text = firstName;
+        _lastNameController.text = lastName;
+      } else if (fullName.isNotEmpty) {
+        final parts = fullName.split(' ');
+        _firstNameController.text = parts.first;
+        if (parts.length > 1) {
+          _lastNameController.text = parts.sublist(1).join(' ');
+        }
+      }
       _phoneController.text = user.userMetadata?['phone'] ?? "";
     }
   }
@@ -32,14 +46,18 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) return;
 
-      final name = _nameController.text.trim();
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
+      final fullName = '$firstName $lastName'.trim();
       final phone = _phoneController.text.trim();
 
       // Update auth metadata
       await Supabase.instance.client.auth.updateUser(
         UserAttributes(
           data: {
-            'full_name': name,
+            'first_name': firstName,
+            'last_name': lastName,
+            'full_name': fullName,
             'phone': phone,
           },
         ),
@@ -48,7 +66,9 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
       // Update public.users table
       await Supabase.instance.client.from('users').upsert({
         'id': user.id,
-        'full_name': name,
+        'first_name': firstName,
+        'last_name': lastName,
+        'full_name': fullName,
         'phone': phone,
         'updated_at': DateTime.now().toIso8601String(),
       });
@@ -152,8 +172,13 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
                     "Informasi Utama",
                     [
                       _isEditing 
-                        ? _buildEditableTile(isDark, HugeIcons.strokeRoundedUser, "Nama Penuh", _nameController)
-                        : _buildDetailTile(isDark, HugeIcons.strokeRoundedUser, "Nama Penuh", _nameController.text),
+                        ? Column(
+                            children: [
+                              _buildEditableTile(isDark, HugeIcons.strokeRoundedUser, "Nama Pertama", _firstNameController),
+                              _buildEditableTile(isDark, HugeIcons.strokeRoundedUser, "Nama Akhir", _lastNameController),
+                            ],
+                          )
+                        : _buildDetailTile(isDark, HugeIcons.strokeRoundedUser, "Nama Penuh", '${_firstNameController.text} ${_lastNameController.text}'.trim()),
                       _isEditing
                         ? _buildEditableTile(isDark, HugeIcons.strokeRoundedSmartPhone01, "No. Telefon", _phoneController, keyboardType: TextInputType.phone)
                         : _buildDetailTile(isDark, HugeIcons.strokeRoundedSmartPhone01, "No. Telefon", _phoneController.text),

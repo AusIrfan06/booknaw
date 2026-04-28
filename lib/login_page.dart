@@ -289,27 +289,25 @@ class _LoginPageState extends State<LoginPage> {
                           
                           const SizedBox(height: 16),
                           
-                          // Register Link
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const SignupPage()),
-                              );
-                            },
-                            child: RichText(
-                              text: TextSpan(
-                                text: 'Tiada akaun? ',
-                                style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-                                children: const [
-                                  TextSpan(
-                                    text: 'Daftar Sekarang',
-                                    style: TextStyle(
-                                      color: Color(0xFFFF5722),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                          // Register Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const SignupPage()),
+                                );
+                              },
+                              icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserAdd01, color: Color(0xFFFF5722), size: 20),
+                              label: const Text(
+                                'Daftar Sekarang',
+                                style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                side: const BorderSide(color: Color(0xFFFF5722)),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                               ),
                             ),
                           ),
@@ -327,7 +325,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 12),
 
-                          // Guest Signup Button
+                          // Guest Login Button
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
@@ -339,7 +337,7 @@ class _LoginPageState extends State<LoginPage> {
                               },
                               icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserCircle, color: Color(0xFFFF5722), size: 20),
                               label: const Text(
-                                'Daftar sebagai Tetamu',
+                                'Log Masuk sebagai Tetamu',
                                 style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
                               ),
                               style: OutlinedButton.styleFrom(

@@ -28,7 +28,8 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   bool _isLoading = false;
@@ -39,7 +40,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
       final meta = user.userMetadata;
-      _nameController.text = meta?['full_name'] ?? '';
+      String fullName = meta?['full_name'] ?? '';
+      String firstName = meta?['first_name'] ?? '';
+      String lastName = meta?['last_name'] ?? '';
+
+      if (fullName.startsWith('Tetamu')) {
+        _firstNameController.text = '';
+        _lastNameController.text = '';
+      } else {
+        if (firstName.isNotEmpty) {
+          _firstNameController.text = firstName;
+          _lastNameController.text = lastName;
+        } else if (fullName.isNotEmpty) {
+          // Fallback for old accounts without split names
+          final parts = fullName.split(' ');
+          _firstNameController.text = parts.first;
+          if (parts.length > 1) {
+            _lastNameController.text = parts.sublist(1).join(' ');
+          }
+        }
+      }
       _phoneController.text = meta?['phone'] ?? '';
     }
   }
@@ -54,7 +74,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     try {
       final response = await Supabase.instance.client.from('orders').insert({
         'user_id': Supabase.instance.client.auth.currentUser?.id,
-        'customer_name': _nameController.text,
+        'customer_name': '${_firstNameController.text} ${_lastNameController.text}'.trim(),
         'phone_number': _phoneController.text,
         'delivery_address': _isDelivery ? _addressController.text.trim() : null,
         'hot_quantity_100g': widget.hotQuantity,
@@ -89,7 +109,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       if (!mounted) return;
 
       // Build WhatsApp message for Lysa
-      final name = _nameController.text;
+      final name = '${_firstNameController.text} ${_lastNameController.text}'.trim();
       final phone = _phoneController.text;
       final hot = widget.hotQuantity > 0 ? 'HOT & SPICYYY x${widget.hotQuantity}' : '';
       final bbq = widget.bbqQuantity > 0 ? 'BBQ x${widget.bbqQuantity}' : '';
@@ -197,11 +217,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- Order Summary Card ---
-              _buildModernSummary(isDark),
-              
-              const SizedBox(height: 32),
-
               // --- Contact Info Header ---
               _buildSectionHeader(
                 icon: HugeIcons.strokeRoundedUser,
@@ -211,11 +226,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
               const SizedBox(height: 16),
               
               _buildTextField(
-                controller: _nameController,
-                label: 'Nama Penuh',
+                controller: _firstNameController,
+                label: 'Nama Pertama',
                 icon: HugeIcons.strokeRoundedUser,
                 isDark: isDark,
-                validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama' : null,
+                validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama pertama' : null,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _lastNameController,
+                label: 'Nama Akhir',
+                icon: HugeIcons.strokeRoundedUser,
+                isDark: isDark,
+                validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama akhir' : null,
               ),
               const SizedBox(height: 16),
               _buildTextField(
@@ -237,6 +260,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   validator: (val) => val == null || val.trim().isEmpty ? 'Sila masukkan alamat' : null,
                 ),
               ],
+              
+              const SizedBox(height: 32),
+
+              // --- Order Summary Card ---
+              _buildModernSummary(isDark),
+              
+              const SizedBox(height: 32),
 
               const SizedBox(height: 40),
 

@@ -13,14 +13,27 @@ class GuestSignupPage extends StatefulWidget {
 }
 
 class _GuestSignupPageState extends State<GuestSignupPage> {
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
 
   Future<void> _signUp() async {
+    String firstName = _firstNameController.text.trim();
+    String lastName = _lastNameController.text.trim();
     String phoneInput = _phoneController.text.trim();
     String password = _passwordController.text;
+
+    if (firstName.isEmpty || lastName.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sila masukkan nama pertama dan nama akhir!')),
+      );
+      return;
+    }
+
+    String fullName = '$firstName $lastName';
 
     if (phoneInput.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,7 +66,7 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
         email: fakeEmail,
         password: password,
         data: {
-          'full_name': 'Tetamu $cleanPhoneInput',
+          'full_name': fullName,
           'phone': phone,
           'is_staff': false,
         },
@@ -66,7 +79,9 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
           'id': userId,
           'email': fakeEmail,
           'phone': phone,
-          'full_name': 'Tetamu $cleanPhoneInput',
+          'full_name': fullName,
+          'first_name': firstName,
+          'last_name': lastName,
           'is_staff': false,
           'updated_at': DateTime.now().toIso8601String(),
         });
@@ -77,7 +92,7 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
           context,
           MaterialPageRoute(
             builder: (context) => AuthSuccessScreen(
-              name: 'Tetamu $cleanPhoneInput',
+              name: firstName,
               isStaff: false,
             ),
           ),
@@ -141,6 +156,22 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
                           style: TextStyle(color: Colors.grey),
                         ),
                         const SizedBox(height: 32),
+                        _buildField(
+                          controller: _firstNameController,
+                          label: 'Nama Pertama',
+                          icon: HugeIcons.strokeRoundedUser,
+                          isDark: isDark,
+                          keyboardType: TextInputType.name,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildField(
+                          controller: _lastNameController,
+                          label: 'Nama Akhir',
+                          icon: HugeIcons.strokeRoundedUser,
+                          isDark: isDark,
+                          keyboardType: TextInputType.name,
+                        ),
+                        const SizedBox(height: 16),
                         _buildField(
                           controller: _phoneController,
                           label: 'No. Telefon',

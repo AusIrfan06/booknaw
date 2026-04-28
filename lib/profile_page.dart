@@ -175,7 +175,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       ],
                       
                       Center(child: Column(children: [const Text("Nachozyyy v0.1.0", style: TextStyle(color: Colors.grey, fontSize: 12, fontWeight: FontWeight.w600)), const SizedBox(height: 4), const Text("Dibuat dengan Kasih Sayang", style: TextStyle(color: Colors.grey, fontSize: 10))])),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 120),
                     ],
                   ),
                 ),

@@ -30,7 +30,7 @@ class AllReviewsPage extends StatelessWidget {
             return const Center(child: Text('Tiada review lagi.'));
           }
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: reviews.length,
             itemBuilder: (context, index) {
               final review = reviews[index];

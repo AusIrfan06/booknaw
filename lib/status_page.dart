@@ -163,7 +163,7 @@ class _StatusPageState extends State<StatusPage>
                 return _EmptyState(tab: _tabs[i].label);
               }
               return ListView.builder(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                 itemCount: filtered.length,
                 itemBuilder: (context, idx) =>
                     _CustomerOrderCard(order: filtered[idx]),

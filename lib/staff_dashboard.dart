@@ -189,12 +189,12 @@ class _DashboardPage extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
               const Text(
                 'Ringkasan Hari Ini',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               // ── Stats cards ─────────────────────────────────────────────────────
               StreamBuilder<List<Map<String, dynamic>>>(
@@ -220,10 +220,11 @@ class _DashboardPage extends StatelessWidget {
 
                   return GridView.builder(
                     shrinkWrap: true,
+                    padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                       maxCrossAxisExtent: 250,
-                      mainAxisExtent: 130, // Increased to fix overflow
+                      mainAxisExtent: 120, // Increased from 105 to fix overflow
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                     ),
@@ -264,14 +265,13 @@ class _DashboardPage extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(height: 24),
-
+              const SizedBox(height: 20),
               // ── Stock summary ───────────────────────────────────────────────────
               const Text(
                 'Status Stok',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               StreamBuilder<List<Map<String, dynamic>>>(
                 stream: inventoryStream,
@@ -287,10 +287,11 @@ class _DashboardPage extends StatelessWidget {
                   return GridView.count(
                     crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 1,
                     shrinkWrap: true,
+                    padding: EdgeInsets.zero,
                     physics: const NeverScrollableScrollPhysics(),
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 2.2,
+                    childAspectRatio: 2.1, // Increased from 2.2 for more height
                     children: [
                       _ModernStockCard(
                         label: 'HOT & SPICYYY',
@@ -322,13 +323,12 @@ class _DashboardPage extends StatelessWidget {
                 },
               ),
 
-              const SizedBox(height: 24),
-
+              const SizedBox(height: 20),
               const Text(
                 'Sedia Untuk Penghantaran',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
               StreamBuilder<List<Map<String, dynamic>>>(
                 stream: ordersStream,
@@ -378,7 +378,7 @@ class _DashboardPage extends StatelessWidget {
                   );
                 },
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 120), // Increased to ensure nav bar clearance
             ],
           ),
         ),
@@ -551,9 +551,15 @@ class _StockUpdateRow extends StatelessWidget {
               ],
             ),
           ),
-          _adjustBtn(Icons.remove, () => _update(-10), isDark),
-          const SizedBox(width: 8),
-          _adjustBtn(Icons.add, () => _update(10), isDark),
+          _adjustBtn(Icons.remove, () => _update(-1), isDark),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              '$currentStock',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+            ),
+          ),
+          _adjustBtn(Icons.add, () => _update(1), isDark),
         ],
       ),
     );

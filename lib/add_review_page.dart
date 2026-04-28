@@ -19,28 +19,23 @@ class _AddReviewPageState extends State<AddReviewPage> {
   int _rating = 5;
   final _commentController = TextEditingController();
   XFile? _selectedFile;
-  bool _isVideo = false;
   bool _isUploading = false;
   final _picker = ImagePicker();
 
-  Future<void> _pickMedia(bool video) async {
-    final XFile? file = video
-        ? await _picker.pickVideo(source: ImageSource.gallery)
-        : await _picker.pickImage(
-            source: ImageSource.gallery,
-            imageQuality: 70,
-          );
+  Future<void> _pickImage() async {
+    final XFile? file = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
 
     if (file != null) {
-      setState(() {
-        _selectedFile = file;
-        _isVideo = video;
-      });
+      setState(() => _selectedFile = file);
     }
   }
 
   Future<void> _submitReview() async {
-    if (_commentController.text.trim().isEmpty) {
+    final comment = _commentController.text.trim();
+    if (comment.isEmpty) {
       showGlassToast(context, 'Sila tulis komen anda!', isError: true);
       return;
     }
@@ -51,39 +46,35 @@ class _AddReviewPageState extends State<AddReviewPage> {
       final user = Supabase.instance.client.auth.currentUser;
       String? mediaUrl;
 
+      // 1. Upload Media if selected
       if (_selectedFile != null) {
-        final fileName = '${DateTime.now().millisecondsSinceEpoch}_${_selectedFile!.name}';
-        final path = 'reviews/$fileName';
+        final fileExtension = _selectedFile!.name.split('.').last;
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+        final path = 'public/$fileName';
 
         try {
-          final fileBytes = await _selectedFile!.readAsBytes();
-          
-          // Attempt Storage Upload
+          final bytes = await _selectedFile!.readAsBytes();
           await Supabase.instance.client.storage
               .from('reviews')
-              .uploadBinary(path, fileBytes);
+              .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: 'image/$fileExtension'));
           
           mediaUrl = Supabase.instance.client.storage
               .from('reviews')
               .getPublicUrl(path);
-        } catch (storageErr) {
-          throw Exception('Gagal memuat naik gambar: Sila pastikan bucket "reviews" wujud di Supabase Storage dan ditetapkan kepada Public. (Ralat: $storageErr)');
+        } catch (e) {
+          throw 'Gagal memuat naik imej. Sila pastikan bucket "reviews" adalah Public di Supabase.';
         }
       }
 
-      try {
-        // Attempt Database Insert
-        await Supabase.instance.client.from('reviews').insert({
-          'user_id': user?.id,
-          'order_id': int.tryParse(widget.order['id'].toString()),
-          'customer_name': user?.userMetadata?['full_name'] ?? 'Pelanggan',
-          'rating': _rating,
-          'comment': _commentController.text.trim(),
-          'image_url': mediaUrl,
-        });
-      } catch (dbErr) {
-        throw Exception('Gagal menyimpan ke database: Sila pastikan table "reviews" anda mempunyai column yang betul. (Ralat: $dbErr)');
-      }
+      // 2. Save to Database
+      await Supabase.instance.client.from('reviews').insert({
+        'order_id': widget.order['id'],
+        'user_id': user?.id,
+        'customer_name': user?.userMetadata?['full_name'] ?? 'Pelanggan',
+        'rating': _rating,
+        'comment': comment,
+        'image_url': mediaUrl,
+      });
 
       if (mounted) {
         showGlassToast(context, 'Review berjaya dihantar! Terima kasih!');
@@ -91,7 +82,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
       }
     } catch (e) {
       if (mounted) {
-        showGlassToast(context, e.toString().replaceAll('Exception: ', ''), isError: true);
+        showGlassToast(context, e.toString(), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -107,164 +98,78 @@ class _AddReviewPageState extends State<AddReviewPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildOrderInfo(isDark),
+            // Order Summary Card
+            _buildOrderCard(isDark),
             const SizedBox(height: 32),
 
-            const Text(
-              'Bagaimana pengalaman anda?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
+            // Star Rating
+            const Text('Berikan Penarafan:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return IconButton(
-                  onPressed: () => setState(() => _rating = index + 1),
-                  icon: Icon(
-                    index < _rating
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                    color: Colors.amber,
-                    size: 40,
-                  ),
-                );
-              }),
+              children: List.generate(5, (i) => IconButton(
+                icon: Icon(i < _rating ? Icons.star_rounded : Icons.star_outline_rounded, color: Colors.amber, size: 40),
+                onPressed: () => setState(() => _rating = i + 1),
+              )),
             ),
             const SizedBox(height: 32),
+
+            // Comment Box
             TextField(
               controller: _commentController,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: 'Tulis komen anda di sini...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                hintText: 'Kongsikan pengalaman anda...',
                 filled: true,
-                fillColor: isDark
-                    ? Colors.white.withValues(alpha: 0.05)
-                    : Colors.grey.shade100,
+                fillColor: isDark ? Colors.white10 : Colors.grey.shade100,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
               ),
             ),
             const SizedBox(height: 24),
 
+            // Image Preview
             if (_selectedFile != null) ...[
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: _isVideo
-                        ? Container(
-                            height: 200,
-                            width: double.infinity,
-                            color: Colors.black,
-                            child: const Center(
-                              child: Icon(
-                                Icons.videocam,
-                                color: Colors.white,
-                                size: 48,
-                              ),
-                            ),
-                          )
-                        : kIsWeb 
-                          ? Image.network(
-                              _selectedFile!.path,
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.network( // In mobile, XFile.path works with Image.network for local assets sometimes, but safer to use memory if needed. 
-                              _selectedFile!.path, // Actually for XFile, Image.network(path) works on web for blob urls.
-                              height: 200,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                  ),
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: IconButton(
-                      onPressed: () => setState(() => _selectedFile = null),
-                      icon: const CircleAvatar(
-                        backgroundColor: Colors.red,
-                        radius: 14,
-                        child: Icon(Icons.close, color: Colors.white, size: 16),
-                      ),
-                    ),
-                  ),
-                ],
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: kIsWeb 
+                  ? Image.network(_selectedFile!.path, height: 200, width: double.infinity, fit: BoxFit.cover)
+                  : Image.network(_selectedFile!.path, height: 200, width: double.infinity, fit: BoxFit.cover),
+              ),
+              TextButton.icon(
+                onPressed: () => setState(() => _selectedFile = null),
+                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                label: const Text('Buang Gambar', style: TextStyle(color: Colors.red)),
               ),
               const SizedBox(height: 16),
-            ],
-
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickMedia(false),
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedImage01,
-                      color: Color(0xFFFF5722),
-                      size: 20,
-                    ),
-                    label: const Text('Tambah Gambar'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _pickMedia(true),
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedVideo01,
-                      color: Color(0xFFFF5722),
-                      size: 20,
-                    ),
-                    label: const Text('Tambah Video'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: _isUploading ? null : _submitReview,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: const Color(0xFFFF5722),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+            ] else 
+              OutlinedButton.icon(
+                onPressed: _pickImage,
+                icon: const Icon(Icons.add_a_photo_outlined),
+                label: const Text('Tambah Gambar'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-              child: _isUploading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Text(
-                      'Hantar Review',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+
+            const SizedBox(height: 48),
+
+            // Submit Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isUploading ? null : _submitReview,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFFFF5722),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: _isUploading 
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Hantar Review', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ),
             ),
           ],
         ),
@@ -272,27 +177,20 @@ class _AddReviewPageState extends State<AddReviewPage> {
     );
   }
 
-  Widget _buildOrderInfo(bool isDark) {
+  Widget _buildOrderCard(bool isDark) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
+        color: isDark ? Colors.white10 : Colors.grey.shade100,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: Colors.white10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Pesanan Selesai:', style: TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 4),
-          Text(
-            'Order #${widget.order['id']}',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          Text(
-            widget.order['delivery_option'] ?? '',
-            style: const TextStyle(fontSize: 13, color: Colors.grey),
-          ),
+          Text('Pesanan #${widget.order['id']}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text(widget.order['delivery_option'] ?? '', style: const TextStyle(color: Colors.grey, fontSize: 13)),
         ],
       ),
     );

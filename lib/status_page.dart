@@ -163,7 +163,7 @@ class _StatusPageState extends State<StatusPage>
                 return _EmptyState(tab: _tabs[i].label);
               }
               return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
                 itemCount: filtered.length,
                 itemBuilder: (context, idx) =>
                     _CustomerOrderCard(order: filtered[idx]),
@@ -592,7 +592,7 @@ class _CustomerOrderCard extends StatelessWidget {
                     icon: HugeIcons.strokeRoundedWhatsapp,
                     color: const Color(0xFF25D366),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 160),
                   ElevatedButton.icon(
                     onPressed: () async {
                       final hot = hotQty > 0 ? 'HOT & SPICYYY x$hotQty' : '';

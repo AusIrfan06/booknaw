@@ -378,7 +378,7 @@ class _DashboardPage extends StatelessWidget {
                   );
                 },
               ),
-              const SizedBox(height: 120), // Increased to ensure nav bar clearance
+              const SizedBox(height: 160), // Further increased for tap clearance
             ],
           ),
         ),

@@ -1,3 +1,4 @@
+import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -160,7 +161,7 @@ class _ReviewPageState extends State<ReviewPage> {
                         borderRadius: BorderRadius.circular(16),
                         child: kIsWeb 
                           ? Image.network(_image!.path, fit: BoxFit.cover)
-                          : Image.network(_image!.path, fit: BoxFit.cover),
+                          : Image.file(File(_image!.path), fit: BoxFit.cover),
                       )
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,

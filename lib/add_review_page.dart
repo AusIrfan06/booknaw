@@ -1,3 +1,4 @@
+import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -50,7 +51,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
       if (_selectedFile != null) {
         final fileExtension = _selectedFile!.name.split('.').last;
         final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
-        final path = 'public/$fileName';
+        final path = 'review_images/$fileName';
 
         try {
           final bytes = await _selectedFile!.readAsBytes();
@@ -67,8 +68,11 @@ class _AddReviewPageState extends State<AddReviewPage> {
       }
 
       // 2. Save to Database
+      final orderId = int.tryParse(widget.order['id'].toString());
+      if (orderId == null) throw 'ID Pesanan tidak sah.';
+
       await Supabase.instance.client.from('reviews').insert({
-        'order_id': widget.order['id'],
+        'order_id': orderId,
         'user_id': user?.id,
         'customer_name': user?.userMetadata?['full_name'] ?? 'Pelanggan',
         'rating': _rating,
@@ -134,7 +138,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 borderRadius: BorderRadius.circular(16),
                 child: kIsWeb 
                   ? Image.network(_selectedFile!.path, height: 200, width: double.infinity, fit: BoxFit.cover)
-                  : Image.network(_selectedFile!.path, height: 200, width: double.infinity, fit: BoxFit.cover),
+                  : Image.file(File(_selectedFile!.path), height: 200, width: double.infinity, fit: BoxFit.cover),
               ),
               TextButton.icon(
                 onPressed: () => setState(() => _selectedFile = null),

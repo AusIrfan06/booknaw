@@ -325,7 +325,7 @@ class _HomeTab extends StatelessWidget {
                     ),
                     const SizedBox(height: 32),
                     const _ReviewsSection(),
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 120), // Standardized clearance
                   ],
                 ),
               ),

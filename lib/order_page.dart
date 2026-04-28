@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'checkout_page.dart';
 import 'login_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'utils/glass_toast.dart';
 
 class OrderPage extends StatefulWidget {
   const OrderPage({super.key});
@@ -42,24 +43,16 @@ class _OrderPageState extends State<OrderPage> {
 
   void _proceedToCheckout() {
     if (_hotQuantity == 0 && _bbqQuantity == 0 && _cheeseQuantity == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sila tambah sekurang-kurangnya 1 item (Nachos atau Cheese Dip)!'),
-        ),
-      );
+      showGlassToast(context, 'Sila tambah sekurang-kurangnya 1 item (Nachos atau Cheese Dip)!', isError: true);
       return;
     }
     if (_deliveryOption == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila pilih cara delivery/pickup!')),
-      );
+      showGlassToast(context, 'Sila pilih cara delivery/pickup!', isError: true);
       return;
     }
 
     if (Supabase.instance.client.auth.currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila log masuk untuk membuat pesanan!')),
-      );
+      showGlassToast(context, 'Sila log masuk untuk membuat pesanan!', isError: true);
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -192,13 +185,7 @@ class _OrderPageState extends State<OrderPage> {
               }
               
               if (changed && _deliveryOption != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Maaf, stok di zon pilihan tidak mencukupi. Kuantiti diselaraskan secara automatik.'),
-                    backgroundColor: Colors.orange,
-                    duration: Duration(seconds: 3),
-                  ),
-                );
+                showGlassToast(context, 'Maaf, stok di zon pilihan tidak mencukupi. Kuantiti diselaraskan secara automatik.', isError: true);
               }
             }
           });

@@ -6,6 +6,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'home_page.dart';
 import 'profile_page.dart';
+import 'utils/glass_toast.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
@@ -1007,9 +1008,7 @@ class _StaffOrderCard extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     }
   }
@@ -1291,9 +1290,7 @@ class _DeliveryOrderCard extends StatelessWidget {
       await launchUrl(waUrl, mode: LaunchMode.externalApplication);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     }
   }
@@ -1306,15 +1303,11 @@ class _DeliveryOrderCard extends StatelessWidget {
           .eq('id', order['id']);
       
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pesanan telah ditanda sebagai Selesai.'), backgroundColor: Colors.green),
-        );
+        showGlassToast(context, 'Pesanan telah ditanda sebagai Selesai.');
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     }
   }
@@ -1645,7 +1638,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
       await Supabase.instance.client.from('inventory').upsert(payload);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     }
   }
@@ -1667,7 +1660,7 @@ class _StockUpdaterState extends State<_StockUpdater> {
         await Supabase.instance.client.from('inventory').upsert(payload);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Ralat: $e')));
+          showGlassToast(context, 'Ralat: $e', isError: true);
         }
       }
     });

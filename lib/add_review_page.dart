@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'utils/glass_toast.dart';
 
 class AddReviewPage extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -40,9 +41,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
   Future<void> _submitReview() async {
     if (_commentController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila tulis komen anda!')),
-      );
+      showGlassToast(context, 'Sila tulis komen anda!', isError: true);
       return;
     }
 
@@ -85,23 +84,12 @@ class _AddReviewPageState extends State<AddReviewPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Review berjaya dihantar! Terima kasih!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        showGlassToast(context, 'Review berjaya dihantar! Terima kasih!');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString().replaceAll('Exception: ', '')), 
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 6),
-          ),
-        );
+        showGlassToast(context, e.toString().replaceAll('Exception: ', ''), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);

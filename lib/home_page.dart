@@ -11,6 +11,7 @@ import 'profile_page.dart';
 import 'app_logo.dart';
 import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'utils/glass_toast.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -67,9 +68,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () async {
               final newPass = controller.text.trim();
               if (newPass.length < 6) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Minimum 6 aksara!')),
-                );
+                showGlassToast(context, 'Minimum 6 aksara!', isError: true);
                 return;
               }
               try {
@@ -78,15 +77,11 @@ class _HomePageState extends State<HomePage> {
                 );
                 if (mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Kata laluan berjaya ditukar!')),
-                  );
+                  showGlassToast(context, 'Kata laluan berjaya ditukar!');
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-                  );
+                  showGlassToast(context, 'Ralat: $e', isError: true);
                 }
               }
             },

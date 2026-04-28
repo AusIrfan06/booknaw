@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'utils/glass_toast.dart';
 
 class AccountDetailsPage extends StatefulWidget {
   const AccountDetailsPage({super.key});
@@ -75,15 +76,11 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
 
       if (mounted) {
         setState(() => _isEditing = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profil berjaya dikemaskini!'), backgroundColor: Colors.green),
-        );
+        showGlassToast(context, 'Profil berjaya dikemaskini!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

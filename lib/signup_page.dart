@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'app_logo.dart';
 import 'auth_success_screen.dart';
+import 'utils/glass_toast.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -31,30 +32,22 @@ class _SignupPageState extends State<SignupPage> {
     String password = _passwordController.text;
 
     if (firstName.isEmpty || lastName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan nama pertama dan nama akhir!')),
-      );
+      showGlassToast(context, 'Sila masukkan nama pertama dan nama akhir!', isError: true);
       return;
     }
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan alamat email!')),
-      );
+      showGlassToast(context, 'Sila masukkan alamat email!', isError: true);
       return;
     }
 
     if (phoneInput.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan no. telefon!')),
-      );
+      showGlassToast(context, 'Sila masukkan no. telefon!', isError: true);
       return;
     }
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kata laluan mestilah sekurang-kurangnya 6 aksara!')),
-      );
+      showGlassToast(context, 'Kata laluan mestilah sekurang-kurangnya 6 aksara!', isError: true);
       return;
     }
 
@@ -114,12 +107,7 @@ class _SignupPageState extends State<SignupPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ralat daftar: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showGlassToast(context, 'Ralat daftar: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -265,7 +253,7 @@ class _SignupPageState extends State<SignupPage> {
                         _buildGlassField(
                           controller: _staffCodeController,
                           label: 'Kod Rujukan (Abaikan jika tiada)',
-                          icon: HugeIcons.strokeRoundedSharing01,
+                          icon: HugeIcons.strokeRoundedShare01,
                           isDark: isDark,
                           obscureText: _obscureStaffCode,
                           suffixIcon: IconButton(

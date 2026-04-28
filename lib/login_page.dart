@@ -8,6 +8,7 @@ import 'guest_signup_page.dart';
 import 'forgot_password_page.dart';
 import 'app_logo.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'utils/glass_toast.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -106,13 +107,7 @@ class _LoginPageState extends State<LoginPage> {
 
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ralat: ${e.toString().replaceAll('Exception: ', '')}'), 
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        showGlassToast(context, 'Ralat: ${e.toString().replaceAll('Exception: ', '')}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -126,12 +121,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) _handleSignInSuccess(res);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Ralat masuk sebagai tetamu: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showGlassToast(context, 'Ralat masuk sebagai tetamu: ${e.toString()}', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'utils/glass_toast.dart';
 
 class ReviewPage extends StatefulWidget {
   final Map<String, dynamic> order;
@@ -65,16 +66,12 @@ class _ReviewPageState extends State<ReviewPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Terima kasih atas review anda!')),
-        );
+        showGlassToast(context, 'Terima kasih atas review anda!');
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);

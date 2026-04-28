@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'app_logo.dart';
+import 'utils/glass_toast.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -18,9 +19,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Future<void> _resetPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan e-mel anda!')),
-      );
+      showGlassToast(context, 'Sila masukkan e-mel anda!', isError: true);
       return;
     }
 
@@ -54,9 +53,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

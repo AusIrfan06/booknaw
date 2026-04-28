@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:image_picker/image_picker.dart';
+import 'utils/glass_toast.dart';
 
 class CheckoutPage extends StatefulWidget {
   final int hotQuantity;
@@ -136,9 +137,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       _showSuccessDialog(orderId, waUrl);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

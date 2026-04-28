@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'app_logo.dart';
 import 'auth_success_screen.dart';
+import 'utils/glass_toast.dart';
 
 class GuestSignupPage extends StatefulWidget {
   const GuestSignupPage({super.key});
@@ -27,25 +28,19 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
     String password = _passwordController.text;
 
     if (firstName.isEmpty || lastName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan nama pertama dan nama akhir!')),
-      );
+      showGlassToast(context, 'Sila masukkan nama pertama dan nama akhir!', isError: true);
       return;
     }
 
     String fullName = '$firstName $lastName';
 
     if (phoneInput.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sila masukkan no. telefon!')),
-      );
+      showGlassToast(context, 'Sila masukkan no. telefon!', isError: true);
       return;
     }
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Kata laluan mestilah sekurang-kurangnya 6 aksara!')),
-      );
+      showGlassToast(context, 'Kata laluan mestilah sekurang-kurangnya 6 aksara!', isError: true);
       return;
     }
 
@@ -100,9 +95,7 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ralat: $e'), backgroundColor: Colors.red),
-        );
+        showGlassToast(context, 'Ralat: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

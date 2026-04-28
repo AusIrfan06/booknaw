@@ -419,70 +419,69 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   Widget _buildQRCodeSection(bool isDark, Color primaryColor) {
-    return GlassContainer(
-      useOwnLayer: true,
-      quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
-      settings: LiquidGlassSettings(
-        thickness: 0.1, blur: 20, 
-        glassColor: primaryColor.withValues(alpha: 0.05),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
       ),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryColor.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    spreadRadius: 2,
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.asset(
-                  'assets/qr_payment.png',
-                  width: 220,
-                  height: 220,
-                  fit: BoxFit.cover,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/qr_payment.png',
+                width: 200,
+                height: 200,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Column(
+                  children: [
+                    const Icon(Icons.qr_code_2_rounded, size: 100, color: Colors.grey),
+                    const SizedBox(height: 8),
+                    Text('QR Code tidak dapat dimuatkan', style: TextStyle(color: Colors.red.shade700, fontSize: 12)),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'SITI FARHANA ALLYSA BINTI MD FADLI',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'SITI FARHANA ALLYSA BINTI MD FADLI',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'DuitNow / QR Pay',
+            style: TextStyle(color: Colors.grey, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: primaryColor.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'DuitNow / QR Pay',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+            child: Text(
+              'Sila ambil tangkap layar (screenshot) QR ini',
+              style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'Sila ambil tangkap layar (screenshot) QR ini',
-                style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

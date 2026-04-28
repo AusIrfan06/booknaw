@@ -264,8 +264,8 @@ class _SignupPageState extends State<SignupPage> {
                         const SizedBox(height: 16),
                         _buildGlassField(
                           controller: _staffCodeController,
-                          label: 'Kod Promosi (Pilihan)',
-                          icon: HugeIcons.strokeRoundedGiftCard,
+                          label: 'Kod Rujukan (Abaikan jika tiada)',
+                          icon: HugeIcons.strokeRoundedSharing01,
                           isDark: isDark,
                           obscureText: _obscureStaffCode,
                           suffixIcon: IconButton(

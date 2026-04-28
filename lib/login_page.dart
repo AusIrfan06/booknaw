@@ -179,8 +179,11 @@ class _LoginPageState extends State<LoginPage> {
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                children: [
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 450),
+                  child: Column(
+                    children: [
                   const SizedBox(height: 40),
                   // Logo / Icon
                   Hero(
@@ -355,10 +358,12 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-        ],
+        ),
       ),
-    );
-  }
+    ],
+  ),
+);
+}
 
   Widget _buildTextField({
     required TextEditingController controller,

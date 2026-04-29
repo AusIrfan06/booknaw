@@ -16,6 +16,9 @@ class AllReviewsPage extends StatelessWidget {
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false);
 
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width > 1200 ? 5 : (width > 900 ? 4 : (width > 600 ? 3 : 2));
+
     return Scaffold(
       appBar: AppBar(title: const Text('Semua Review Pelanggan')),
       body: StreamBuilder<List<Map<String, dynamic>>>(
@@ -30,7 +33,7 @@ class AllReviewsPage extends StatelessWidget {
           }
           return MasonryGridView.count(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            crossAxisCount: 2,
+            crossAxisCount: crossAxisCount,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
             itemCount: reviews.length,

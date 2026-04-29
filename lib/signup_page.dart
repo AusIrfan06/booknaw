@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'app_logo.dart';
 import 'auth_success_screen.dart';
 import 'utils/glass_toast.dart';
 
@@ -186,7 +185,6 @@ class _SignupPageState extends State<SignupPage> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Center(child: AppLogo(size: 60)),
                         const SizedBox(height: 24),
                         Text(
                           'Cipta Akaun Baru',

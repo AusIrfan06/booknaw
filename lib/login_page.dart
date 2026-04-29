@@ -6,7 +6,6 @@ import 'home_page.dart';
 import 'staff_dashboard.dart';
 import 'guest_signup_page.dart';
 import 'forgot_password_page.dart';
-import 'app_logo.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
 
@@ -188,11 +187,6 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                   const SizedBox(height: 40),
-                  // Logo / Icon
-                  Hero(
-                    tag: 'app_logo',
-                    child: const AppLogo(size: 80),
-                  ),
                   const SizedBox(height: 24),
                   const Text(
                     'Log Masuk',

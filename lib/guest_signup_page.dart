@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'app_logo.dart';
 import 'auth_success_screen.dart';
 import 'utils/glass_toast.dart';
 
@@ -140,7 +139,6 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const AppLogo(size: 80),
                         const SizedBox(height: 24),
                         const Text(
                           'Daftar Cepat',

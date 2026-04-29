@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -72,9 +73,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
     setState(() => _isLoading = true);
 
     try {
+      String fName = _firstNameController.text.trim();
+      fName = fName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
+      
+      String lName = _lastNameController.text.trim();
+      lName = lName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
+
       final response = await Supabase.instance.client.from('orders').insert({
         'user_id': Supabase.instance.client.auth.currentUser?.id,
-        'customer_name': '${_firstNameController.text} ${_lastNameController.text}'.trim(),
+        'customer_name': '$fName $lName'.trim(),
         'phone_number': _phoneController.text,
         'delivery_address': _isDelivery ? _addressController.text.trim() : null,
         'hot_quantity_100g': widget.hotQuantity,
@@ -89,10 +96,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       // Determine locId from delivery option
       int locId = 1;
-      if (widget.deliveryOption.contains('Alpha')) locId = 1;
-      else if (widget.deliveryOption.contains('Beta')) locId = 2;
-      else if (widget.deliveryOption.contains('Gamma')) locId = 3;
-      else if (widget.deliveryOption.contains('NR')) locId = 4;
+      if (widget.deliveryOption.contains('Alpha')) {
+        locId = 1;
+      } else if (widget.deliveryOption.contains('Beta')) {
+        locId = 2;
+      } else if (widget.deliveryOption.contains('Gamma')) {
+        locId = 3;
+      } else if (widget.deliveryOption.contains('NR')) {
+        locId = 4;
+      }
 
       // Deduct stock from the CORRECT location
       final invData = await Supabase.instance.client.from('inventory').select().eq('id', locId).single();
@@ -228,6 +240,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 label: 'Nama Pertama',
                 icon: HugeIcons.strokeRoundedUser,
                 isDark: isDark,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                textCapitalization: TextCapitalization.words,
                 validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama pertama' : null,
               ),
               const SizedBox(height: 16),
@@ -236,6 +250,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 label: 'Nama Akhir',
                 icon: HugeIcons.strokeRoundedUser,
                 isDark: isDark,
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                textCapitalization: TextCapitalization.words,
                 validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama akhir' : null,
               ),
               const SizedBox(height: 16),
@@ -493,12 +509,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
+      inputFormatters: inputFormatters,
+      textCapitalization: textCapitalization,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Padding(

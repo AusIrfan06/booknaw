@@ -334,11 +334,11 @@ class _HomeTab extends StatelessWidget {
                   ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   Widget _buildSleekCard(

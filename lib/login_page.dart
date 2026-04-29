@@ -38,47 +38,60 @@ class _LoginPageState extends State<LoginPage> {
         if (mounted) _handleSignInSuccess(res);
         return;
       } catch (e) {
-        final isDigits = RegExp(r'^[0-9]+$').hasMatch(rawIdentifier);
-        if (!isDigits || !e.toString().contains('invalid_credentials')) {
+        // If it's an email format, or it's not an 'invalid credentials' error, rethrow
+        if (rawIdentifier.contains('@') || !e.toString().contains('invalid_credentials')) {
           rethrow;
         }
       }
 
       // 2. Prepare phone variations
-      String cleanPhone = rawIdentifier;
-      if (cleanPhone.startsWith('0')) {
+      // Clean identifier to digits only for phone matching
+      String digitsOnly = rawIdentifier.replaceAll(RegExp(r'[^0-9]'), '');
+      if (digitsOnly.isEmpty) {
+        throw Exception('Maklumat log masuk tidak sah.');
+      }
+
+      String cleanPhone = digitsOnly;
+      if (cleanPhone.startsWith('60')) {
+        cleanPhone = cleanPhone.substring(2);
+      } else if (cleanPhone.startsWith('0')) {
         cleanPhone = cleanPhone.substring(1);
       }
+
       final variations = [
         '+60$cleanPhone', // Standard: +6011...
         '60$cleanPhone',  // 6011...
-        rawIdentifier,    // 011...
+        '0$cleanPhone',   // 011...
+        cleanPhone,       // 11...
       ];
 
-      // 3. Try searching users for each variation
-      for (var phone in variations) {
-        try {
-          final profileData = await Supabase.instance.client
-              .from('users')
-              .select('email')
-              .eq('phone', phone)
-              .maybeSingle();
-          
-          if (profileData != null && profileData['email'] != null) {
-            final res = await Supabase.instance.client.auth.signInWithPassword(
-              email: profileData['email'],
-              password: password,
-            );
-            if (mounted) _handleSignInSuccess(res);
-            return;
-          }
-        } catch (_) {}
+      // 3. Try searching in public.users and public.profiles for each variation
+      final tables = ['users', 'profiles'];
+      for (var table in tables) {
+        for (var phone in variations) {
+          try {
+            final profileData = await Supabase.instance.client
+                .from(table)
+                .select('email')
+                .eq('phone', phone)
+                .maybeSingle();
+            
+            if (profileData != null && profileData['email'] != null) {
+              final res = await Supabase.instance.client.auth.signInWithPassword(
+                email: profileData['email'],
+                password: password,
+              );
+              if (mounted) _handleSignInSuccess(res);
+              return;
+            }
+          } catch (_) {}
+        }
       }
 
-      // 4. Try fake email formats
+      // 4. Try fake email formats (used by some implementations)
       final fakeEmails = [
         '$cleanPhone@nachos.com',
-        '$rawIdentifier@nachos.com',
+        '0$cleanPhone@nachos.com',
       ];
       for (var email in fakeEmails) {
         try {

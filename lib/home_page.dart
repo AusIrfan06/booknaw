@@ -172,173 +172,173 @@ class _HomeTab extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () async {
         await Future.delayed(const Duration(milliseconds: 500));
-        // Realtime streams auto-update, but this provides a visual sync feedback
       },
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 800),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // ── Header Section ──────────────────────────────────────────────
-              GlassContainer(
-                useOwnLayer: true,
-                quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 30.0),
-                settings: LiquidGlassSettings(
-                  thickness: 0.1, blur: 15, refractiveIndex: 1.0,
-                  glassColor: Colors.transparent, lightAngle: 45.0,
-                  lightIntensity: isDark ? 0.1 : 0.2, ambientStrength: 1.0,
-                  saturation: 1.0, chromaticAberration: 0.0,
-                ),
-                child: Container(
-                  width: double.infinity,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isDark 
-                        ? [const Color(0xFFFF5722).withValues(alpha: 0.3), const Color(0xFF1E1E1E)] 
-                        : [const Color(0xFFFF5722).withValues(alpha: 0.8), const Color(0xFFFF9800).withValues(alpha: 0.6)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ── Header Section ──────────────────────────────────────────────
+                GlassContainer(
+                  useOwnLayer: true,
+                  quality: GlassQuality.standard,
+                  shape: LiquidRoundedSuperellipse(borderRadius: 30.0),
+                  settings: LiquidGlassSettings(
+                    thickness: 0.1, blur: 15, refractiveIndex: 1.0,
+                    glassColor: Colors.transparent, lightAngle: 45.0,
+                    lightIntensity: isDark ? 0.1 : 0.2, ambientStrength: 1.0,
+                    saturation: 1.0, chromaticAberration: 0.0,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const AppLogo(size: 80),
-                      const SizedBox(height: 16),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'KRUP KRAP EXTREEM NACHOS!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.2),
-                        ),
+                  child: Container(
+                    width: double.infinity,
+                    height: 250,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isDark 
+                          ? [const Color(0xFFFF5722).withValues(alpha: 0.3), const Color(0xFF1E1E1E)] 
+                          : [const Color(0xFFFF5722).withValues(alpha: 0.8), const Color(0xFFFF9800).withValues(alpha: 0.6)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                      const SizedBox(height: 8),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          'Paling ranggup di alam semesta!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 15, color: Colors.white70, fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 24),
-
-              // ── Order Now Button Section ────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: InkWell(
-                  onTap: onOrder,
-                  borderRadius: BorderRadius.circular(20),
-                  child: GlassContainer(
-                    useOwnLayer: true,
-                    quality: GlassQuality.standard,
-                    shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-                    settings: LiquidGlassSettings(thickness: 0.15, blur: 20, glassColor: Colors.white.withValues(alpha: 0.1)),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Colors.amber, Colors.orange],
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.orange.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          )
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Colors.black87, size: 24),
-                          SizedBox(width: 12),
-                          Text(
-                            'ORDER SEKARANG!',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black87),
-                          ),
-                        ],
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30),
                       ),
                     ),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
-              
-              // ── Selection Section ───────────────────────────────────────────
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          'Pilihan Hangat',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87),
+                        const AppLogo(size: 80),
+                        const SizedBox(height: 16),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'KRUP KRAP EXTREEM NACHOS!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1.2),
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () {},
-                          child: const Text('Lihat Semua', style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'Paling ranggup di alam semesta!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 15, color: Colors.white70, fontWeight: FontWeight.w500),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    _buildSleekCard(
-                      context,
-                      title: 'HOT & SPICYYY',
-                      desc: 'Pedas gila, gerenti berpeluh! (100g)',
-                      price: 'RM 5.00',
-                      imageColor: Colors.redAccent,
-                      onTap: onOrder,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSleekCard(
-                      context,
-                      title: 'SMOKY BBQ',
-                      desc: 'Rasa salai yang premium. (100g)',
-                      price: 'RM 5.00',
-                      imageColor: Colors.orangeAccent,
-                      onTap: onOrder,
-                    ),
-                    const SizedBox(height: 16),
-                    _buildSleekCard(
-                      context,
-                      title: 'CHEESE DIP',
-                      desc: 'Sos keju berkrim & padu.',
-                      price: 'RM 1.00',
-                      imageColor: Colors.amber,
-                      onTap: onOrder,
-                    ),
-                    const SizedBox(height: 32),
-                    const _ReviewsSection(),
-                    const SizedBox(height: 150), // Further increased for tap clearance
-                  ],
+                  ),
                 ),
-              ),
+                
+                const SizedBox(height: 24),
+
+                // ── Order Now Button Section ────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: InkWell(
+                    onTap: onOrder,
+                    borderRadius: BorderRadius.circular(20),
+                    child: GlassContainer(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+                      settings: LiquidGlassSettings(thickness: 0.15, blur: 20, glassColor: Colors.white.withValues(alpha: 0.1)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Colors.amber, Colors.orange],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withValues(alpha: 0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            )
+                          ],
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Colors.black87, size: 24),
+                            SizedBox(width: 12),
+                            Text(
+                              'ORDER SEKARANG!',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black87),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                // ── Selection Section ───────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Pilihan Hangat',
+                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87),
+                          ),
+                          TextButton(
+                            onPressed: () {},
+                            child: const Text('Lihat Semua', style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSleekCard(
+                        context,
+                        title: 'HOT & SPICYYY',
+                        desc: 'Pedas gila, gerenti berpeluh! (100g)',
+                        price: 'RM 5.00',
+                        imageColor: Colors.redAccent,
+                        onTap: onOrder,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSleekCard(
+                        context,
+                        title: 'SMOKY BBQ',
+                        desc: 'Rasa salai yang premium. (100g)',
+                        price: 'RM 5.00',
+                        imageColor: Colors.orangeAccent,
+                        onTap: onOrder,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSleekCard(
+                        context,
+                        title: 'CHEESE DIP',
+                        desc: 'Sos keju berkrim & padu.',
+                        price: 'RM 1.00',
+                        imageColor: Colors.amber,
+                        onTap: onOrder,
+                      ),
+                      const SizedBox(height: 32),
+                      const _ReviewsSection(),
+                      const SizedBox(height: 150), // Further increased for tap clearance
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      );
-    }
+      ),
+    );
   }
 
   Widget _buildSleekCard(

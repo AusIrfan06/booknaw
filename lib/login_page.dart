@@ -272,50 +272,27 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 16),
                           
                           // Login Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : _signIn,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF5722),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                elevation: 0,
-                              ),
-                              child: _isLoading 
-                                ? const SizedBox(
-                                    height: 20, 
-                                    width: 20, 
-                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                                  )
-                                : const Text('Log Masuk', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                            ),
+                          _buildFrostedButton(
+                            label: 'Log Masuk',
+                            onTap: _signIn,
+                            isPrimary: true,
+                            isLoading: _isLoading,
+                            isDark: isDark,
                           ),
                           
                           const SizedBox(height: 16),
                           
                           // Register Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const SignupPage()),
-                                );
-                              },
-                              icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserAdd01, color: Color(0xFFFF5722), size: 20),
-                              label: const Text(
-                                'Daftar Sekarang',
-                                style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                side: const BorderSide(color: Color(0xFFFF5722)),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                            ),
+                          _buildFrostedButton(
+                            label: 'Daftar Sekarang',
+                            icon: HugeIcons.strokeRoundedUserAdd01,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const SignupPage()),
+                              );
+                            },
+                            isDark: isDark,
                           ),
 
                           const SizedBox(height: 12),
@@ -332,26 +309,16 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 12),
 
                           // Guest Login Button
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const GuestSignupPage()),
-                                );
-                              },
-                              icon: const HugeIcon(icon: HugeIcons.strokeRoundedUserCircle, color: Color(0xFFFF5722), size: 20),
-                              label: const Text(
-                                'Log Masuk sebagai Tetamu',
-                                style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                side: const BorderSide(color: Color(0xFFFF5722)),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                              ),
-                            ),
+                          _buildFrostedButton(
+                            label: 'Log Masuk sebagai Tetamu',
+                            icon: HugeIcons.strokeRoundedUserCircle,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const GuestSignupPage()),
+                              );
+                            },
+                            isDark: isDark,
                           ),
                         ],
                       ),
@@ -367,6 +334,81 @@ class _LoginPageState extends State<LoginPage> {
   ),
 );
 }
+
+  Widget _buildFrostedButton({
+    required String label,
+    required VoidCallback? onTap,
+    dynamic icon,
+    bool isPrimary = false,
+    bool isLoading = false,
+    required bool isDark,
+  }) {
+    const color = Color(0xFFFF5722);
+    
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
+      settings: LiquidGlassSettings(
+        thickness: 0.1,
+        blur: 15,
+        refractiveIndex: 1.0,
+        glassColor: Colors.transparent,
+        lightAngle: 45.0,
+        lightIntensity: isDark ? 0.1 : 0.2,
+        ambientStrength: 1.0,
+        saturation: 1.0,
+        chromaticAberration: 0.0,
+      ),
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: isPrimary 
+                ? color.withValues(alpha: isDark ? 0.8 : 0.9)
+                : color.withValues(alpha: isDark ? 0.1 : 0.15),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: isPrimary ? 0.5 : (isDark ? 0.3 : 0.5)),
+              width: 1.0,
+            ),
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        HugeIcon(
+                          icon: icon,
+                          color: isPrimary ? Colors.white : color,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: isPrimary ? Colors.white : color,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildTextField({
     required TextEditingController controller,

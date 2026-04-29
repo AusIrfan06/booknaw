@@ -274,25 +274,12 @@ class _SignupPageState extends State<SignupPage> {
                           ),
                         ),
                         const SizedBox(height: 32),
-                        ElevatedButton(
-                          onPressed: _isLoading ? null : _signUp,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF5722),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                            elevation: 0,
-                          ),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                )
-                              : const Text(
-                                  'Daftar Sekarang',
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
+                        _buildFrostedButton(
+                          label: 'Daftar Sekarang',
+                          onTap: _signUp,
+                          isPrimary: true,
+                          isLoading: _isLoading,
+                          isDark: isDark,
                         ),
                       ],
                     ),
@@ -300,6 +287,81 @@ class _SignupPageState extends State<SignupPage> {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFrostedButton({
+    required String label,
+    required VoidCallback? onTap,
+    dynamic icon,
+    bool isPrimary = false,
+    bool isLoading = false,
+    required bool isDark,
+  }) {
+    const color = Color(0xFFFF5722);
+    
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
+      settings: LiquidGlassSettings(
+        thickness: 0.1,
+        blur: 15,
+        refractiveIndex: 1.0,
+        glassColor: Colors.transparent,
+        lightAngle: 45.0,
+        lightIntensity: isDark ? 0.1 : 0.2,
+        ambientStrength: 1.0,
+        saturation: 1.0,
+        chromaticAberration: 0.0,
+      ),
+      child: InkWell(
+        onTap: isLoading ? null : onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: isPrimary 
+                ? color.withValues(alpha: isDark ? 0.8 : 0.9)
+                : color.withValues(alpha: isDark ? 0.1 : 0.15),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: isPrimary ? 0.5 : (isDark ? 0.3 : 0.5)),
+              width: 1.0,
+            ),
+          ),
+          child: Center(
+            child: isLoading
+                ? const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (icon != null) ...[
+                        HugeIcon(
+                          icon: icon,
+                          color: isPrimary ? Colors.white : color,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: isPrimary ? Colors.white : color,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),

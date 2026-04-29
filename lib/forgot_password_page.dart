@@ -63,50 +63,37 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           );
         }
       } else {
-        // Phone logic -> Redirect to Customer's OWN WhatsApp
-        final phoneDigits = input.replaceAll(RegExp(r'[^0-9]'), '');
-        String cleanPhone = phoneDigits;
-        if (cleanPhone.startsWith('60')) {
-          cleanPhone = cleanPhone.substring(2);
-        } else if (cleanPhone.startsWith('0')) {
-          cleanPhone = cleanPhone.substring(1);
-        }
-
-        // Variations to search for the user's name
-        final variations = ['+60$cleanPhone', '60$cleanPhone', '0$cleanPhone', cleanPhone];
-        String customerName = 'Pelanggan';
-        
+        // Phone logic -> Use Supabase's built-in phone reset which sends an SMS OTP
         try {
-          final tables = ['users', 'profiles'];
-          for (var table in tables) {
-            for (var v in variations) {
-              final res = await Supabase.instance.client
-                  .from(table)
-                  .select('full_name')
-                  .eq('phone', v)
-                  .maybeSingle();
-              if (res != null && res['full_name'] != null) {
-                customerName = res['full_name'];
-                break;
-              }
-            }
-            if (customerName != 'Pelanggan') break;
+          await Supabase.instance.client.auth.resetPasswordForPhone(input);
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: const Text('OTP Dihantar', style: TextStyle(fontWeight: FontWeight.bold)),
+                content: const Text('Sila semak SMS anda untuk kod OTP tetapan semula kata laluan.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK', style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
           }
-        } catch (_) {
-          // Fallback to generic name if query fails
-        }
-
-        final targetPhone = '60$cleanPhone';
-        final msg = 'Hai $customerName, sila tetapkan semula kata laluan anda di sini:\n\n'
-                    'https://wazeallszgpiasinsjzi.supabase.co/auth/v1/verify?type=recovery&phone=+$targetPhone\n\n'
-                    '(Nota: Anda boleh membuka pautan ini dalam pelayar web atau aplikasi BookNaw)';
-        
-        final waUrl = Uri.parse('https://wa.me/$targetPhone?text=${Uri.encodeComponent(msg)}');
-        
-        if (await canLaunchUrl(waUrl)) {
-          await launchUrl(waUrl, mode: LaunchMode.externalApplication);
-        } else {
-          throw 'Tidak dapat membuka WhatsApp. Sila hubungi kami secara manual.';
+        } catch (e) {
+          // If SMS fails (e.g. no provider), fallback to WhatsApp support
+          final phoneDigits = input.replaceAll(RegExp(r'[^0-9]'), '');
+          final msg = 'Assalamualaikum, saya ingin menetapkan semula kata laluan untuk akaun saya (No: $input). Boleh bantu saya?';
+          final waUrl = Uri.parse('https://wa.me/601115892468?text=${Uri.encodeComponent(msg)}');
+          
+          if (await canLaunchUrl(waUrl)) {
+            await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+          } else {
+            rethrow;
+          }
         }
       }
     } catch (e) {

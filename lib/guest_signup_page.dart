@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -23,7 +24,10 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
 
   Future<void> _signUp() async {
     String firstName = _firstNameController.text.trim();
+    firstName = firstName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
+
     String lastName = _lastNameController.text.trim();
+    lastName = lastName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
     String phoneInput = _phoneController.text.trim();
     String password = _passwordController.text;
 
@@ -155,6 +159,8 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
                           icon: HugeIcons.strokeRoundedUser,
                           isDark: isDark,
                           keyboardType: TextInputType.name,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                          textCapitalization: TextCapitalization.words,
                         ),
                         const SizedBox(height: 16),
                         _buildField(
@@ -163,6 +169,8 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
                           icon: HugeIcons.strokeRoundedUser,
                           isDark: isDark,
                           keyboardType: TextInputType.name,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                          textCapitalization: TextCapitalization.words,
                         ),
                         const SizedBox(height: 16),
                         _buildField(
@@ -218,6 +226,8 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
     bool isPassword = false,
     TextInputType? keyboardType,
     String? prefixText,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,6 +245,8 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
             controller: controller,
             obscureText: isPassword && _obscurePassword,
             keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
+            textCapitalization: textCapitalization,
             style: const TextStyle(fontSize: 16),
             decoration: InputDecoration(
               prefixText: prefixText,

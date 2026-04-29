@@ -1040,7 +1040,34 @@ class _StaffOrderCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text(phone, style: const TextStyle(color: Colors.grey)),
+              Row(
+                children: [
+                  Text(phone, style: const TextStyle(color: Colors.grey)),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () async {
+                      final Uri url = Uri.parse('tel:${phone.replaceAll(RegExp(r'\D'), '')}');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    },
+                    icon: const Icon(Icons.phone_rounded, color: Colors.blue, size: 20),
+                    tooltip: 'Call',
+                  ),
+                  IconButton(
+                    onPressed: () async {
+                      String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+                      if (cleanPhone.startsWith('0')) cleanPhone = '6$cleanPhone';
+                      final Uri url = Uri.parse('https://wa.me/$cleanPhone');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
+                    tooltip: 'WhatsApp',
+                  ),
+                ],
+              ),
               const Divider(),
               if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
               if (bbqQty > 0) Text('- BBQ x$bbqQty'),
@@ -1316,7 +1343,34 @@ class _DeliveryOrderCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(phone, style: const TextStyle(color: Colors.grey)),
+            Row(
+              children: [
+                Text(phone, style: const TextStyle(color: Colors.grey)),
+                const Spacer(),
+                IconButton(
+                  onPressed: () async {
+                    final Uri url = Uri.parse('tel:${phone.replaceAll(RegExp(r'\D'), '')}');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url);
+                    }
+                  },
+                  icon: const Icon(Icons.phone_rounded, color: Colors.blue, size: 20),
+                  tooltip: 'Call',
+                ),
+                IconButton(
+                  onPressed: () async {
+                    String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+                    if (cleanPhone.startsWith('0')) cleanPhone = '6$cleanPhone';
+                    final Uri url = Uri.parse('https://wa.me/$cleanPhone');
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
+                  },
+                  icon: const Icon(HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
+                  tooltip: 'WhatsApp',
+                ),
+              ],
+            ),
             const Divider(),
             if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
             if (bbqQty > 0) Text('- BBQ x$bbqQty'),

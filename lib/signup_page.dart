@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -26,7 +27,10 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _signUp() async {
     String firstName = _firstNameController.text.trim();
+    firstName = firstName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
+    
     String lastName = _lastNameController.text.trim();
+    lastName = lastName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
     String email = _emailController.text.trim();
     String phoneInput = _phoneController.text.trim();
     String password = _passwordController.text;
@@ -208,6 +212,8 @@ class _SignupPageState extends State<SignupPage> {
                           label: 'Nama Pertama',
                           icon: HugeIcons.strokeRoundedUser,
                           isDark: isDark,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                          textCapitalization: TextCapitalization.words,
                         ),
                         const SizedBox(height: 16),
                         _buildGlassField(
@@ -215,6 +221,8 @@ class _SignupPageState extends State<SignupPage> {
                           label: 'Nama Akhir',
                           icon: HugeIcons.strokeRoundedUser,
                           isDark: isDark,
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
+                          textCapitalization: TextCapitalization.words,
                         ),
                         const SizedBox(height: 16),
                         _buildGlassField(
@@ -307,6 +315,8 @@ class _SignupPageState extends State<SignupPage> {
     Widget? suffixIcon,
     TextInputType? keyboardType,
     String? prefixText,
+    List<TextInputFormatter>? inputFormatters,
+    TextCapitalization textCapitalization = TextCapitalization.none,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -318,6 +328,8 @@ class _SignupPageState extends State<SignupPage> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
+        textCapitalization: textCapitalization,
         style: TextStyle(color: isDark ? Colors.white : Colors.black87),
         decoration: InputDecoration(
           labelText: label,

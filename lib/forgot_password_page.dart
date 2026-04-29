@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'app_logo.dart';
 import 'utils/glass_toast.dart';
 
@@ -13,43 +14,61 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final _emailController = TextEditingController();
+  final _inputController = TextEditingController();
   bool _isLoading = false;
 
   Future<void> _resetPassword() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      showGlassToast(context, 'Sila masukkan e-mel anda!', isError: true);
+    final input = _inputController.text.trim();
+    if (input.isEmpty) {
+      showGlassToast(context, 'Sila masukkan e-mel atau no. telefon!', isError: true);
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      await Supabase.instance.client.auth.resetPasswordForEmail(
-        email,
-        redirectTo: 'io.supabase.booknaw://reset-password/',
-      );
-
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('E-mel Dihantar', style: TextStyle(fontWeight: FontWeight.bold)),
-            content: const Text('Sila semak peti masuk e-mel anda untuk pautan tetapan semula kata laluan.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context); // Back to login
-                },
-                child: const Text('OK', style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
+      final isEmail = input.contains('@');
+      
+      if (isEmail) {
+        await Supabase.instance.client.auth.resetPasswordForEmail(
+          input,
+          redirectTo: 'io.supabase.booknaw://reset-password/',
         );
+
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('E-mel Dihantar', style: TextStyle(fontWeight: FontWeight.bold)),
+              content: const Text('Sila semak peti masuk e-mel anda untuk pautan tetapan semula kata laluan.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Back to login
+                  },
+                  child: const Text('OK', style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        // Phone logic -> Redirect to WhatsApp
+        final phone = input.replaceAll(RegExp(r'[^0-9]'), '');
+        const lysaNumber = '60132163194';
+        final waMessage = Uri.encodeComponent(
+          'Assalamualaikum Lysa, saya ingin menetapkan semula kata laluan saya.\n\nNo. Tel: $phone'
+        );
+        final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
+        
+        if (await canLaunchUrl(waUrl)) {
+          await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+        } else {
+          throw 'Tidak dapat membuka WhatsApp. Sila hubungi kami secara manual.';
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -96,7 +115,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Jangan risau! Masukkan e-mel anda dan kami akan hantarkan pautan untuk menetapkan semula kata laluan anda.',
+                    'Jangan risau! Masukkan e-mel atau no. telefon anda untuk menetapkan semula kata laluan anda.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: isDark ? Colors.white70 : Colors.black54,
@@ -128,9 +147,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       child: Column(
                         children: [
                           _buildTextField(
-                            controller: _emailController,
-                            label: 'Alamat E-mel',
-                            icon: HugeIcons.strokeRoundedMail01,
+                            controller: _inputController,
+                            label: 'E-mel atau No. Telefon',
+                            icon: HugeIcons.strokeRoundedUser,
                             isDark: isDark,
                             keyboardType: TextInputType.emailAddress,
                           ),
@@ -204,7 +223,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(vertical: 14),
-              hintText: 'Masukkan e-mel anda',
+              hintText: 'Masukkan e-mel atau no. tel',
               hintStyle: TextStyle(color: Colors.grey.withValues(alpha: 0.6), fontSize: 14),
             ),
           ),

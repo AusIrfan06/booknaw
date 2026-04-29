@@ -56,13 +56,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           );
         }
       } else {
-        // Phone logic -> Redirect to WhatsApp
-        final phone = input.replaceAll(RegExp(r'[^0-9]'), '');
-        const lysaNumber = '60132163194';
-        final waMessage = Uri.encodeComponent(
-          'Assalamualaikum Lysa, saya ingin menetapkan semula kata laluan saya.\n\nNo. Tel: $phone'
-        );
-        final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
+        // Phone logic -> Redirect to Customer's OWN WhatsApp
+        final phoneDigits = input.replaceAll(RegExp(r'[^0-9]'), '');
+        String cleanPhone = phoneDigits;
+        if (cleanPhone.startsWith('60')) {
+          cleanPhone = cleanPhone.substring(2);
+        } else if (cleanPhone.startsWith('0')) {
+          cleanPhone = cleanPhone.substring(1);
+        }
+
+        // Variations to search for the user's name
+        final variations = ['+60$cleanPhone', '60$cleanPhone', '0$cleanPhone', cleanPhone];
+        String customerName = 'Pelanggan';
+        
+        try {
+          final tables = ['users', 'profiles'];
+          for (var table in tables) {
+            for (var v in variations) {
+              final res = await Supabase.instance.client
+                  .from(table)
+                  .select('full_name')
+                  .eq('phone', v)
+                  .maybeSingle();
+              if (res != null && res['full_name'] != null) {
+                customerName = res['full_name'];
+                break;
+              }
+            }
+            if (customerName != 'Pelanggan') break;
+          }
+        } catch (_) {
+          // Fallback to generic name if query fails
+        }
+
+        final targetPhone = '60$cleanPhone';
+        final msg = 'Hai $customerName, sila tetapkan semula kata laluan anda di sini:\n\n'
+                    'https://booknaw.supabase.co/auth/v1/verify?type=recovery&phone=+$targetPhone\n\n'
+                    '(Nota: Sila pastikan anda membuka pautan ini dalam peranti yang sama dengan aplikasi BookNaw)';
+        
+        final waUrl = Uri.parse('https://wa.me/$targetPhone?text=${Uri.encodeComponent(msg)}');
         
         if (await canLaunchUrl(waUrl)) {
           await launchUrl(waUrl, mode: LaunchMode.externalApplication);

@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter/foundation.dart';
 import 'app_logo.dart';
 import 'utils/glass_toast.dart';
 
@@ -30,9 +31,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       final isEmail = input.contains('@');
       
       if (isEmail) {
+        // For web, we use the current origin. For mobile, we keep the custom scheme
+        // but we can also use a site URL if available.
+        final String redirectUrl = kIsWeb 
+            ? Uri.base.origin 
+            : 'io.supabase.booknaw://reset-password/';
+
         await Supabase.instance.client.auth.resetPasswordForEmail(
           input,
-          redirectTo: 'io.supabase.booknaw://reset-password/',
+          redirectTo: redirectUrl,
         );
 
         if (mounted) {
@@ -91,8 +98,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
         final targetPhone = '60$cleanPhone';
         final msg = 'Hai $customerName, sila tetapkan semula kata laluan anda di sini:\n\n'
-                    'https://booknaw.supabase.co/auth/v1/verify?type=recovery&phone=+$targetPhone\n\n'
-                    '(Nota: Sila pastikan anda membuka pautan ini dalam peranti yang sama dengan aplikasi BookNaw)';
+                    'https://wazeallszgpiasinsjzi.supabase.co/auth/v1/verify?type=recovery&phone=+$targetPhone\n\n'
+                    '(Nota: Anda boleh membuka pautan ini dalam pelayar web atau aplikasi BookNaw)';
         
         final waUrl = Uri.parse('https://wa.me/$targetPhone?text=${Uri.encodeComponent(msg)}');
         

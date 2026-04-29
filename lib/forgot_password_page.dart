@@ -63,9 +63,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           );
         }
       } else {
-        // Phone logic -> Use Supabase's built-in phone reset which sends an SMS OTP
+        // Phone logic -> Use signInWithOtp which sends an SMS code for verification
         try {
-          await Supabase.instance.client.auth.resetPasswordForPhone(input);
+          // Ensure phone format is correct (e.g. +60...)
+          String phone = input;
+          if (!phone.startsWith('+')) {
+            if (phone.startsWith('0')) {
+              phone = '+60${phone.substring(1)}';
+            } else if (!phone.startsWith('60')) {
+              phone = '+60$phone';
+            } else {
+              phone = '+$phone';
+            }
+          }
+
+          await Supabase.instance.client.auth.signInWithOtp(
+            phone: phone,
+            shouldCreateUser: false, // Don't create a new user, only for existing ones
+          );
+
           if (mounted) {
             showDialog(
               context: context,
@@ -73,7 +89,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E1E1E) : Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 title: const Text('OTP Dihantar', style: TextStyle(fontWeight: FontWeight.bold)),
-                content: const Text('Sila semak SMS anda untuk kod OTP tetapan semula kata laluan.'),
+                content: const Text('Sila semak SMS anda untuk kod OTP. Anda boleh log masuk dan tukar kata laluan selepas ini.'),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
@@ -85,7 +101,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           }
         } catch (e) {
           // If SMS fails (e.g. no provider), fallback to WhatsApp support
-          final phoneDigits = input.replaceAll(RegExp(r'[^0-9]'), '');
           final msg = 'Assalamualaikum, saya ingin menetapkan semula kata laluan untuk akaun saya (No: $input). Boleh bantu saya?';
           final waUrl = Uri.parse('https://wa.me/601115892468?text=${Uri.encodeComponent(msg)}');
           

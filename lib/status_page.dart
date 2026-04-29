@@ -3,7 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'login_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'review_page.dart';
 import 'add_review_page.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -148,36 +147,38 @@ class _StatusPageState extends State<StatusPage>
           await Future.delayed(const Duration(milliseconds: 500));
         },
         child: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: ordersStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          stream: ordersStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          // On error (e.g. user_id column not yet added), just show empty
-          final allOrders = snapshot.hasError
-              ? <Map<String, dynamic>>[]
-              : (snapshot.data ?? <Map<String, dynamic>>[]);
+            // On error (e.g. user_id column not yet added), just show empty
+            final allOrders = snapshot.hasError
+                ? <Map<String, dynamic>>[]
+                : (snapshot.data ?? <Map<String, dynamic>>[]);
 
-          return TabBarView(
-            controller: _tabController,
-            children: List.generate(_tabs.length, (i) {
-              final filtered = _filter(allOrders, i);
-              if (filtered.isEmpty) {
-                return _EmptyState(tab: _tabs[i].label);
-              }
-              return RefreshIndicator(
-                onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-                child: ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  itemCount: filtered.length,
-                itemBuilder: (context, idx) =>
-                    _CustomerOrderCard(order: filtered[idx]),
-              );
-            }),
-          );
-        },
+            return TabBarView(
+              controller: _tabController,
+              children: List.generate(_tabs.length, (i) {
+                final filtered = _filter(allOrders, i);
+                if (filtered.isEmpty) {
+                  return _EmptyState(tab: _tabs[i].label);
+                }
+                return RefreshIndicator(
+                  onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    itemCount: filtered.length,
+                    itemBuilder: (context, idx) =>
+                        _CustomerOrderCard(order: filtered[idx]),
+                  ),
+                );
+              }),
+            );
+          },
+        ),
       ),
     );
   }
@@ -220,7 +221,7 @@ class _CustomerOrderCard extends StatelessWidget {
     final hotQty = order['hot_quantity_100g'] as int? ?? 0;
     final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
     final addCheese = order['add_cheese_dip'] as bool? ?? false;
-    final totalPrice = order['total_price'] ?? 0;
+    final totalPrice = (order['total_price'] as num?)?.toDouble() ?? 0.0;
     final customerName = order['customer_name'] ?? '-';
     final delivery = order['delivery_option'] ?? '-';
     final status = order['status'] ?? 'Pending';
@@ -254,134 +255,134 @@ class _CustomerOrderCard extends StatelessWidget {
       child: InkWell(
         onTap: () => _showReceipt(context),
         borderRadius: BorderRadius.circular(14),
-      child: GlassContainer(
-        useOwnLayer: true,
-        quality: GlassQuality.standard,
-        shape: LiquidRoundedSuperellipse(borderRadius: 14.0),
-        settings: LiquidGlassSettings(
-          thickness: 0.1,
-          blur: 15,
-          refractiveIndex: 1.0,
-          glassColor: isDark 
-              ? const Color(0xFFFF5722).withValues(alpha: 0.1) 
-              : const Color(0xFFFF5722).withValues(alpha: 0.05),
-          lightAngle: 45.0,
-          lightIntensity: 0.1,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-              // Top row: name + total
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: GlassContainer(
+          useOwnLayer: true,
+          quality: GlassQuality.standard,
+          shape: LiquidRoundedSuperellipse(borderRadius: 14.0),
+          settings: LiquidGlassSettings(
+            thickness: 0.1,
+            blur: 15,
+            refractiveIndex: 1.0,
+            glassColor: isDark 
+                ? const Color(0xFFFF5722).withValues(alpha: 0.1) 
+                : const Color(0xFFFF5722).withValues(alpha: 0.05),
+            lightAngle: 45.0,
+            lightIntensity: 0.1,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      customerName,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.amber.shade900.withValues(alpha: 0.3)
-                          : Colors.amber.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'RM ${totalPrice.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
+                // Top row: name + total
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        customerName,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(delivery,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
-              const Divider(height: 20),
-
-              // Items
-              if (hotQty > 0)
-                _row('HOT & SPICYYY', '$hotQty pek', isDark),
-              if (bbqQty > 0)
-                _row('BBQ', '$bbqQty pek', isDark),
-              if (addCheese)
-                _row('Cheese Dip', 'Ya', isDark),
-
-              const SizedBox(height: 12),
-
-              // Status pills
-              Row(
-                children: [
-                  Flexible(child: _pill(payLabel, payColor)),
-                  const SizedBox(width: 8),
-                  Flexible(child: _pill(delLabel, delColor)),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(Icons.receipt_long_outlined,
-                      size: 13, color: Colors.grey.shade400),
-                  const SizedBox(width: 4),
-                  Text('Tekan untuk lihat resit',
-                      style: TextStyle(
-                          fontSize: 11, color: Colors.grey.shade400)),
-                ],
-              ),
-              if (isDelivered) ...[
-                const SizedBox(height: 16),
-                FutureBuilder<bool>(
-                  future: Supabase.instance.client
-                      .from('reviews')
-                      .select('id')
-                      .eq('order_id', order['id'])
-                      .maybeSingle()
-                      .then((val) => val != null),
-                  builder: (context, snapshot) {
-                    final hasReview = snapshot.data ?? false;
-                    
-                    return SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: hasReview 
-                          ? null 
-                          : () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AddReviewPage(order: order),
-                              ),
-                            ),
-                        icon: Icon(
-                          hasReview ? Icons.check_circle_outline : Icons.rate_review_outlined, 
-                          size: 18,
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.amber.shade900.withValues(alpha: 0.3)
+                            : Colors.amber.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'RM ${totalPrice.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
-                        label: Text(hasReview ? 'Review Telah Dihantar' : 'Berikan Review'),
-                        style: OutlinedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(delivery,
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                const Divider(height: 20),
+
+                // Items
+                if (hotQty > 0)
+                  _row('HOT & SPICYYY', '$hotQty pek', isDark),
+                if (bbqQty > 0)
+                  _row('BBQ', '$bbqQty pek', isDark),
+                if (addCheese)
+                  _row('Cheese Dip', 'Ya', isDark),
+
+                const SizedBox(height: 12),
+
+                // Status pills
+                Row(
+                  children: [
+                    Flexible(child: _pill(payLabel, payColor)),
+                    const SizedBox(width: 8),
+                    Flexible(child: _pill(delLabel, delColor)),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(Icons.receipt_long_outlined,
+                        size: 13, color: Colors.grey.shade400),
+                    const SizedBox(width: 4),
+                    Text('Tekan untuk lihat resit',
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade400)),
+                  ],
+                ),
+                if (isDelivered) ...[
+                  const SizedBox(height: 16),
+                  FutureBuilder<bool>(
+                    future: Supabase.instance.client
+                        .from('reviews')
+                        .select('id')
+                        .eq('order_id', order['id'])
+                        .maybeSingle()
+                        .then((val) => val != null),
+                    builder: (context, snapshot) {
+                      final hasReview = snapshot.data ?? false;
+                      
+                      return SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: hasReview 
+                            ? null 
+                            : () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AddReviewPage(order: order),
+                                ),
+                              ),
+                          icon: Icon(
+                            hasReview ? Icons.check_circle_outline : Icons.rate_review_outlined, 
+                            size: 18,
+                          ),
+                          label: Text(hasReview ? 'Review Telah Dihantar' : 'Berikan Review'),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     ),
-  ),
-);
+  );
 }
 
   void _showReceipt(BuildContext context) {
@@ -432,25 +433,13 @@ class _CustomerOrderCard extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) {
-        final isDark = Theme.of(ctx).brightness == Brightness.dark;
         final primary = Theme.of(ctx).colorScheme.primary;
         return DraggableScrollableSheet(
           expand: false,
           initialChildSize: 0.75,
           maxChildSize: 0.95,
-          builder: (_, controller) => RefreshIndicator(
-      onRefresh: () async {
-        await Future.delayed(const Duration(milliseconds: 500));
-        // Realtime streams auto-update, but setState ensures UI consistency
-        if (context.mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('Berjaya dikemaskini!'), duration: Duration(seconds: 1)),
-           );
-        }
-      },
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-        controller: controller,
+          builder: (_, controller) => SingleChildScrollView(
+            controller: controller,
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -610,7 +599,7 @@ class _CustomerOrderCard extends StatelessWidget {
                     icon: HugeIcons.strokeRoundedWhatsapp,
                     color: const Color(0xFF25D366),
                   ),
-                  const SizedBox(height: 160),
+                  const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () async {
                       final hot = hotQty > 0 ? 'HOT & SPICYYY x$hotQty' : '';

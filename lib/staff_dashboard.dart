@@ -1067,7 +1067,7 @@ class _StaffOrderCard extends StatelessWidget {
                         await launchUrl(url, mode: LaunchMode.externalApplication);
                       }
                     },
-                    icon: const Icon(HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
+                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
                     tooltip: 'WhatsApp',
                   ),
                 ],
@@ -1370,7 +1370,7 @@ class _DeliveryOrderCard extends StatelessWidget {
                       await launchUrl(url, mode: LaunchMode.externalApplication);
                     }
                   },
-                  icon: const Icon(HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
                   tooltip: 'WhatsApp',
                 ),
               ],

@@ -32,7 +32,7 @@ class AllReviewsPage extends StatelessWidget {
             return const Center(child: Text('Tiada review lagi.'));
           }
           return MasonryGridView.count(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
             crossAxisCount: crossAxisCount,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
@@ -41,91 +41,134 @@ class AllReviewsPage extends StatelessWidget {
               final review = reviews[index];
               final rating = review['rating'] as int? ?? 5;
               final imageUrl = review['image_url'] as String?;
+              final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
               return GlassContainer(
                 useOwnLayer: true,
                 quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+                shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
                 settings: LiquidGlassSettings(
                   thickness: 0.1,
-                  blur: 10,
+                  blur: 15,
                   glassColor: isDark
-                      ? const Color(0xFFFF5722).withValues(alpha: 0.1)
-                      : const Color(0xFFFF5722).withValues(alpha: 0.05),
+                      ? const Color(0xFFFF5722).withValues(alpha: 0.08)
+                      : const Color(0xFFFF5722).withValues(alpha: 0.04),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              review['customer_name'] ?? 'Pelanggan',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          Row(
-                            children: List.generate(5, (i) {
-                              return Icon(
-                                i < rating
-                                    ? Icons.star_rounded
-                                    : Icons.star_outline_rounded,
-                                color: Colors.amber,
-                                size: 12,
-                              );
-                            }),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      if (imageUrl != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: AspectRatio(
-                            aspectRatio: 1,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (hasImage)
+                      AspectRatio(
+                        aspectRatio: 1,
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                               child: Image.network(
                                 imageUrl,
                                 width: double.infinity,
+                                height: double.infinity,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Container(
-                                  width: double.infinity,
                                   color: Colors.grey.shade300,
-                                  child: const Icon(
-                                    Icons.image_not_supported,
-                                    size: 24,
-                                  ),
+                                  child: const Icon(Icons.image_not_supported, size: 30),
                                 ),
                               ),
                             ),
+                            // Small rating overlay on image
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.star_rounded, color: Colors.amber, size: 14),
+                                    const SizedBox(width: 2),
+                                    Text(
+                                      rating.toString(),
+                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!hasImage) ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Icon(
+                                  Icons.format_quote_rounded,
+                                  color: const Color(0xFFFF5722).withValues(alpha: 0.3),
+                                  size: 24,
+                                ),
+                                Row(
+                                  children: List.generate(5, (i) {
+                                    return Icon(
+                                      i < rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                                      color: Colors.amber,
+                                      size: 14,
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          Text(
+                            review['customer_name'] ?? 'Pelanggan',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      Text(
-                        review['comment'] ?? 'Tiada komen.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
+                          const SizedBox(height: 6),
+                          Text(
+                            review['comment'] ?? 'Tiada komen.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                _formatDate(review['created_at']),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                              if (hasImage)
+                                Icon(
+                                  Icons.image_outlined,
+                                  size: 14,
+                                  color: Colors.grey.shade500,
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatDate(review['created_at']),
-                        style: TextStyle(
-                          fontSize: 9,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             },
@@ -139,7 +182,11 @@ class AllReviewsPage extends StatelessWidget {
     if (dateStr == null) return '';
     try {
       final dt = DateTime.parse(dateStr).toLocal();
-      return '${dt.day}/${dt.month}/${dt.year}  ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      final now = DateTime.now();
+      if (dt.year == now.year && dt.month == now.month && dt.day == now.day) {
+        return 'Hari Ini ${dt.hour}:${dt.minute.toString().padLeft(2, '0')}';
+      }
+      return '${dt.day}/${dt.month}/${dt.year}';
     } catch (_) {
       return '';
     }

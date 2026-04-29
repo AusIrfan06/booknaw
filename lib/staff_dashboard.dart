@@ -868,7 +868,11 @@ class _OrdersTabState extends State<_OrdersTab>
 
         // ── Content ────────────────────────────────────────────────────────
         Expanded(
-          child: StreamBuilder<List<Map<String, dynamic>>>(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: StreamBuilder<List<Map<String, dynamic>>>(
             stream: ordersStream,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {

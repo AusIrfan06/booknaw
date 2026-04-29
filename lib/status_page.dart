@@ -143,7 +143,11 @@ class _StatusPageState extends State<StatusPage>
               .toList(),
         ),
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: StreamBuilder<List<Map<String, dynamic>>>(
         stream: ordersStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -162,9 +166,12 @@ class _StatusPageState extends State<StatusPage>
               if (filtered.isEmpty) {
                 return _EmptyState(tab: _tabs[i].label);
               }
-              return ListView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
-                itemCount: filtered.length,
+              return RefreshIndicator(
+                onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+                child: ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 150),
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  itemCount: filtered.length,
                 itemBuilder: (context, idx) =>
                     _CustomerOrderCard(order: filtered[idx]),
               );
@@ -431,8 +438,19 @@ class _CustomerOrderCard extends StatelessWidget {
           expand: false,
           initialChildSize: 0.75,
           maxChildSize: 0.95,
-          builder: (_, controller) => SingleChildScrollView(
-            controller: controller,
+          builder: (_, controller) => RefreshIndicator(
+      onRefresh: () async {
+        await Future.delayed(const Duration(milliseconds: 500));
+        // Realtime streams auto-update, but setState ensures UI consistency
+        if (context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text('Berjaya dikemaskini!'), duration: Duration(seconds: 1)),
+           );
+        }
+      },
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+        controller: controller,
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

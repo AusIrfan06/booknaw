@@ -155,7 +155,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         }),
                         _buildDivider(isDark),
                         _buildSettingsTile(isDark, HugeIcons.strokeRoundedMessageQuestion, "Hubungi Kami", onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpCenterScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactPage()));
                         }),
                       ])),
                       const SizedBox(height: 40),

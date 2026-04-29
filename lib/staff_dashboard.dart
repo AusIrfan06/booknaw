@@ -915,6 +915,7 @@ class _OrdersTabState extends State<_OrdersTab>
                 }),
               );
             },
+            ),
           ),
         ),
       ],

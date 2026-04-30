@@ -1602,13 +1602,16 @@ class _StatisticsTab extends StatelessWidget {
   }
 
   Widget _buildDailySalesChart(BuildContext context, List<Map<String, dynamic>> paidOrders, bool isDark) {
-    // Calculate daily sales for last 7 days
+    // Calculate daily data and store orders for popups
     final Map<String, double> dailyData = {};
+    final Map<String, List<Map<String, dynamic>>> dailyOrders = {};
     final now = DateTime.now();
+    
     for (int i = 0; i < 7; i++) {
       final date = now.subtract(Duration(days: i));
       final key = "${date.day}/${date.month}";
       dailyData[key] = 0.0;
+      dailyOrders[key] = [];
     }
 
     for (var o in paidOrders) {
@@ -1616,6 +1619,7 @@ class _StatisticsTab extends StatelessWidget {
       final key = "${date.day}/${date.month}";
       if (dailyData.containsKey(key)) {
         dailyData[key] = dailyData[key]! + (double.tryParse(o['total_price'].toString()) ?? 0.0);
+        dailyOrders[key]!.add(o);
       }
     }
 
@@ -1650,35 +1654,113 @@ class _StatisticsTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: sortedKeys.map((key) {
                   final val = dailyData[key]!;
+                  final orders = dailyOrders[key]!;
                   final percent = val / scale;
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        width: 25,
-                        height: (100 * percent).clamp(5.0, 100.0),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                            colors: [Colors.green.shade700, Colors.green.shade300],
+                  
+                  return InkWell(
+                    onTap: () => _showDaySummary(context, key, orders, isDark),
+                    borderRadius: BorderRadius.circular(6),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                            width: 25,
+                            height: (100 * percent).clamp(5.0, 100.0),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.topCenter,
+                                colors: [Colors.green.shade700, Colors.green.shade300],
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                              boxShadow: [
+                                if (percent > 0.1)
+                                  BoxShadow(color: Colors.green.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2))
+                              ],
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(6),
-                          boxShadow: [
-                            if (percent > 0.1)
-                              BoxShadow(color: Colors.green.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2))
-                          ],
-                        ),
+                          const SizedBox(height: 8),
+                          Text(key, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                        ],
                       ),
-                      const SizedBox(height: 8),
-                      Text(key, style: const TextStyle(fontSize: 9, color: Colors.grey)),
-                    ],
+                    ),
                   );
                 }).toList(),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showDaySummary(BuildContext context, String day, List<Map<String, dynamic>> orders, bool isDark) {
+    int hot = 0;
+    int bbq = 0;
+    int cheese = 0;
+    double total = 0;
+    for (var o in orders) {
+      hot += (o['hot_quantity_100g'] as num? ?? 0).toInt();
+      bbq += (o['bbq_quantity_100g'] as num? ?? 0).toInt();
+      cheese += (o['cheese_quantity'] as num? ?? 0).toInt();
+      total += double.tryParse(o['total_price'].toString()) ?? 0.0;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => GlassContainer(
+        useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 32.0),
+        settings: _getStaffGlassSettings(isDark),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E).withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 20),
+              Text('Ringkasan Jualan ($day)', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              _summaryRow('HOT & SPICYYY', '$hot unit', Colors.redAccent),
+              _summaryRow('SMOKY BBQ', '$bbq unit', Colors.orangeAccent),
+              _summaryRow('CHEESE DIP', '$cheese unit', Colors.amber),
+              const Divider(height: 32),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Jumlah Pendapatan', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('RM ${total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.green)),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _summaryRow(String label, String val, Color color) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+              const SizedBox(width: 12),
+              Text(label, style: const TextStyle(fontSize: 14)),
+            ],
+          ),
+          Text(val, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
@@ -1744,49 +1826,129 @@ class _StatisticsTab extends StatelessWidget {
   }
 
   Widget _buildTransactionList(BuildContext context, List<Map<String, dynamic>> orders, bool isDark) {
-    return GlassContainer(
-      useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
-      settings: _getStaffGlassSettings(isDark),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
-        ),
-        child: ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: orders.length > 10 ? 10 : orders.length,
-          separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12, indent: 64),
-          itemBuilder: (context, index) {
-            final o = orders[index];
-            final price = double.tryParse(o['total_price'].toString()) ?? 0.0;
-            final date = DateTime.tryParse(o['created_at'].toString()) ?? DateTime.now();
-            final isPaid = o['payment_status'] == 'Paid';
-            
-            final isOut = o['type'] == 'Expense'; // Placeholder for expense logic
-            final itemColor = isOut ? Colors.red : (isPaid ? Colors.green : Colors.orange);
-            final itemIcon = isOut ? HugeIcons.strokeRoundedArrowUpRight01 : (isPaid ? HugeIcons.strokeRoundedArrowDownLeft01 : HugeIcons.strokeRoundedClock01);
+    return Column(
+      children: [
+        GlassContainer(
+          useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+          settings: _getStaffGlassSettings(isDark),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: orders.length > 7 ? 7 : orders.length,
+              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12, indent: 64),
+              itemBuilder: (context, index) {
+                final o = orders[index];
+                final price = double.tryParse(o['total_price'].toString()) ?? 0.0;
+                final date = DateTime.tryParse(o['created_at'].toString()) ?? DateTime.now();
+                final isPaid = o['payment_status'] == 'Paid';
+                
+                final isOut = o['type'] == 'Expense'; 
+                final itemColor = isOut ? Colors.red : (isPaid ? Colors.green : Colors.orange);
+                final itemIcon = isOut ? HugeIcons.strokeRoundedArrowUpRight01 : (isPaid ? HugeIcons.strokeRoundedArrowDownLeft01 : HugeIcons.strokeRoundedClock01);
 
-            return ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: itemColor.withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: HugeIcon(icon: itemIcon, color: itemColor, size: 20),
-              ),
-              title: Text(o['customer_name'] ?? 'Transaksi', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-              subtitle: Text('${date.day}/${date.month} • ${date.hour}:${date.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('${isOut ? "-" : "+"} RM ${price.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: itemColor)),
-                  Text(isOut ? "Belanja" : (o['payment_status'] ?? 'Pending'), style: TextStyle(fontSize: 10, color: itemColor, fontWeight: FontWeight.bold)),
-                ],
-              ),
-            );
-          },
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: itemColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: HugeIcon(icon: itemIcon, color: itemColor, size: 20),
+                  ),
+                  title: Text(o['customer_name'] ?? 'Transaksi', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  subtitle: Text('${date.day}/${date.month} • ${date.hour}:${date.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('${isOut ? "-" : "+"} RM ${price.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: itemColor)),
+                      Text(isOut ? "Belanja" : (o['payment_status'] ?? 'Pending'), style: TextStyle(fontSize: 10, color: itemColor, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (orders.length > 7)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => _AllTransactionsPage(orders: orders)),
+                );
+              },
+              icon: const Text('Lihat Semua Transaksi', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 13)),
+              label: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _AllTransactionsPage extends StatelessWidget {
+  final List<Map<String, dynamic>> orders;
+  const _AllTransactionsPage({required this.orders});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Semua Transaksi'), centerTitle: true),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: GlassContainer(
+          useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+          settings: _getStaffGlassSettings(isDark),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: orders.length,
+              separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12, indent: 64),
+              itemBuilder: (context, index) {
+                final o = orders[index];
+                final price = double.tryParse(o['total_price'].toString()) ?? 0.0;
+                final date = DateTime.tryParse(o['created_at'].toString()) ?? DateTime.now();
+                final isPaid = o['payment_status'] == 'Paid';
+                final isOut = o['type'] == 'Expense';
+                final itemColor = isOut ? Colors.red : (isPaid ? Colors.green : Colors.orange);
+                final itemIcon = isOut ? HugeIcons.strokeRoundedArrowUpRight01 : (isPaid ? HugeIcons.strokeRoundedArrowDownLeft01 : HugeIcons.strokeRoundedClock01);
+
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: itemColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: HugeIcon(icon: itemIcon, color: itemColor, size: 20),
+                  ),
+                  title: Text(o['customer_name'] ?? 'Transaksi', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  subtitle: Text('${date.day}/${date.month}/${date.year} • ${date.hour}:${date.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text('${isOut ? "-" : "+"} RM ${price.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: itemColor)),
+                      Text(isOut ? "Belanja" : (o['payment_status'] ?? 'Pending'), style: TextStyle(fontSize: 10, color: itemColor, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

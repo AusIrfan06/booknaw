@@ -140,10 +140,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                           }),
                         ])),
                         if (!isStaff) ...[
+                          const SizedBox(height: 24),
                           _buildSectionHeader("Perniagaan"),
                           _buildBusinessCard(isDark),
-                          const SizedBox(height: 24),
                         ],
+                        const SizedBox(height: 24),
                       ],
 
                       _buildSectionHeader("Pilihan"),

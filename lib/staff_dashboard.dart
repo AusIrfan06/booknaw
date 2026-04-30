@@ -22,22 +22,12 @@ class StaffDashboard extends StatefulWidget {
 class _StaffDashboardState extends State<StaffDashboard> {
   int _currentIndex = 0;
 
-  Future<void> _logout(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
-    if (context.mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomePage()),
-        (route) => false,
-      );
-    }
-  }
 
   static const _titles = [
     'Dashboard',
     'Pesanan',
     'Penghantaran',
-    'Stok Inventori',
+    'Statistik',
     'Profil',
   ];
 
@@ -47,7 +37,7 @@ class _StaffDashboardState extends State<StaffDashboard> {
       const _DashboardPage(),
       const _OrdersTab(),
       const _DeliveryTab(),
-      const _InventoryTab(),
+      const _StatisticsTab(),
       const ProfileSettingsScreen(showAppBar: false),
     ];
 
@@ -75,8 +65,8 @@ class _StaffDashboardState extends State<StaffDashboard> {
             title: 'Hantar',
           ),
           NavItem(
-            icon: HugeIcons.strokeRoundedPackage,
-            title: 'Stok',
+            icon: HugeIcons.strokeRoundedAnalytics01,
+            title: 'Stat',
           ),
           NavItem(
             icon: HugeIcons.strokeRoundedUser,
@@ -87,6 +77,15 @@ class _StaffDashboardState extends State<StaffDashboard> {
     );
   }
 }
+
+// ─── Data Constants ──────────────────────────────────────────────────────────
+
+const _inventoryLocations = [
+  {'id': 1, 'name': 'Alpha'},
+  {'id': 2, 'name': 'Beta'},
+  {'id': 3, 'name': 'Gamma'},
+  {'id': 4, 'name': 'Non Resident (NR)'},
+];
 
 // ─── Page 0: Dashboard Overview ───────────────────────────────────────────────
 
@@ -213,8 +212,9 @@ class _DashboardPage extends StatelessWidget {
                   final totalSales = paidOrders.fold<double>(0.0, (sum, o) {
                     final price = o['total_price'];
                     if (price is num) return sum + price.toDouble();
-                    if (price is String)
+                    if (price is String) {
                       return sum + (double.tryParse(price) ?? 0.0);
+                    }
                     return sum;
                   });
 
@@ -938,10 +938,15 @@ class _StaffOrderCard extends StatelessWidget {
       // Deduct inventory
       final opt = order['delivery_option'] as String? ?? '';
       int locationId = 1; // Default to Alpha
-      if (opt.contains('Alpha')) locationId = 1;
-      else if (opt.contains('Beta')) locationId = 2;
-      else if (opt.contains('Gamma')) locationId = 3;
-      else if (opt.contains('NR')) locationId = 4;
+      if (opt.contains('Alpha')) {
+        locationId = 1;
+      } else if (opt.contains('Beta')) {
+        locationId = 2;
+      } else if (opt.contains('Gamma')) {
+        locationId = 3;
+      } else if (opt.contains('NR')) {
+        locationId = 4;
+      }
 
       final hotQty = order['hot_quantity_100g'] as int? ?? 0;
       final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
@@ -1457,141 +1462,55 @@ class _DeliveryOrderCard extends StatelessWidget {
   }
 }
 
-// ─── Page 3: Stok Inventori ───────────────────────────────────────────────────
-
-const _inventoryLocations = [
-  {'id': 1, 'name': 'Alpha'},
-  {'id': 2, 'name': 'Beta'},
-  {'id': 3, 'name': 'Gamma'},
-  {'id': 4, 'name': 'Non Resident (NR)'},
-];
-
-class _InventoryTab extends StatelessWidget {
-  const _InventoryTab();
+// ─── Page 3: Statistik ────────────────────────────────────────────────────────
+class _StatisticsTab extends StatelessWidget {
+  const _StatisticsTab();
 
   @override
   Widget build(BuildContext context) {
-    final inventoryStream = Supabase.instance.client
-        .from('inventory')
+    final ordersStream = Supabase.instance.client
+        .from('orders')
         .stream(primaryKey: ['id'])
-        .order('id');
+        .order('created_at', ascending: false);
 
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: inventoryStream,
+      stream: ordersStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final data = snapshot.data ?? [];
+        final orders = snapshot.data ?? [];
         final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        // Calculate Totals
-        int totalHot = data.fold<int>(0, (sum, r) => sum + (r['hot_stock'] as int? ?? 0));
-        int totalBBQ = data.fold<int>(0, (sum, r) => sum + (r['bbq_stock'] as int? ?? 0));
-        int totalCheese = data.fold<int>(0, (sum, r) => sum + (r['cheese_stock'] as int? ?? 0));
+        // Statistics Calculations
+        final paidOrders = orders.where((o) => o['payment_status'] == 'Paid').toList();
+        final totalSales = paidOrders.fold<double>(0.0, (sum, o) => sum + (double.tryParse(o['total_price'].toString()) ?? 0.0));
+        
+        final hotTotal = paidOrders.fold<int>(0, (sum, o) => sum + (int.tryParse(o['hot_quantity_100g']?.toString() ?? '0') ?? 0));
+        final bbqTotal = paidOrders.fold<int>(0, (sum, o) => sum + (int.tryParse(o['bbq_quantity_100g']?.toString() ?? '0') ?? 0));
+        final cheeseTotal = paidOrders.fold<int>(0, (sum, o) => sum + (int.tryParse(o['cheese_quantity']?.toString() ?? '0') ?? 0));
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
           physics: const BouncingScrollPhysics(),
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
+              constraints: const BoxConstraints(maxWidth: 1000),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── TOTAL STOCK SECTION ─────────────────────────────────────
-                  const Text(
-                    'Ringkasan Keseluruhan',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  GlassContainer(
-                    useOwnLayer: true,
-                    quality: GlassQuality.standard,
-                    shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
-                    settings: _getStaffGlassSettings(isDark),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          _buildTotalStat(context, 'HOT', totalHot, Colors.redAccent),
-                          _buildTotalStat(context, 'BBQ', totalBBQ, Colors.orangeAccent),
-                          _buildTotalStat(context, 'CHEESE', totalCheese, Colors.amber),
-                        ],
-                      ),
-                    ),
-                  ),
-
+                  _buildSummaryGrid(context, totalSales, paidOrders.length, orders.length, isDark),
                   const SizedBox(height: 32),
-
-                  // ── BY STORE SECTION ────────────────────────────────────────
-                  const Text(
-                    'Pecahan Mengikut Stor',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
+                  
+                  const Text('Analisis Jualan Produk', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
-                  ..._inventoryLocations.map((loc) {
-                    final row = data.firstWhere(
-                      (r) => r['id'] == loc['id'],
-                      orElse: () => <String, dynamic>{},
-                    );
-                    final hotStock = row['hot_stock'] as int? ?? 0;
-                    final bbqStock = row['bbq_stock'] as int? ?? 0;
-                    final cheeseStock = row['cheese_stock'] as int? ?? 0;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8, bottom: 12),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.storefront_rounded, size: 20, color: Color(0xFFFF5722)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Cawangan: ${loc['name']}',
-                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-                                ),
-                              ],
-                            ),
-                          ),
-                          _StockUpdater(
-                            locationId: loc['id'] as int,
-                            flavor: 'HOT & SPICYYY',
-                            dbColumn: 'hot_stock',
-                            currentStock: hotStock,
-                            currentRow: row,
-                          ),
-                          const SizedBox(height: 12),
-                          _StockUpdater(
-                            locationId: loc['id'] as int,
-                            flavor: 'BBQ',
-                            dbColumn: 'bbq_stock',
-                            currentStock: bbqStock,
-                            currentRow: row,
-                          ),
-                          const SizedBox(height: 12),
-                          _StockUpdater(
-                            locationId: loc['id'] as int,
-                            flavor: 'Cheese Dip',
-                            dbColumn: 'cheese_stock',
-                            currentStock: cheeseStock,
-                            currentRow: row,
-                            unit: 'unit',
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                  _buildProductChart(context, hotTotal, bbqTotal, cheeseTotal, isDark),
+                  
+                  const SizedBox(height: 32),
+                  const Text('Transaksi Terkini (Keluar)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _buildTransactionList(context, orders, isDark),
                 ],
               ),
             ),
@@ -1601,296 +1520,147 @@ class _InventoryTab extends StatelessWidget {
     );
   }
 
-  Widget _buildTotalStat(BuildContext context, String label, int value, Color color) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
+  Widget _buildSummaryGrid(BuildContext context, double sales, int paidCount, int totalCount, bool isDark) {
+    return GridView.count(
+      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 1,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 16,
+      childAspectRatio: 2,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white54 : Colors.black54),
+        _buildStatCard('Jumlah Jualan', 'RM ${sales.toStringAsFixed(2)}', HugeIcons.strokeRoundedWallet01, Colors.green, isDark),
+        _buildStatCard('Pesanan Dibayar', '$paidCount', HugeIcons.strokeRoundedCheckmarkCircle01, Colors.blue, isDark),
+        _buildStatCard('Semua Pesanan', '$totalCount', HugeIcons.strokeRoundedShoppingCart01, Colors.orange, isDark),
+      ],
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, dynamic icon, Color color, bool isDark) {
+    return GlassContainer(
+      useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+      settings: _getStaffGlassSettings(isDark),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            HugeIcon(icon: icon, color: color, size: 24),
+            const SizedBox(height: 12),
+            Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
+            Text(title, style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductChart(BuildContext context, int hot, int bbq, int cheese, bool isDark) {
+    final maxVal = [hot, bbq, cheese].reduce((a, b) => a > b ? a : b);
+    final scale = maxVal == 0 ? 1.0 : maxVal.toDouble();
+
+    return GlassContainer(
+      useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+      settings: _getStaffGlassSettings(isDark),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+        ),
+        child: Column(
+          children: [
+            _buildBar('HOT & SPICYYY', hot, scale, Colors.redAccent, isDark),
+            const SizedBox(height: 20),
+            _buildBar('SMOKY BBQ', bbq, scale, Colors.orangeAccent, isDark),
+            const SizedBox(height: 20),
+            _buildBar('CHEESE DIP', cheese, scale, Colors.amber, isDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBar(String label, int value, double max, Color color, bool isDark) {
+    final percent = value / max;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            Text('$value unit', style: TextStyle(color: color, fontWeight: FontWeight.bold)),
+          ],
         ),
         const SizedBox(height: 8),
-        Text(
-          '$value',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color),
+        Stack(
+          children: [
+            Container(height: 12, width: double.infinity, decoration: BoxDecoration(color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(6))),
+            FractionallySizedBox(
+              widthFactor: percent.clamp(0.01, 1.0),
+              child: Container(
+                height: 12,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [color, color.withValues(alpha: 0.6)]),
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
-}
 
-class _StockUpdater extends StatefulWidget {
-  final int locationId;
-  final String flavor;
-  final String dbColumn;
-  final int currentStock;
-  final Map<String, dynamic> currentRow;
-  final String unit;
-
-  const _StockUpdater({
-    required this.locationId,
-    required this.flavor,
-    required this.dbColumn,
-    required this.currentStock,
-    required this.currentRow,
-    this.unit = 'pek',
-    super.key,
-  });
-
-  @override
-  State<_StockUpdater> createState() => _StockUpdaterState();
-}
-
-class _StockUpdaterState extends State<_StockUpdater> {
-  final _manualController = TextEditingController();
-  Timer? _debounce;
-
-  Future<void> _adjustStock(int amount) async {
-    try {
-      final newStock = widget.currentStock + amount;
-      final payload = {
-        'id': widget.locationId,
-        'hot_stock': widget.currentRow['hot_stock'] ?? 0,
-        'bbq_stock': widget.currentRow['bbq_stock'] ?? 0,
-        'cheese_stock': widget.currentRow['cheese_stock'] ?? 0,
-      };
-      payload[widget.dbColumn] = newStock < 0 ? 0 : newStock;
-
-      await Supabase.instance.client.from('inventory').upsert(payload);
-    } catch (e) {
-      if (mounted) {
-        showGlassToast(context, e.toString(), isError: true);
-      }
-    }
-  }
-
-  Future<void> _setManualStock(String value) async {
-    final newStock = int.tryParse(value);
-    if (newStock == null) return;
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-    _debounce = Timer(const Duration(milliseconds: 600), () async {
-      try {
-        final payload = {
-          'id': widget.locationId,
-          'hot_stock': widget.currentRow['hot_stock'] ?? 0,
-          'bbq_stock': widget.currentRow['bbq_stock'] ?? 0,
-          'cheese_stock': widget.currentRow['cheese_stock'] ?? 0,
-        };
-        payload[widget.dbColumn] = newStock < 0 ? 0 : newStock;
-
-        await Supabase.instance.client.from('inventory').upsert(payload);
-      } catch (e) {
-        if (mounted) {
-          showGlassToast(context, e.toString(), isError: true);
-        }
-      }
-    });
-  }
-
-  void _showManualInput() {
-    _manualController.text = widget.currentStock.toString();
-    _manualController.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: _manualController.text.length,
-    );
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+  Widget _buildTransactionList(BuildContext context, List<Map<String, dynamic>> orders, bool isDark) {
+    return GlassContainer(
+      useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+      settings: _getStaffGlassSettings(isDark),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Set Stok: ${widget.flavor}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _manualController,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                labelText: 'Jumlah stok',
-                border: OutlineInputBorder(),
-                suffix: Text(widget.unit),
+        child: ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: orders.length > 10 ? 10 : orders.length,
+          separatorBuilder: (context, index) => Divider(height: 1, color: isDark ? Colors.white10 : Colors.black12, indent: 64),
+          itemBuilder: (context, index) {
+            final o = orders[index];
+            final price = double.tryParse(o['total_price'].toString()) ?? 0.0;
+            final date = DateTime.tryParse(o['created_at'].toString()) ?? DateTime.now();
+            final isPaid = o['payment_status'] == 'Paid';
+            
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: (isPaid ? Colors.green : Colors.orange).withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(isPaid ? Icons.arrow_outward : Icons.hourglass_top_rounded, color: isPaid ? Colors.green : Colors.orange, size: 20),
               ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () async {
-                final val = _manualController.text;
-                Navigator.pop(ctx);
-                await _setManualStock(val);
-              },
-              child: const Text('Simpan', style: TextStyle(fontSize: 16)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _manualController.dispose();
-    _debounce?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isSoldOut = widget.currentStock <= 0;
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: isSoldOut ? Colors.red.shade50 : null,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.flavor,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (isSoldOut)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'SOLD OUT',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                _CounterButton(
-                  icon: HugeIcons.strokeRoundedMinusSign,
-                  buttonColor: Colors.orange,
-                  onPressed: widget.currentStock > 0
-                      ? () => _adjustStock(-1)
-                      : null,
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: _showManualInput,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: primary, width: 2),
-                        borderRadius: BorderRadius.circular(12),
-                        color: primary.withValues(alpha: 0.05),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '${widget.currentStock}',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              color: isSoldOut ? Colors.red : primary,
-                            ),
-                          ),
-                          Text(
-                            '${widget.unit}  •  ketuk untuk edit',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Colors.grey.shade500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                _CounterButton(
-                  icon: HugeIcons.strokeRoundedPlusSign,
-                  buttonColor: Colors.green,
-                  onPressed: () => _adjustStock(1),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CounterButton extends StatelessWidget {
-  final dynamic icon;
-  final Color buttonColor;
-  final VoidCallback? onPressed;
-
-  const _CounterButton({
-    required this.icon,
-    required this.buttonColor,
-    this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: onPressed != null
-          ? buttonColor.withValues(alpha: 0.1)
-          : Colors.grey.shade200,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onPressed,
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: onPressed != null ? buttonColor : Colors.grey.shade400,
-              width: 2,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: HugeIcon(
-              icon: icon,
-              color: onPressed != null ? buttonColor : Colors.grey,
-              size: 24,
-            ),
-          ),
+              title: Text(o['customer_name'] ?? 'Pelanggan', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              subtitle: Text('${date.day}/${date.month} • ${date.hour}:${date.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              trailing: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text('RM ${price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  Text(o['payment_status'] ?? 'Pending', style: TextStyle(fontSize: 10, color: isPaid ? Colors.green : Colors.orange, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );

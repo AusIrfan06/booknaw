@@ -13,6 +13,8 @@ import 'staff_dashboard.dart';
 import 'account_details_page.dart';
 import 'privacy_safety_page.dart';
 import 'home_page.dart';
+import 'business_registration_page.dart';
+
 
 class ProfileSettingsScreen extends StatefulWidget {
   final bool showAppBar;
@@ -137,9 +139,11 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacySafetyPage()));
                           }),
                         ])),
-                        const SizedBox(height: 24),
-
-                        const SizedBox(height: 24),
+                        if (!isStaff) ...[
+                          _buildSectionHeader("Perniagaan"),
+                          _buildBusinessCard(isDark),
+                          const SizedBox(height: 24),
+                        ],
                       ],
 
                       _buildSectionHeader("Pilihan"),
@@ -292,4 +296,59 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   );
 
   Widget _buildDivider(bool isDark) => Padding(padding: const EdgeInsets.only(left: 60, right: 16), child: Divider(height: 1, color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)));
+
+  Widget _buildBusinessCard(bool isDark) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const BusinessRegistrationPage())),
+      child: GlassContainer(
+        useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0), settings: _getGlassSettings(isDark),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                const Color(0xFFFF5722).withValues(alpha: isDark ? 0.2 : 0.1),
+                Colors.amber.withValues(alpha: isDark ? 0.1 : 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.3), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF5722).withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const HugeIcon(icon: HugeIcons.strokeRoundedStore01, color: Color(0xFFFF5722), size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Daftar Perniagaan",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Mula terima tempahan hari ini",
+                      style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+              const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: Color(0xFFFF5722), size: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -4,7 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'home_page.dart';
 import 'profile_page.dart';
 import 'utils/glass_toast.dart';
 import 'widgets/glass_nav_bar.dart';
@@ -1767,7 +1766,7 @@ class _StatisticsTab extends StatelessWidget {
             
             final isOut = o['type'] == 'Expense'; // Placeholder for expense logic
             final itemColor = isOut ? Colors.red : (isPaid ? Colors.green : Colors.orange);
-            final itemIcon = isOut ? HugeIcons.strokeRoundedArrowUpRight : (isPaid ? HugeIcons.strokeRoundedArrowDownLeft : HugeIcons.strokeRoundedClock01);
+            final itemIcon = isOut ? HugeIcons.strokeRoundedArrowUpRight01 : (isPaid ? HugeIcons.strokeRoundedArrowDownLeft01 : HugeIcons.strokeRoundedClock01);
 
             return ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),

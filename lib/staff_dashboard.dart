@@ -1501,15 +1501,35 @@ class _StatisticsTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildSummaryGrid(context, totalSales, paidOrders.length, orders.length, isDark),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20),
                   
+                  const Text('Analisis Jualan Harian', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  _buildDailySalesChart(context, paidOrders, isDark),
+                  
+                  const SizedBox(height: 24),
                   const Text('Analisis Jualan Produk', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   _buildProductChart(context, hotTotal, bbqTotal, cheeseTotal, isDark),
                   
-                  const SizedBox(height: 32),
-                  const Text('Transaksi Terkini (Keluar)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Transaksi Terkini', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      TextButton.icon(
+                        onPressed: () {
+                           // Future: Show dialog to add expense
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             const SnackBar(content: Text('Fungsi tambah belanja akan datang.'))
+                           );
+                        },
+                        icon: const Icon(Icons.add_circle_outline, size: 18, color: Colors.red),
+                        label: const Text('Tambah Belanja', style: TextStyle(color: Colors.red, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   _buildTransactionList(context, orders, isDark),
                 ],
               ),
@@ -1521,40 +1541,143 @@ class _StatisticsTab extends StatelessWidget {
   }
 
   Widget _buildSummaryGrid(BuildContext context, double sales, int paidCount, int totalCount, bool isDark) {
-    return GridView.count(
-      crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 1,
+    return GridView.builder(
       shrinkWrap: true,
+      padding: EdgeInsets.zero,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 2,
-      children: [
-        _buildStatCard('Jumlah Jualan', 'RM ${sales.toStringAsFixed(2)}', HugeIcons.strokeRoundedWallet01, Colors.green, isDark),
-        _buildStatCard('Pesanan Dibayar', '$paidCount', HugeIcons.strokeRoundedCheckmarkCircle01, Colors.blue, isDark),
-        _buildStatCard('Semua Pesanan', '$totalCount', HugeIcons.strokeRoundedShoppingCart01, Colors.orange, isDark),
-      ],
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 250,
+        mainAxisExtent: 120,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+      ),
+      itemCount: 3,
+      itemBuilder: (context, index) {
+        switch (index) {
+          case 0:
+            return _buildStatCard('Jumlah Jualan', 'RM ${sales.toStringAsFixed(2)}', HugeIcons.strokeRoundedWallet01, Colors.green, isDark);
+          case 1:
+            return _buildStatCard('Pesanan Dibayar', '$paidCount', HugeIcons.strokeRoundedCheckmarkCircle01, Colors.blue, isDark);
+          default:
+            return _buildStatCard('Semua Pesanan', '$totalCount', HugeIcons.strokeRoundedShoppingCart01, Colors.orange, isDark);
+        }
+      },
     );
   }
 
   Widget _buildStatCard(String title, String value, dynamic icon, Color color, bool isDark) {
+    return GlassContainer(
+      useOwnLayer: true,
+      quality: GlassQuality.standard,
+      shape: LiquidRoundedSuperellipse(borderRadius: 14.0),
+      settings: _getStaffGlassSettings(isDark),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? color.withValues(alpha: 0.15) : color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            HugeIcon(icon: icon, color: color, size: 22),
+            const SizedBox(height: 10),
+            Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDailySalesChart(BuildContext context, List<Map<String, dynamic>> paidOrders, bool isDark) {
+    // Calculate daily sales for last 7 days
+    final Map<String, double> dailyData = {};
+    final now = DateTime.now();
+    for (int i = 0; i < 7; i++) {
+      final date = now.subtract(Duration(days: i));
+      final key = "${date.day}/${date.month}";
+      dailyData[key] = 0.0;
+    }
+
+    for (var o in paidOrders) {
+      final date = DateTime.tryParse(o['created_at'].toString()) ?? DateTime.now();
+      final key = "${date.day}/${date.month}";
+      if (dailyData.containsKey(key)) {
+        dailyData[key] = dailyData[key]! + (double.tryParse(o['total_price'].toString()) ?? 0.0);
+      }
+    }
+
+    final sortedKeys = dailyData.keys.toList().reversed.toList();
+    final maxVal = dailyData.values.isEmpty ? 1.0 : dailyData.values.reduce((a, b) => a > b ? a : b);
+    final scale = maxVal == 0 ? 1.0 : maxVal;
+
     return GlassContainer(
       useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
       settings: _getStaffGlassSettings(isDark),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
+          border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            HugeIcon(icon: icon, color: color, size: 24),
-            const SizedBox(height: 12),
-            Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black87)),
-            Text(title, style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.black54)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Prestasi Jualan 7 Hari', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                Text('Max: RM ${maxVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 150,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: sortedKeys.map((key) {
+                  final val = dailyData[key]!;
+                  final percent = val / scale;
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        width: 25,
+                        height: (100 * percent).clamp(5.0, 100.0),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [Colors.green.shade700, Colors.green.shade300],
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: [
+                            if (percent > 0.1)
+                              BoxShadow(color: Colors.green.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2))
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(key, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
           ],
         ),
       ),
@@ -1642,21 +1765,25 @@ class _StatisticsTab extends StatelessWidget {
             final date = DateTime.tryParse(o['created_at'].toString()) ?? DateTime.now();
             final isPaid = o['payment_status'] == 'Paid';
             
+            final isOut = o['type'] == 'Expense'; // Placeholder for expense logic
+            final itemColor = isOut ? Colors.red : (isPaid ? Colors.green : Colors.orange);
+            final itemIcon = isOut ? HugeIcons.strokeRoundedArrowUpRight : (isPaid ? HugeIcons.strokeRoundedArrowDownLeft : HugeIcons.strokeRoundedClock01);
+
             return ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               leading: Container(
                 padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(color: (isPaid ? Colors.green : Colors.orange).withValues(alpha: 0.1), shape: BoxShape.circle),
-                child: Icon(isPaid ? Icons.arrow_outward : Icons.hourglass_top_rounded, color: isPaid ? Colors.green : Colors.orange, size: 20),
+                decoration: BoxDecoration(color: itemColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: HugeIcon(icon: itemIcon, color: itemColor, size: 20),
               ),
-              title: Text(o['customer_name'] ?? 'Pelanggan', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              title: Text(o['customer_name'] ?? 'Transaksi', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               subtitle: Text('${date.day}/${date.month} • ${date.hour}:${date.minute.toString().padLeft(2, '0')}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
               trailing: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('RM ${price.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                  Text(o['payment_status'] ?? 'Pending', style: TextStyle(fontSize: 10, color: isPaid ? Colors.green : Colors.orange, fontWeight: FontWeight.bold)),
+                  Text('${isOut ? "-" : "+"} RM ${price.toStringAsFixed(2)}', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: itemColor)),
+                  Text(isOut ? "Belanja" : (o['payment_status'] ?? 'Pending'), style: TextStyle(fontSize: 10, color: itemColor, fontWeight: FontWeight.bold)),
                 ],
               ),
             );

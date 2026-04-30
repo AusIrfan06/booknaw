@@ -393,7 +393,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
       child: Row(
         children: [
-          // Tambah ke Troli (Glass style)
+          // Tambah ke Troli (Navbar style glass)
           Expanded(
             child: InkWell(
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ditambah ke troli!'))),
@@ -402,14 +402,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 quality: GlassQuality.standard,
                 shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
                 settings: LiquidGlassSettings(
-                  thickness: 0.1, blur: 10,
+                  thickness: 0.1, blur: 15,
                   glassColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.1),
                 ),
                 child: Container(
                   height: 54,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.5), width: 1.5),
+                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
                   ),
                   child: const Center(
                     child: Text(
@@ -422,23 +422,28 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ),
           const SizedBox(width: 12),
-          // Beli Sekarang (Solid style)
+          // Beli Sekarang (Navbar style glass)
           Expanded(
             child: InkWell(
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menuju ke pembayaran...'))),
-              child: Container(
-                height: 54,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFFF5722), Color(0xFFFF9800)]),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(color: const Color(0xFFFF5722).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
-                  ],
+              child: GlassContainer(
+                useOwnLayer: true,
+                quality: GlassQuality.standard,
+                shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
+                settings: LiquidGlassSettings(
+                  thickness: 0.1, blur: 15,
+                  glassColor: const Color(0xFFFF5722).withValues(alpha: 0.8),
                 ),
-                child: const Center(
-                  child: Text(
-                    'BELI SEKARANG',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+                child: Container(
+                  height: 54,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'BELI SEKARANG',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+                    ),
                   ),
                 ),
               ),

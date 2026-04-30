@@ -428,17 +428,42 @@ class _HomeTabState extends State<_HomeTabState> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                height: height * 0.6,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: imageColor.withValues(alpha: 0.2),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
-                ),
-                child: Center(
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
-                ),
+              Stack(
+                children: [
+                  Container(
+                    height: height * 0.6,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: imageColor.withValues(alpha: 0.2),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
+                    ),
+                    child: Center(
+                      child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
+                    ),
+                  ),
+                  // Rating Badge on Bottom Right of Image
+                  Positioned(
+                    bottom: 10,
+                    right: 10,
+                    child: GlassContainer(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      shape: LiquidRoundedSuperellipse(borderRadius: 10.0),
+                      settings: LiquidGlassSettings(thickness: 0.2, blur: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                            SizedBox(width: 2),
+                            Text('4.9', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.all(12),
@@ -452,11 +477,13 @@ class _HomeTabState extends State<_HomeTabState> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(color: const Color(0xFFFF5722).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-                          child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Color(0xFFFF5722), size: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
+                            const SizedBox(height: 2),
+                            Text('100+ terjual', style: TextStyle(fontSize: 9, color: Colors.grey.shade500)),
+                          ],
                         ),
                       ],
                     ),

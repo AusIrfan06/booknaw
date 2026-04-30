@@ -3,15 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'order_page.dart';
-import 'contact_page.dart';
-import 'login_page.dart';
-import 'staff_dashboard.dart';
 import 'status_page.dart';
 import 'profile_page.dart';
 import 'app_logo.dart';
 import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
+import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'product_detail_page.dart';
 
@@ -77,12 +75,12 @@ class _HomePageState extends State<HomePage> {
                 await Supabase.instance.client.auth.updateUser(
                   UserAttributes(password: newPass),
                 );
-                if (mounted) {
+                if (context.mounted) {
                   Navigator.pop(context);
                   showGlassToast(context, 'Kata laluan berjaya ditukar!');
                 }
               } catch (e) {
-                if (mounted) {
+                if (context.mounted) {
                   showGlassToast(context, 'Ralat: $e', isError: true);
                 }
               }
@@ -100,12 +98,7 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _handleProfileTap() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ProfileSettingsScreen()),
-    ).then((_) => setState(() {}));
-  }
+
 
   @override
   Widget build(BuildContext context) {

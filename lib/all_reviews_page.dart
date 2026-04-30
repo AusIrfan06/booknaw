@@ -167,13 +167,6 @@ class AllReviewsPage extends StatelessWidget {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // You could navigate to add review here if you want a general button
-        },
-        backgroundColor: const Color(0xFFFF5722),
-        child: const Icon(Icons.add_comment_rounded, color: Colors.white),
-      ),
     );
   }
 }

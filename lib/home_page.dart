@@ -313,7 +313,21 @@ class _HomeTabState extends State<_HomeTab> {
                             price: p.price,
                             imageColor: p.color,
                             onTap: () {
-                              showGlassToast(context, 'Menu ini akan menyusul tidak lama lagi! ✨', isError: false);
+                              if (p.title == 'HOT & SPICYYY' || p.title == 'SMOKY BBQ' || p.title == 'CHEESE DIP') {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailPage(
+                                      title: p.title,
+                                      price: p.price,
+                                      description: p.desc,
+                                      themeColor: p.color,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                showGlassToast(context, 'Menu ini akan menyusul tidak lama lagi! ✨', isError: false);
+                              }
                             },
                           );
                         },

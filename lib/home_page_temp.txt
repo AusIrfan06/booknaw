@@ -99,6 +99,8 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
@@ -150,9 +152,8 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// ─── Home Tab Content ─────────────────────────────────────────────────────────
 
-class _HomeTab extends StatefulWidget {
+// ????????? Home Tab Content ?????????????????????????????????????????????????????class _HomeTab extends StatefulWidget {
   final VoidCallback onOrder;
   const _HomeTab({required this.onOrder});
 
@@ -160,7 +161,7 @@ class _HomeTab extends StatefulWidget {
   State<_HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<_HomeTabState> {
+class _HomeTabState extends State<_HomeTab> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _timer;
@@ -231,7 +232,7 @@ class _HomeTabState extends State<_HomeTabState> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Header Section (Auto-sliding Carousel) ─────────────────────
+                // ?????? Header Section (Auto-sliding Carousel) ???????????????????????????????????????????????????????????????
                 SizedBox(
                   height: 280,
                   child: PageView.builder(
@@ -264,7 +265,7 @@ class _HomeTabState extends State<_HomeTabState> {
 
                 const SizedBox(height: 32),
                 
-                // ── Selection Section ───────────────────────────────────────────
+                // ?????? Selection Section ?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
@@ -313,7 +314,7 @@ class _HomeTabState extends State<_HomeTabState> {
                                     builder: (context) => ProductDetailPage(
                                       title: p.title,
                                       price: p.price,
-                                      description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim and rasa umami yang tinggi gerenti membuatkan anda ketagih!',
+                                      description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim dan rasa umami yang tinggi gerenti membuatkan anda ketagih!',
                                       themeColor: p.color,
                                     ),
                                   ),
@@ -394,8 +395,6 @@ class _HomeTabState extends State<_HomeTabState> {
         ),
       ),
     );
-  }
-
   Widget _buildPinterestCard(
     BuildContext context, {
     required String title,

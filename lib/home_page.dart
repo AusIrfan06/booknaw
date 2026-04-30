@@ -12,6 +12,7 @@ import 'utils/glass_toast.dart';
 import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'product_detail_page.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -293,51 +294,45 @@ class _HomeTab extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      _buildSleekCard(
-                        context,
-                        title: 'HOT & SPICYYY',
-                        desc: 'Pedas gila, gerenti berpeluh! (100g)',
-                        price: 'RM 5.00',
-                        imageColor: Colors.redAccent,
-                        onTap: onOrder,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSleekCard(
-                        context,
-                        title: 'SMOKY BBQ',
-                        desc: 'Rasa salai yang premium. (100g)',
-                        price: 'RM 5.00',
-                        imageColor: Colors.orangeAccent,
-                        onTap: onOrder,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSleekCard(
-                        context,
-                        title: 'CHEESE DIP',
-                        desc: 'Sos keju berkrim & padu.',
-                        price: 'RM 1.00',
-                        imageColor: Colors.amber,
-                        onTap: onOrder,
-                      ),
-                      const SizedBox(height: 16),
-                      _buildSleekCard(
-                        context,
-                        title: 'SALTED EGG SUPREME',
-                        desc: 'Rasa telur masin premium yang mewah.',
-                        price: 'RM 12.00',
-                        imageColor: Colors.yellow.shade700,
-                        onTap: () {
-                          Navigator.push(
+                      MasonryGridView.count(
+                        crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : (MediaQuery.of(context).size.width > 600 ? 2 : 2),
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 4,
+                        itemBuilder: (context, index) {
+                          final products = [
+                            (title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', color: Colors.redAccent, height: 220.0),
+                            (title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', color: Colors.orangeAccent, height: 260.0),
+                            (title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', color: Colors.amber, height: 200.0),
+                            (title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', color: Colors.yellow.shade700, height: 280.0),
+                          ];
+                          final p = products[index];
+                          return _buildPinterestCard(
                             context,
-                            MaterialPageRoute(
-                              builder: (context) => const ProductDetailPage(
-                                title: 'SALTED EGG SUPREME',
-                                price: 'RM 12.00',
-                                description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim dan rasa umami yang tinggi gerenti membuatkan anda ketagih!',
-                                themeColor: Colors.amber,
-                              ),
-                            ),
+                            title: p.title,
+                            desc: p.desc,
+                            price: p.price,
+                            imageColor: p.color,
+                            height: p.height,
+                            onTap: () {
+                              if (p.title == 'SALTED EGG SUPREME') {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailPage(
+                                      title: p.title,
+                                      price: p.price,
+                                      description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim dan rasa umami yang tinggi gerenti membuatkan anda ketagih!',
+                                      themeColor: p.color,
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                onOrder();
+                              }
+                            },
                           );
                         },
                       ),
@@ -355,12 +350,13 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
-  Widget _buildSleekCard(
+  Widget _buildPinterestCard(
     BuildContext context, {
     required String title,
     required String desc,
     required String price,
     required Color imageColor,
+    required double height,
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -378,43 +374,48 @@ class _HomeTab extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(24),
         child: Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.3)),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 80,
-                height: 80,
+                height: height * 0.6,
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: imageColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: imageColor.withValues(alpha: 0.3)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                  border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
                 ),
                 child: Center(
-                  child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 32),
+                  child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
+                    Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
                     const SizedBox(height: 4),
-                    Text(desc, style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : Colors.black54)),
+                    Text(desc, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : Colors.black54), maxLines: 2, overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 12),
-                    Text(price, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: const Color(0xFFFF5722).withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+                          child: const HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Color(0xFFFF5722), size: 16),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: const Color(0xFFFF5722), borderRadius: BorderRadius.circular(12)),
-                child: HugeIcon(icon: HugeIcons.strokeRoundedAdd01, color: Colors.white, size: 20),
               ),
             ],
           ),

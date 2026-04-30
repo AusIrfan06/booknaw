@@ -178,7 +178,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       children: [
                         _infoCard(HugeIcons.strokeRoundedFire, 'Tahap Pedas', 'Ekstrem', Colors.red),
                         _infoCard(HugeIcons.strokeRoundedTimer01, 'Tempoh Sedia', '5-10 min', Colors.blue),
-                        _infoCard(HugeIcons.strokeRoundedVegetarianFood01, 'Asli', 'Tanpa MSG', Colors.green),
+                        _infoCard(HugeIcons.strokeRoundedVegetarianFood, 'Asli', 'Tanpa MSG', Colors.green),
                       ],
                     ),
                   ),

@@ -13,6 +13,7 @@ import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'product_detail_page.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'cart_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -138,6 +139,13 @@ class _HomePageState extends State<HomePage> {
         title: const Text('NACHOZYYY'),
         centerTitle: true,
         automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CartPage())),
+            icon: const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Color(0xFFFF5722)),
+          ),
+          const SizedBox(width: 8),
+        ],
       ) : null,
       extendBody: true,
       body: IndexedStack(index: safeIndex, children: pages),
@@ -292,10 +300,10 @@ class _HomeTabState extends State<_HomeTab> {
                         itemCount: 4,
                         itemBuilder: (context, index) {
                           final products = [
-                            (title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', color: Colors.redAccent, height: 220.0),
-                            (title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', color: Colors.orangeAccent, height: 260.0),
-                            (title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', color: Colors.amber, height: 200.0),
-                            (title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', color: Colors.yellow.shade700, height: 280.0),
+                            (title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', color: Colors.redAccent),
+                            (title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', color: Colors.orangeAccent),
+                            (title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', color: Colors.amber),
+                            (title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', color: Colors.yellow.shade700),
                           ];
                           final p = products[index];
                           return _buildPinterestCard(
@@ -304,7 +312,6 @@ class _HomeTabState extends State<_HomeTab> {
                             desc: p.desc,
                             price: p.price,
                             imageColor: p.color,
-                            height: p.height,
                             onTap: () {
                               if (p.title == 'SALTED EGG SUPREME') {
                                 Navigator.push(
@@ -402,7 +409,6 @@ class _HomeTabState extends State<_HomeTab> {
     required String desc,
     required String price,
     required Color imageColor,
-    required double height,
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -431,15 +437,17 @@ class _HomeTabState extends State<_HomeTab> {
               Stack(
                 children: [
                   Container(
-                    height: height * 0.6,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: imageColor.withValues(alpha: 0.2),
                       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                       border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
                     ),
-                    child: Center(
-                      child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
+                    child: AspectRatio(
+                      aspectRatio: title.length % 2 == 0 ? 0.8 : 1.2, // Simulate varied heights based on content
+                      child: Center(
+                        child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
+                      ),
                     ),
                   ),
                   // Rating Badge on Bottom Right of Image

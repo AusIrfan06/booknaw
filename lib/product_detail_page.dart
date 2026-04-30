@@ -393,7 +393,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
       child: Row(
         children: [
-          // Tambah ke Troli (Navbar style glass)
+          // Tambah ke Troli (Ultra-transparent frosted)
           Expanded(
             child: InkWell(
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ditambah ke troli!'))),
@@ -402,14 +402,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 quality: GlassQuality.standard,
                 shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
                 settings: LiquidGlassSettings(
-                  thickness: 0.1, blur: 15,
-                  glassColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.1),
+                  thickness: 0.05, blur: 5,
+                  glassColor: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.white.withValues(alpha: 0.05),
                 ),
                 child: Container(
                   height: 54,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02)),
                   ),
                   child: const Center(
                     child: Text(
@@ -422,7 +422,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ),
           const SizedBox(width: 12),
-          // Beli Sekarang (Navbar style glass)
+          // Beli Sekarang (High-blur orange frosted)
           Expanded(
             child: InkWell(
               onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menuju ke pembayaran...'))),
@@ -431,13 +431,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 quality: GlassQuality.standard,
                 shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
                 settings: LiquidGlassSettings(
-                  thickness: 0.1, blur: 15,
-                  glassColor: const Color(0xFFFF5722).withValues(alpha: 0.8),
+                  thickness: 0.15, blur: 25,
+                  glassColor: const Color(0xFFFF5722).withValues(alpha: 0.7),
                 ),
                 child: Container(
                   height: 54,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(color: const Color(0xFFFF5722).withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 5)),
+                    ],
                   ),
                   child: const Center(
                     child: Text(

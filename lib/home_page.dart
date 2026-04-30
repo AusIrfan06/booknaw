@@ -12,8 +12,8 @@ import 'app_logo.dart';
 import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
-import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
+import 'product_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -326,6 +326,27 @@ class _HomeTab extends StatelessWidget {
                         price: 'RM 1.00',
                         imageColor: Colors.amber,
                         onTap: onOrder,
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSleekCard(
+                        context,
+                        title: 'SALTED EGG SUPREME',
+                        desc: 'Rasa telur masin premium yang mewah.',
+                        price: 'RM 12.00',
+                        imageColor: Colors.yellow.shade700,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ProductDetailPage(
+                                title: 'SALTED EGG SUPREME',
+                                price: 'RM 12.00',
+                                description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim dan rasa umami yang tinggi gerenti membuatkan anda ketagih!',
+                                themeColor: Colors.amber,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(height: 32),
                       const _ReviewsSection(),

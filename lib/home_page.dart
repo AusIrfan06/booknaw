@@ -160,7 +160,7 @@ class _HomeTab extends StatefulWidget {
   State<_HomeTab> createState() => _HomeTabState();
 }
 
-class _HomeTabState extends State<_HomeTabState> {
+class _HomeTabState extends State<_HomeTab> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   Timer? _timer;

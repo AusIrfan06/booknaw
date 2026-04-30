@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'all_reviews_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String title;
@@ -199,15 +201,15 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Text(
                     widget.title,
                     style: TextStyle(
-                      fontSize: 28,
+                      fontSize: 22,
                       fontWeight: FontWeight.w900,
                       color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     'Kategori: Nachos Premium',
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                   ),
                 ],
               ),
@@ -215,33 +217,33 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             Text(
               widget.price,
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.w900,
                 color: Color(0xFFFF5722),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         const Text(
           'Deskripsi Produk',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Text(
           widget.description,
           style: TextStyle(
-            fontSize: 15,
-            height: 1.6,
+            fontSize: 13,
+            height: 1.5,
             color: isDark ? Colors.white70 : Colors.black54,
           ),
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: 24),
         const Text(
           'Maklumat Tambahan',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -253,18 +255,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ],
           ),
         ),
-        const SizedBox(height: 40),
+        const SizedBox(height: 24),
         Row(
           children: [
             const Text(
               'Kuantiti',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             const Spacer(),
             Container(
               decoration: BoxDecoration(
                 color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
@@ -272,10 +274,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     if (_quantity > 1) setState(() => _quantity--);
                   }),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       '$_quantity',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                     ),
                   ),
                   _quantityBtn(Icons.add, () {
@@ -286,9 +288,94 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ],
         ),
+        const SizedBox(height: 40),
+        const Divider(),
+        const SizedBox(height: 24),
+        _buildReviewsSection(context, isDark),
         const SizedBox(height: 150),
       ],
     );
+  }
+
+  Widget _buildReviewsSection(BuildContext context, bool isDark) {
+    final reviewsStream = Supabase.instance.client
+        .from('reviews')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .limit(5);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Komen Pelanggan',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AllReviewsPage())),
+              child: const Text('Lihat Semua', style: TextStyle(color: Color(0xFFFF5722), fontSize: 12)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<List<Map<String, dynamic>>>(
+          stream: reviewsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final reviews = snapshot.data ?? [];
+            if (reviews.isEmpty) return const Text('Belum ada review lagi.', style: TextStyle(color: Colors.grey, fontSize: 12));
+            
+            return Column(
+              children: reviews.take(3).map((r) => _buildMiniReview(r, isDark)).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniReview(Map<String, dynamic> review, bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(review['customer_name'] ?? 'Pelanggan', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              Row(
+                children: List.generate(5, (i) => Icon(
+                  i < (review['rating'] ?? 5) ? Icons.star_rounded : Icons.star_outline_rounded,
+                  color: Colors.amber, size: 12,
+                )),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(review['comment'] ?? '', style: TextStyle(fontSize: 11, color: isDark ? Colors.white70 : Colors.black87)),
+          const SizedBox(height: 4),
+          Text(_formatDate(review['created_at']), style: const TextStyle(fontSize: 9, color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+
+  String _formatDate(dynamic dateStr) {
+    if (dateStr == null) return '';
+    final date = DateTime.tryParse(dateStr.toString());
+    if (date == null) return '';
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   Widget _buildBottomBar(BuildContext context, bool isDark) {
@@ -306,29 +393,52 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
       child: Row(
         children: [
+          // Tambah ke Troli (Glass style)
           Expanded(
             child: InkWell(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Ditambah ke troli!'))
-                );
-              },
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ditambah ke troli!'))),
               child: GlassContainer(
                 useOwnLayer: true,
                 quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-                settings: LiquidGlassSettings(thickness: 0.1, blur: 10),
+                shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
+                settings: LiquidGlassSettings(
+                  thickness: 0.1, blur: 10,
+                  glassColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.1),
+                ),
                 child: Container(
-                  height: 60,
+                  height: 54,
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(colors: [Color(0xFFFF5722), Color(0xFFFF9800)]),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.5), width: 1.5),
                   ),
                   child: const Center(
                     child: Text(
                       'TAMBAH KE TROLI',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                      style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold, fontSize: 13),
                     ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Beli Sekarang (Solid style)
+          Expanded(
+            child: InkWell(
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menuju ke pembayaran...'))),
+              child: Container(
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFFF5722), Color(0xFFFF9800)]),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFFFF5722).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'BELI SEKARANG',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
                   ),
                 ),
               ),

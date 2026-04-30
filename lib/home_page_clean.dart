@@ -395,39 +395,9 @@ class _HomeTabState extends State<_HomeTab> {
         ),
       ),
     );
-  }                         themeColor: p.color,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                onOrder();
-                              }
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      const _ReviewsSection(),
-                      const SizedBox(height: 150), // Further increased for tap clearance
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
-
-  Widget _buildPinterestCard(
-    BuildContext context, {
-    required String title,
-    required String desc,
-    required String price,
-    required Color imageColor,
-    required double height,
-    required VoidCallback onTap,
+}
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassContainer(

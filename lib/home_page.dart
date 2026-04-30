@@ -141,7 +141,7 @@ class _HomePageState extends State<HomePage> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CartPage())),
+            onPressed: () => showGlassToast(context, 'Troli akan datang tidak lama lagi! 🛒', isError: false),
             icon: const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Color(0xFFFF5722)),
           ),
           const SizedBox(width: 8),
@@ -313,21 +313,7 @@ class _HomeTabState extends State<_HomeTab> {
                             price: p.price,
                             imageColor: p.color,
                             onTap: () {
-                              if (p.title == 'SALTED EGG SUPREME') {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductDetailPage(
-                                      title: p.title,
-                                      price: p.price,
-                                      description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim and rasa umami yang tinggi gerenti membuatkan anda ketagih!',
-                                      themeColor: p.color,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                widget.onOrder();
-                              }
+                              showGlassToast(context, 'Menu ini akan menyusul tidak lama lagi! ✨', isError: false);
                             },
                           );
                         },

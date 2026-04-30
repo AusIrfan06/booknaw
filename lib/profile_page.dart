@@ -146,15 +146,16 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         ],
                         if (isStaff) ...[
                           const SizedBox(height: 24),
-                          _buildSectionHeader("Akses Staf"),
+                          _buildSectionHeader("AKSES"),
                           _buildGlassSection(isDark, Column(children: [
-                            _buildSettingsTile(isDark, HugeIcons.strokeRoundedShoppingBag01, "Pergi ke Kedai (Tempah)", onTap: () {
-                              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomePage()), (route) => false);
-                            }),
-                            _buildDivider(isDark),
-                            _buildSettingsTile(isDark, HugeIcons.strokeRoundedDashboardSquare01, "Dashboard Staf", onTap: () {
-                              Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const StaffDashboard()), (route) => false);
-                            }),
+                            if (!widget.showAppBar) // In Dashboard Tab
+                              _buildSettingsTile(isDark, HugeIcons.strokeRoundedShoppingBag01, "Mod Pelanggan", onTap: () {
+                                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomePage()), (route) => false);
+                              })
+                            else // In Standalone Profile (from Home)
+                              _buildSettingsTile(isDark, HugeIcons.strokeRoundedDashboardSquare01, "Mod Pengurusan", onTap: () {
+                                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const StaffDashboard()), (route) => false);
+                              }),
                           ])),
                         ],
                         const SizedBox(height: 24),

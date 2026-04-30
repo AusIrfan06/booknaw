@@ -47,14 +47,73 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
       await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
-        showGlassToast(context, "Permohonan anda telah dihantar! Kami akan menghubungi anda segera.");
-        Navigator.pop(context);
+        _showSuccessOverlay();
       }
     } catch (e) {
       if (mounted) showGlassToast(context, "Ralat: ${e.toString()}", isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showSuccessOverlay() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 32.0),
+            settings: _getGlassSettings(Theme.of(context).brightness == Brightness.dark),
+            child: Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.black87 : Colors.white,
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(color: const Color(0xFFFF5722).withValues(alpha: 0.1), shape: BoxShape.circle),
+                    child: const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, color: Color(0xFFFF5722), size: 64),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text("Permohonan Berjaya!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Terima kasih kerana berminat menyertai kami. Pasukan kami akan menyemak permohonan anda dan menghubungi anda dalam masa 24 jam.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, height: 1.5),
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx); // Close dialog
+                        Navigator.pop(context); // Go back to profile
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFFF5722),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text("Kembali ke Profil", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override

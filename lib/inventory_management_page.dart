@@ -4,6 +4,15 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'supabase_service.dart';
 
+LiquidGlassSettings _getGlassSettings(bool isDark) {
+  return LiquidGlassSettings(
+    thickness: 0.1, blur: 15, refractiveIndex: 1.0,
+    glassColor: Colors.transparent, lightAngle: 45.0,
+    lightIntensity: isDark ? 0.1 : 0.2, ambientStrength: 1.0,
+    saturation: 1.0, chromaticAberration: 0.0,
+  );
+}
+
 class InventoryManagementPage extends StatefulWidget {
   const InventoryManagementPage({super.key});
 
@@ -23,6 +32,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
   }
 
   Future<void> _fetchData() async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     try {
       final business = await SupabaseService.getBusinessInfo();
@@ -39,18 +49,47 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         final productRes = await Supabase.instance.client
             .from('products')
             .select()
-            .eq('business_id', businessId);
+            .eq('business_id', businessId)
+            .order('created_at', ascending: false);
 
-        setState(() {
-          _staff = List<Map<String, dynamic>>.from(staffRes);
-          _products = List<Map<String, dynamic>>.from(productRes);
-        });
+        if (mounted) {
+          setState(() {
+            _staff = List<Map<String, dynamic>>.from(staffRes);
+            _products = List<Map<String, dynamic>>.from(productRes);
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error fetching inventory data: $e');
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showAddProductPopup() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _ProductFormPopup(
+        onSaved: () {
+          _fetchData();
+        },
+      ),
+    );
+  }
+
+  void _showAddStaffPopup() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _StaffInvitePopup(
+        onInvited: () {
+          _fetchData();
+        },
+      ),
+    );
   }
 
   @override
@@ -61,28 +100,28 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       return const Center(child: CircularProgressIndicator(color: Color(0xFFFF5722)));
     }
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // --- SECTION 1: STAFF MANAGEMENT (TOP) ---
-          _buildSectionHeader("Pengurusan Staf", HugeIcons.strokeRoundedUserGroup, () {
-            // Logic to add staff
-          }),
-          const SizedBox(height: 16),
-          _buildStaffList(isDark),
+    return RefreshIndicator(
+      onRefresh: _fetchData,
+      color: const Color(0xFFFF5722),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 150),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // --- SECTION 1: STAFF MANAGEMENT (TOP) ---
+            _buildSectionHeader("Pengurusan Staf", HugeIcons.strokeRoundedUserGroup, _showAddStaffPopup),
+            const SizedBox(height: 16),
+            _buildStaffList(isDark),
 
-          const SizedBox(height: 40),
+            const SizedBox(height: 40),
 
-          // --- SECTION 2: PRODUCT INVENTORY (BOTTOM) ---
-          _buildSectionHeader("Inventori Produk", HugeIcons.strokeRoundedPackage, () {
-            // Logic to add product
-          }),
-          const SizedBox(height: 16),
-          _buildProductGrid(isDark),
-        ],
+            // --- SECTION 2: PRODUCT INVENTORY (BOTTOM) ---
+            _buildSectionHeader("Inventori Produk", HugeIcons.strokeRoundedPackage, _showAddProductPopup),
+            const SizedBox(height: 16),
+            _buildProductGrid(isDark),
+          ],
+        ),
       ),
     );
   }
@@ -111,7 +150,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
 
   Widget _buildStaffList(bool isDark) {
     if (_staff.isEmpty) {
-      return _buildEmptyState(isDark, "Tiada staf lagi", HugeIcons.strokeRoundedUserGroup);
+      return _buildEmptyState(isDark, "Tiada staf lagi. Jemput staf anda!", HugeIcons.strokeRoundedUserGroup);
     }
 
     return SizedBox(
@@ -122,45 +161,48 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         itemCount: _staff.length,
         itemBuilder: (context, index) {
           final person = _staff[index];
-          return Container(
-            width: 85,
-            margin: const EdgeInsets.only(right: 16),
-            child: Column(
-              children: [
-                GlassContainer(
-                  useOwnLayer: true,
-                  quality: GlassQuality.standard,
-                  shape: LiquidRoundedSuperellipse(borderRadius: 999),
-                  settings: _getGlassSettings(isDark),
-                  child: Container(
-                    height: 64,
-                    width: 64,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF5722).withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.3)),
-                    ),
-                    child: Center(
-                      child: person['image_url'] != null 
-                        ? ClipOval(child: Image.network(person['image_url'], fit: BoxFit.cover, width: 64, height: 64))
-                        : HugeIcon(icon: HugeIcons.strokeRoundedUser, color: const Color(0xFFFF5722), size: 24),
+          return GestureDetector(
+            onLongPress: () => _confirmDeleteStaff(person),
+            child: Container(
+              width: 85,
+              margin: const EdgeInsets.only(right: 16),
+              child: Column(
+                children: [
+                  GlassContainer(
+                    useOwnLayer: true,
+                    quality: GlassQuality.standard,
+                    shape: LiquidRoundedSuperellipse(borderRadius: 999),
+                    settings: _getGlassSettings(isDark),
+                    child: Container(
+                      height: 64,
+                      width: 64,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF5722).withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.3)),
+                      ),
+                      child: Center(
+                        child: person['image_url'] != null 
+                          ? ClipOval(child: Image.network(person['image_url'], fit: BoxFit.cover, width: 64, height: 64))
+                          : HugeIcon(icon: HugeIcons.strokeRoundedUser, color: const Color(0xFFFF5722), size: 24),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  person['full_name'] ?? "Staf",
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  person['role'] ?? "Ahli",
-                  style: const TextStyle(fontSize: 9, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    person['full_name'] ?? "Staf",
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    person['role'] ?? "Ahli",
+                    style: const TextStyle(fontSize: 9, color: Colors.grey),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -168,9 +210,30 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
     );
   }
 
+  void _confirmDeleteStaff(Map<String, dynamic> staff) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Padam Staf?"),
+        content: Text("Adakah anda pasti mahu memadam ${staff['full_name']} daripada perniagaan?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Supabase.instance.client.from('staff').delete().eq('id', staff['id']);
+              _fetchData();
+            }, 
+            child: const Text("Padam", style: TextStyle(color: Colors.red))
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildProductGrid(bool isDark) {
     if (_products.isEmpty) {
-      return _buildEmptyState(isDark, "Tiada produk lagi", HugeIcons.strokeRoundedPackage);
+      return _buildEmptyState(isDark, "Tiada produk lagi. Tambah sekarang!", HugeIcons.strokeRoundedPackage);
     }
 
     return GridView.builder(
@@ -180,73 +243,89 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.72,
       ),
       itemCount: _products.length,
       itemBuilder: (context, index) {
         final product = _products[index];
         final bool isLowStock = (product['stock_quantity'] ?? 0) < 10;
 
-        return GlassContainer(
-          useOwnLayer: true,
-          quality: GlassQuality.standard,
-          shape: LiquidRoundedSuperellipse(borderRadius: 24),
-          settings: _getGlassSettings(isDark),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.5)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFF5722).withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: product['image_url'] != null
-                      ? ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(product['image_url'], fit: BoxFit.cover))
-                      : const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: Color(0xFFFF5722), size: 40)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  product['name'] ?? "Produk",
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        return GestureDetector(
+          onTap: () => _showEditProductPopup(product),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 24),
+            settings: _getGlassSettings(isDark),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.white.withValues(alpha: isDark ? 0.1 : 0.5)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
                       decoration: BoxDecoration(
-                        color: isLowStock ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
+                        color: const Color(0xFFFF5722).withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        "${product['stock_quantity'] ?? 0} unit",
-                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isLowStock ? Colors.red : Colors.green),
-                      ),
+                      child: product['image_url'] != null && product['image_url'].toString().isNotEmpty
+                        ? ClipRRect(borderRadius: BorderRadius.circular(16), child: Image.network(product['image_url'], fit: BoxFit.cover))
+                        : const Center(child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: Color(0xFFFF5722), size: 40)),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "RM ${(product['price'] ?? 0).toStringAsFixed(2)}",
-                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFFF5722), fontSize: 16),
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    product['name'] ?? "Produk",
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: isLowStock ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          "${product['stock_quantity'] ?? 0} unit",
+                          style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isLowStock ? Colors.red : Colors.green),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "RM ${(product['price'] ?? 0).toStringAsFixed(2)}",
+                    style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFFF5722), fontSize: 16),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showEditProductPopup(Map<String, dynamic> product) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _ProductFormPopup(
+        product: product,
+        onSaved: () => _fetchData(),
+        onDeleted: () => _fetchData(),
+      ),
     );
   }
 
@@ -263,18 +342,324 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         children: [
           HugeIcon(icon: icon, color: Colors.grey.withValues(alpha: 0.5), size: 48),
           const SizedBox(height: 16),
-          Text(message, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+          Text(message, textAlign: TextAlign.center, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
 
-  LiquidGlassSettings _getGlassSettings(bool isDark) {
-    return LiquidGlassSettings(
-      thickness: 0.1, blur: 15, refractiveIndex: 1.0,
-      glassColor: Colors.transparent, lightAngle: 45.0,
-      lightIntensity: isDark ? 0.1 : 0.2, ambientStrength: 1.0,
-      saturation: 1.0, chromaticAberration: 0.0,
+}
+
+// ─── HELPER POPUPS ──────────────────────────────────────────────────────────
+
+class _ProductFormPopup extends StatefulWidget {
+  final Map<String, dynamic>? product;
+  final VoidCallback onSaved;
+  final VoidCallback? onDeleted;
+
+  const _ProductFormPopup({this.product, required this.onSaved, this.onDeleted});
+
+  @override
+  State<_ProductFormPopup> createState() => _ProductFormPopupState();
+}
+
+class _ProductFormPopupState extends State<_ProductFormPopup> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _descController;
+  late TextEditingController _priceController;
+  late TextEditingController _stockController;
+  late TextEditingController _skuController;
+  late TextEditingController _categoryController;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.product?['name']);
+    _descController = TextEditingController(text: widget.product?['description']);
+    _priceController = TextEditingController(text: widget.product?['price']?.toString());
+    _stockController = TextEditingController(text: widget.product?['stock_quantity']?.toString() ?? '0');
+    _skuController = TextEditingController(text: widget.product?['sku']);
+    _categoryController = TextEditingController(text: widget.product?['category']);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _skuController.dispose();
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final business = await SupabaseService.getBusinessInfo();
+      if (business == null) throw "Perniagaan tidak dijumpai.";
+
+      final data = {
+        'business_id': business['id'],
+        'name': _nameController.text.trim(),
+        'description': _descController.text.trim(),
+        'price': double.tryParse(_priceController.text) ?? 0.0,
+        'stock_quantity': int.tryParse(_stockController.text) ?? 0,
+        'sku': _skuController.text.trim(),
+        'category': _categoryController.text.trim(),
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (widget.product == null) {
+        await Supabase.instance.client.from('products').insert(data);
+      } else {
+        await Supabase.instance.client.from('products').update(data).eq('id', widget.product!['id']);
+      }
+
+      widget.onSaved();
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ralat: $e")));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _delete() async {
+    if (widget.product == null) return;
+    setState(() => _isLoading = true);
+    try {
+      await Supabase.instance.client.from('products').delete().eq('id', widget.product!['id']);
+      widget.onDeleted?.call();
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ralat: $e")));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      maxChildSize: 0.95,
+      minChildSize: 0.5,
+      builder: (_, controller) => GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 32),
+        settings: LiquidGlassSettings(thickness: 0.2, blur: 40), // HIGH BLUR
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(widget.product == null ? "Tambah Produk" : "Edit Produk", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                    if (widget.product != null)
+                      IconButton(onPressed: _delete, icon: const Icon(Icons.delete_outline, color: Colors.red)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    controller: controller,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: [
+                      _buildField("Nama Produk", _nameController, HugeIcons.strokeRoundedPackage),
+                      const SizedBox(height: 16),
+                      _buildField("Deskripsi", _descController, HugeIcons.strokeRoundedTextSelection, maxLines: 3),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(child: _buildField("Harga (RM)", _priceController, HugeIcons.strokeRoundedWallet01, keyboardType: TextInputType.number)),
+                          const SizedBox(width: 16),
+                          Expanded(child: _buildField("Stok", _stockController, HugeIcons.strokeRoundedArchive01, keyboardType: TextInputType.number)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildField("SKU / Kod", _skuController, HugeIcons.strokeRoundedShoppingBag01),
+                      const SizedBox(height: 16),
+                      _buildField("Kategori", _categoryController, HugeIcons.strokeRoundedLayers01),
+                      const SizedBox(height: 40),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _save,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF5722),
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: _isLoading 
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Simpan Produk", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                      const SizedBox(height: 100),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildField(String label, TextEditingController controller, dynamic icon, {int maxLines = 1, TextInputType? keyboardType}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey)),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          validator: (v) => v!.isEmpty ? "Wajib diisi" : null,
+          decoration: InputDecoration(
+            prefixIcon: Padding(padding: const EdgeInsets.all(12), child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20)),
+            filled: true,
+            fillColor: Colors.black.withValues(alpha: 0.05),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+          ),
+        ),
+      ],
     );
   }
 }
+
+class _StaffInvitePopup extends StatefulWidget {
+  final VoidCallback onInvited;
+  const _StaffInvitePopup({required this.onInvited});
+
+  @override
+  State<_StaffInvitePopup> createState() => _StaffInvitePopupState();
+}
+
+class _StaffInvitePopupState extends State<_StaffInvitePopup> {
+  final _emailController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _invite() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final business = await SupabaseService.getBusinessInfo();
+      if (business == null) throw "Perniagaan tidak dijumpai.";
+
+      // 1. Check if user exists in auth.users (via a RPC or a search)
+      // For this demo, we simulate finding the user or just adding them if they exist in public.users
+      final userRes = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('email', email)
+          .maybeSingle();
+
+      if (userRes == null) {
+        throw "Pengguna dengan emel ini tidak berdaftar di BookNaw.";
+      }
+
+      // 2. Add to staff table
+      await Supabase.instance.client.from('staff').insert({
+        'business_id': business['id'],
+        'user_id': userRes['id'],
+        'full_name': userRes['full_name'] ?? userRes['email'],
+        'email': email,
+        'role': 'Staff',
+        'status': 'Active',
+      });
+
+      widget.onInvited();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Staf berjaya ditambah!")));
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ralat: $e")));
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 32),
+        settings: LiquidGlassSettings(thickness: 0.2, blur: 50),
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 24),
+              const HugeIcon(icon: HugeIcons.strokeRoundedMail01, color: Color(0xFFFF5722), size: 48),
+              const SizedBox(height: 16),
+              const Text("Tambah Staf", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text("Masukkan emel berdaftar untuk menjemput staf anda.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 32),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: "Emel Staf",
+                  prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFFFF5722)),
+                  filled: true,
+                  fillColor: Colors.black.withValues(alpha: 0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _invite,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF5722),
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: _isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Jemput Staf", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+

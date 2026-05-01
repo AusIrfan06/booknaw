@@ -20,10 +20,10 @@ class _BusinessOwnerDashboardState extends State<BusinessOwnerDashboard> {
 
   final List<String> _titles = [
     'Pusat Perniagaan',
-    'Tempahan Saya',
-    'Staf Saya',
-    'Produk & Servis',
-    'Profil',
+    'Pesanan Pelanggan',
+    'Statistik Perniagaan',
+    'Inventori & Staf',
+    'Profil Saya',
   ];
 
   @override
@@ -33,8 +33,8 @@ class _BusinessOwnerDashboardState extends State<BusinessOwnerDashboard> {
     final pages = [
       const _OwnerOverviewTab(),
       const _OwnerOrdersTab(),
-      const InventoryManagementPage(), // Now combined
-      const InventoryManagementPage(), // Both tabs lead to the same combined view
+      const _OwnerStatisticsTab(), // New Tab
+      const InventoryManagementPage(), // Combined Inventory & Staff
       const ProfileSettingsScreen(showAppBar: false),
     ];
 
@@ -91,9 +91,9 @@ class _BusinessOwnerDashboardState extends State<BusinessOwnerDashboard> {
         onItemSelected: (i) => setState(() => _currentIndex = i),
         items: const [
           NavItem(icon: HugeIcons.strokeRoundedStore01, title: 'Bisnes'),
-          NavItem(icon: HugeIcons.strokeRoundedTask01, title: 'Order'),
-          NavItem(icon: HugeIcons.strokeRoundedPackage, title: 'Inventori'),
-          NavItem(icon: HugeIcons.strokeRoundedUserGroup, title: 'Staf'),
+          NavItem(icon: HugeIcons.strokeRoundedTask01, title: 'Pesanan'),
+          NavItem(icon: HugeIcons.strokeRoundedAnalytics01, title: 'Stat'),
+          NavItem(icon: HugeIcons.strokeRoundedPackage, title: 'Inv'),
           NavItem(icon: HugeIcons.strokeRoundedUser, title: 'Profil'),
         ],
       ),
@@ -305,55 +305,63 @@ class _OwnerOrdersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Reusing the staff orders tab or something similar
-    return const Center(child: Text("Sila urus tempahan di sini."));
-  }
-}
-
-// ─── Tab 2: Staff Management ────────────────────────────────────────────────
-
-class _OwnerStaffTab extends StatelessWidget {
-  const _OwnerStaffTab();
-
-  @override
-  Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListView.builder(
+    return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
-      itemCount: 3,
-      itemBuilder: (context, index) {
-        final staff = ["Ahmad", "Siti", "Chong"];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: GlassContainer(
-            useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 16.0), settings: _getOwnerGlassSettings(isDark),
+      child: Column(
+        children: [
+          GlassContainer(
+            useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0), settings: _getOwnerGlassSettings(isDark),
             child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(16)),
-              child: Row(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(24)),
+              child: const Column(
                 children: [
-                  CircleAvatar(backgroundColor: Colors.blue.withValues(alpha: 0.2), child: Text(staff[index][0], style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold))),
-                  const SizedBox(width: 16),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(staff[index], style: const TextStyle(fontWeight: FontWeight.bold)), const Text("Staf Kaunter", style: TextStyle(fontSize: 12, color: Colors.grey))])),
-                  const HugeIcon(icon: HugeIcons.strokeRoundedUserEdit01, color: Colors.blue, size: 20),
+                  HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: Color(0xFFFF5722), size: 48),
+                  const SizedBox(height: 16),
+                  Text("Pesanan Pelanggan", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text("Semua pesanan perniagaan anda akan muncul di sini.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
                 ],
               ),
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
 
-// ─── Tab 3: Products & Inventory ───────────────────────────────────────────
+// ─── Tab 2: Statistics ───────────────────────────────────────────────────────
 
-class _OwnerInventoryTab extends StatelessWidget {
-  const _OwnerInventoryTab();
+class _OwnerStatisticsTab extends StatelessWidget {
+  const _OwnerStatisticsTab();
 
   @override
   Widget build(BuildContext context) {
-    // Reusing existing inventory UI concepts
-    return const Center(child: Text("Urus menu dan stok anda di sini."));
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
+      child: Column(
+        children: [
+          GlassContainer(
+            useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0), settings: _getOwnerGlassSettings(isDark),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(24)),
+              child: const Column(
+                children: [
+                  HugeIcon(icon: HugeIcons.strokeRoundedAnalytics01, color: Color(0xFFFF5722), size: 48),
+                  SizedBox(height: 16),
+                  Text("Analisis Jualan", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
+                  Text("Data statistik perniagaan anda akan dipaparkan di sini setelah jualan bermula.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

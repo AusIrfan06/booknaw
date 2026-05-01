@@ -410,7 +410,11 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery, 
+      imageQuality: 50,
+      maxWidth: 1080,
+    );
     if (image != null) {
       setState(() => _selectedImage = image);
     }
@@ -428,7 +432,11 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
   }
 
   Future<void> _pickVariationImage(int index) async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery, 
+      imageQuality: 50,
+      maxWidth: 1080,
+    );
     if (image != null) {
       setState(() {
         _variations[index]['file'] = image;

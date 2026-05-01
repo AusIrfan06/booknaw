@@ -253,7 +253,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       itemCount: _products.length,
       itemBuilder: (context, index) {
         final product = _products[index];
-        final bool isLowStock = (product['stock_quantity'] ?? 0) < 10;
+        final bool isLowStock = (product['stock'] ?? 0) < 10;
 
         return GestureDetector(
           onTap: () => _showEditProductPopup(product),
@@ -301,7 +301,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
-                          "${product['stock_quantity'] ?? 0} unit",
+                          "${product['stock'] ?? 0} unit",
                           style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isLowStock ? Colors.red : Colors.green),
                         ),
                       ),
@@ -390,7 +390,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     _nameController = TextEditingController(text: widget.product?['name']);
     _descController = TextEditingController(text: widget.product?['description']);
     _priceController = TextEditingController(text: widget.product?['price']?.toString());
-    _stockController = TextEditingController(text: widget.product?['stock_quantity']?.toString() ?? '0');
+    _stockController = TextEditingController(text: widget.product?['stock']?.toString() ?? '0');
     _skuController = TextEditingController(text: widget.product?['sku']);
     _categoryController = TextEditingController(text: widget.product?['category']);
     
@@ -473,7 +473,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'name': _nameController.text.trim(),
         'description': _descController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? 0.0,
-        'stock_quantity': int.tryParse(_stockController.text) ?? 0,
+        'stock': int.tryParse(_stockController.text) ?? 0,
         'sku': _skuController.text.trim(),
         'category': _categoryController.text.trim(),
         'image_url': mainImageUrl,

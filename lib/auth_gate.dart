@@ -22,7 +22,13 @@ class AuthGate extends StatelessWidget {
           return const LoginPage();
         }
 
-        final role = session.user.userMetadata?['role'] ?? 'customer';
+        final meta = session.user.userMetadata;
+        String role = meta?['role'] ?? 'customer';
+        
+        // Backward compatibility for legacy is_staff flag
+        if (role == 'customer' && meta?['is_staff'] == true) {
+          role = 'staff';
+        }
         
         if (role == 'admin') {
           return const AdminDashboard();

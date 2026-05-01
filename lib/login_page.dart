@@ -131,7 +131,12 @@ class _LoginPageState extends State<LoginPage> {
   void _handleSignInSuccess(AuthResponse res) {
     final user = res.session?.user;
     final meta = user?.userMetadata;
-    final role = meta?['role'] ?? 'customer';
+    String role = meta?['role'] ?? 'customer';
+
+    // Backward compatibility for legacy is_staff flag
+    if (role == 'customer' && meta?['is_staff'] == true) {
+      role = 'staff';
+    }
 
     if (role == 'admin') {
       if (mounted) {

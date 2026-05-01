@@ -34,12 +34,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final isLoggedIn = user != null;
     
     // Data untuk UI sahaja
-    final name = isLoggedIn ? (user.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
-    final email = isLoggedIn ? (user.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
-    final role = isLoggedIn ? (user.userMetadata?['role'] ?? "customer") : "customer";
+    final meta = isLoggedIn ? user.userMetadata : null;
+    String role = isLoggedIn ? (meta?['role'] ?? "customer") : "customer";
+    
+    // Backward compatibility for legacy is_staff flag
+    if (role == 'customer' && meta?['is_staff'] == true) {
+      role = 'staff';
+    }
+
     final isStaff = role == 'staff';
     final isAdmin = role == 'admin';
     final isOwner = role == 'owner';
+    final name = isLoggedIn ? (user.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
+    final email = isLoggedIn ? (user.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
 
 
 
@@ -379,6 +386,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         ),
       ),
     );
+  }
+
   Widget _buildAdminCard(bool isDark) {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDashboard())),

@@ -5,7 +5,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'profile_page.dart';
-import 'staff_dashboard.dart';
 
 class BusinessOwnerDashboard extends StatefulWidget {
   const BusinessOwnerDashboard({super.key});

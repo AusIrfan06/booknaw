@@ -77,7 +77,8 @@ class _SignupPageState extends State<SignupPage> {
           'first_name': firstName,
           'last_name': lastName,
           'full_name': '$firstName $lastName',
-          'is_staff': isStaff,
+          'role': isStaff ? 'staff' : 'customer',
+          'is_staff': isStaff, // Keep for backward compatibility
           'phone': phone,
         },
       );
@@ -92,6 +93,7 @@ class _SignupPageState extends State<SignupPage> {
           'full_name': '$firstName $lastName',
           'first_name': firstName,
           'last_name': lastName,
+          'role': isStaff ? 'staff' : 'customer',
           'is_staff': isStaff,
           'updated_at': DateTime.now().toIso8601String(),
         });

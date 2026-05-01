@@ -5,6 +5,8 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'utils/glass_toast.dart';
 import 'admin_dashboard.dart';
+import 'business_owner_dashboard.dart';
+
 
 class BusinessRegistrationPage extends StatefulWidget {
   const BusinessRegistrationPage({super.key});
@@ -88,7 +90,7 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
                   const Text("Pendaftaran Berjaya!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   const Text(
-                    "Perniagaan anda telah didaftarkan. Anda kini mempunyai akses ke Dashboard Admin.",
+                    "Perniagaan anda telah didaftarkan. Anda kini mempunyai akses ke Pusat Perniagaan.",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey, height: 1.5),
                   ),
@@ -100,7 +102,7 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
                         Navigator.pop(ctx); // Close dialog
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+                          MaterialPageRoute(builder: (context) => const BusinessOwnerDashboard()),
                           (route) => false,
                         );
                       },
@@ -109,9 +111,10 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text("Ke Dashboard Admin", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text("Ke Pusat Perniagaan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
+
                 ],
               ),
             ),

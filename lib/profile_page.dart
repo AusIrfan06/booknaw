@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -8,7 +7,6 @@ import 'login_page.dart';
 import 'main.dart';
 import 'contact_page.dart';
 import 'help_center_page.dart';
-import 'all_reviews_page.dart';
 import 'staff_dashboard.dart';
 import 'account_details_page.dart';
 import 'privacy_safety_page.dart';
@@ -32,10 +30,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final isLoggedIn = user != null;
     
     // Data untuk UI sahaja
-    final name = isLoggedIn ? (user!.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
-    final email = isLoggedIn ? (user!.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
-    final isStaff = isLoggedIn && (user!.userMetadata?['is_staff'] == true);
-    const locationStr = "Shah Alam, Selangor";
+    final name = isLoggedIn ? (user.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
+    final email = isLoggedIn ? (user.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
+    final isStaff = isLoggedIn && (user.userMetadata?['is_staff'] == true);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -49,7 +46,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const CircleBorder(),
+            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -191,13 +188,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       if (isLoggedIn) ...[
                         _buildGlassButton(isDark, "Log Keluar", Colors.redAccent, () async {
                           await Supabase.instance.client.auth.signOut();
-                          if (mounted) {
-                            Navigator.pushAndRemoveUntil(
-                              context, 
-                              MaterialPageRoute(builder: (context) => const HomePage()), 
-                              (route) => false
-                            );
-                          }
+                          if (!mounted) return;
+                          Navigator.pushAndRemoveUntil(
+                            context, 
+                            MaterialPageRoute(builder: (context) => const HomePage()), 
+                            (route) => false
+                          );
                         }),
                         const SizedBox(height: 40),
                       ],
@@ -309,15 +305,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-  Widget _buildToggleTile(bool isDark, dynamic icon, String title, bool value) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(children: [
-        Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.04), borderRadius: BorderRadius.circular(12)), child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20)),
-        const SizedBox(width: 16),
-        Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))),
-        Switch.adaptive(value: value, activeColor: const Color(0xFFFF5722), onChanged: (v) {})
-      ])
-  );
 
   Widget _buildDivider(bool isDark) => Padding(padding: const EdgeInsets.only(left: 60, right: 16), child: Divider(height: 1, color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)));
 

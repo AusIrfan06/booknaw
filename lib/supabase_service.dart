@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class SupabaseService {
   static final client = Supabase.instance.client;
@@ -16,7 +17,7 @@ class SupabaseService {
           .single();
       return response;
     } catch (e) {
-      print('Error fetching user: $e');
+      debugPrint('Error fetching user: $e');
       return null;
     }
   }
@@ -42,7 +43,7 @@ class SupabaseService {
     try {
       await client.from('users').update(updates).eq('id', user.id);
     } catch (e) {
-      print('Error updating user: $e');
+      debugPrint('Error updating user: $e');
       rethrow;
     }
   }
@@ -56,7 +57,7 @@ class SupabaseService {
           .order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      print('Error fetching orders: $e');
+      debugPrint('Error fetching orders: $e');
       return [];
     }
   }
@@ -77,7 +78,7 @@ class SupabaseService {
         'status': 'pending',
       });
     } catch (e) {
-      print('Error creating order: $e');
+      debugPrint('Error creating order: $e');
       rethrow;
     }
   }

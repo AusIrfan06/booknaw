@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'add_review_page.dart';
 
 class AllReviewsPage extends StatelessWidget {
   const AllReviewsPage({super.key});
@@ -27,7 +26,7 @@ class AllReviewsPage extends StatelessWidget {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const CircleBorder(),
+            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),

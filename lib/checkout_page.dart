@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'package:image_picker/image_picker.dart';
 import 'utils/glass_toast.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -226,7 +225,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const CircleBorder(),
+            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),

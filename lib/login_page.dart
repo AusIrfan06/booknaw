@@ -126,19 +126,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _signInAnonymously() async {
-    setState(() => _isLoading = true);
-    try {
-      final res = await Supabase.instance.client.auth.signInAnonymously();
-      if (mounted) _handleSignInSuccess(res);
-    } catch (e) {
-      if (mounted) {
-        showGlassToast(context, e.toString(), isError: true);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
 
   void _handleSignInSuccess(AuthResponse res) {
     final meta = res.session?.user.userMetadata;
@@ -169,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const CircleBorder(),
+            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),

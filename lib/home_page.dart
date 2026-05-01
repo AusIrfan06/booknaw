@@ -5,7 +5,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'order_page.dart';
 import 'status_page.dart';
 import 'profile_page.dart';
-import 'app_logo.dart';
 import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
@@ -491,7 +490,7 @@ class _HomeTabState extends State<_HomeTab> {
                     child: GlassContainer(
                       useOwnLayer: true,
                       quality: GlassQuality.standard,
-                      shape: const StadiumBorder(),
+                      shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
                       settings: LiquidGlassSettings(thickness: 0.3, blur: 20),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'utils/glass_toast.dart';
 
 class AddReviewPage extends StatefulWidget {
@@ -155,7 +154,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const CircleBorder(),
+            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),

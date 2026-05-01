@@ -121,7 +121,7 @@ class _OrderPageState extends State<OrderPage> {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: const CircleBorder(),
+            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
@@ -196,10 +196,15 @@ class _OrderPageState extends State<OrderPage> {
             } else {
               // Zone is selected, use exact stock for that zone
               int locId = 1;
-              if (_deliveryOption!.contains('Alpha')) locId = 1;
-              else if (_deliveryOption!.contains('Beta')) locId = 2;
-              else if (_deliveryOption!.contains('Gamma')) locId = 3;
-              else if (_deliveryOption!.contains('NR')) locId = 4;
+              if (_deliveryOption!.contains('Alpha')) {
+                locId = 1;
+              } else if (_deliveryOption!.contains('Beta')) {
+                locId = 2;
+              } else if (_deliveryOption!.contains('Gamma')) {
+                locId = 3;
+              } else if (_deliveryOption!.contains('NR')) {
+                locId = 4;
+              }
               
               final row = data.firstWhere((r) => r['id'] == locId, orElse: () => <String, dynamic>{});
               hotStock = row['hot_stock'] as int? ?? 0;

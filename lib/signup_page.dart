@@ -157,10 +157,10 @@ class _SignupPageState extends State<SignupPage> {
           child: GlassContainer(
             useOwnLayer: true,
             quality: GlassQuality.standard,
-            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            shape: const CircleBorder(),
             settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
               onPressed: () => Navigator.pop(context),
             ),
           ),

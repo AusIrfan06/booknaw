@@ -298,12 +298,12 @@ class _HomeTabState extends State<_HomeTab> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
                         color: (isDark ? Colors.white : const Color(0xFFFF5722))
-                            .withValues(alpha: _currentPage == entry.key ? 0.9 : 0.2),
+                            .withValues(alpha: _currentPage == entry.key ? 1.0 : 0.2),
                       ),
                     );
                   }).toList(),
                 ),
-
+                
                 const SizedBox(height: 32),
                 
                 // ── Selection Section ───────────────────────────────────────────
@@ -368,7 +368,7 @@ class _HomeTabState extends State<_HomeTab> {
                       ),
                       const SizedBox(height: 32),
                       const _ReviewsSection(),
-                      const SizedBox(height: 150), 
+                      const SizedBox(height: 120), 
                     ],
                   ),
                 ),
@@ -386,7 +386,7 @@ class _HomeTabState extends State<_HomeTab> {
       child: GlassContainer(
         useOwnLayer: true,
         quality: GlassQuality.standard,
-        shape: LiquidRoundedSuperellipse(borderRadius: 30.0),
+        shape: LiquidRoundedSuperellipse(borderRadius: 32.0),
         settings: LiquidGlassSettings(
           thickness: 0.1, blur: 15, refractiveIndex: 1.0,
           glassColor: Colors.transparent, lightAngle: 45.0,
@@ -400,7 +400,7 @@ class _HomeTabState extends State<_HomeTab> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(32),
           ),
           child: Stack(
             children: [
@@ -449,7 +449,7 @@ class _HomeTabState extends State<_HomeTab> {
     return GlassContainer(
       useOwnLayer: true,
       quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+      shape: LiquidRoundedSuperellipse(borderRadius: 32.0),
       settings: LiquidGlassSettings(
         thickness: 0.1, blur: 15, refractiveIndex: 1.0,
         glassColor: Colors.transparent, lightAngle: 45.0,
@@ -458,12 +458,12 @@ class _HomeTabState extends State<_HomeTab> {
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(32),
         child: Container(
           decoration: BoxDecoration(
             color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.3)),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,11 +474,11 @@ class _HomeTabState extends State<_HomeTab> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: imageColor.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                       border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
                     ),
-                    child: AspectRatio(
-                      aspectRatio: title.length % 2 == 0 ? 0.8 : 1.2, // Simulate varied heights based on content
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
                       child: Center(
                         child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
                       ),
@@ -491,10 +491,14 @@ class _HomeTabState extends State<_HomeTab> {
                     child: GlassContainer(
                       useOwnLayer: true,
                       quality: GlassQuality.standard,
-                      shape: LiquidRoundedSuperellipse(borderRadius: 10.0),
-                      settings: LiquidGlassSettings(thickness: 0.2, blur: 10),
+                      shape: const StadiumBorder(),
+                      settings: LiquidGlassSettings(thickness: 0.3, blur: 20),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
                         child: const Row(
                           children: [
                             Icon(Icons.star_rounded, color: Colors.amber, size: 12),

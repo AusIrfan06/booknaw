@@ -477,16 +477,16 @@ class _HomeTabState extends State<_HomeTab> {
                       border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      padding: EdgeInsets.symmetric(vertical: title.length % 2 == 0 ? 32 : 48), // Dynamic height based on title length
                       child: Center(
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 48),
+                        child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 54),
                       ),
                     ),
                   ),
-                  // Rating Badge on Bottom Right of Image
+                  // Rating Badge on Bottom Left of Image
                   Positioned(
-                    bottom: 10,
-                    right: 10,
+                    bottom: 12,
+                    left: 12,
                     child: GlassContainer(
                       useOwnLayer: true,
                       quality: GlassQuality.standard,
@@ -511,23 +511,22 @@ class _HomeTabState extends State<_HomeTab> {
                 ],
               ),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
-                    const SizedBox(height: 4),
-                    Text(desc, style: TextStyle(fontSize: 10, color: isDark ? Colors.white60 : Colors.black54), maxLines: 2, overflow: TextOverflow.ellipsis),
+                    Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(price, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
-                            const SizedBox(height: 2),
-                            Text('100+ terjual', style: TextStyle(fontSize: 9, color: Colors.grey.shade500)),
+                            Text(price, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
+                            const SizedBox(height: 4),
+                            Text('100+ terjual', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                           ],
                         ),
                       ],

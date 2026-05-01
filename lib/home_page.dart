@@ -14,6 +14,7 @@ import 'widgets/nav_item.dart';
 import 'product_detail_page.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'cart_page.dart';
+import 'utils/cart_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -140,9 +141,42 @@ class _HomePageState extends State<HomePage> {
         centerTitle: true,
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            onPressed: () => showGlassToast(context, 'Troli akan datang tidak lama lagi! 🛒', isError: false),
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Color(0xFFFF5722)),
+          ListenableBuilder(
+            listenable: CartService(),
+            builder: (context, _) {
+              final count = CartService().totalItems;
+              return Stack(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CartPage()),
+                      );
+                    },
+                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Color(0xFFFF5722)),
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],

@@ -4,6 +4,8 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'all_reviews_page.dart';
 import 'order_page.dart';
+import 'utils/cart_service.dart';
+import 'utils/glass_toast.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String title;
@@ -397,7 +399,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           // Tambah ke Troli (Ultra-transparent frosted)
           Expanded(
             child: InkWell(
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ditambah ke troli!'))),
+              onTap: () {
+                CartService().addToCart(widget.title, _quantity);
+                showGlassToast(context, '${widget.title} x$_quantity ditambah ke troli! 🛒');
+              },
               child: GlassContainer(
                 useOwnLayer: true,
                 quality: GlassQuality.standard,

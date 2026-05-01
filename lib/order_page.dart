@@ -5,6 +5,7 @@ import 'checkout_page.dart';
 import 'login_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
+import 'utils/cart_service.dart';
 
 class OrderPage extends StatefulWidget {
   final int initialHot;
@@ -23,9 +24,8 @@ class OrderPage extends StatefulWidget {
 }
 
 class _OrderPageState extends State<OrderPage> {
-  late int _hotQuantity;
-  late int _bbqQuantity;
-  late int _cheeseQuantity;
+  // Use CartService for quantities
+  final _cartService = CartService();
   String? _deliveryOption;
   String? _deliveryType; // 'pickup' or 'delivery'
 
@@ -42,8 +42,8 @@ class _OrderPageState extends State<OrderPage> {
   };
 
   double get _totalPrice {
-    double total = ((_hotQuantity + _bbqQuantity) * _pricePer100g);
-    if (_cheeseQuantity > 0) total += (_cheeseQuantity * _cheeseDipPrice);
+    double total = ((_cartService.hotQuantity + _cartService.bbqQuantity) * _pricePer100g);
+    if (_cartService.cheeseQuantity > 0) total += (_cartService.cheeseQuantity * _cheeseDipPrice);
     if (_deliveryOption != null) {
       total += _deliveryFees[_deliveryOption] ?? 0.0;
     }
@@ -51,7 +51,7 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   void _proceedToCheckout() {
-    if (_hotQuantity == 0 && _bbqQuantity == 0 && _cheeseQuantity == 0) {
+    if (_cartService.totalItems == 0) {
       showGlassToast(context, 'Sila tambah sekurang-kurangnya 1 item (Nachos atau Cheese Dip)!', isError: true);
       return;
     }
@@ -73,9 +73,9 @@ class _OrderPageState extends State<OrderPage> {
       context,
       MaterialPageRoute(
         builder: (context) => CheckoutPage(
-          hotQuantity: _hotQuantity,
-          bbqQuantity: _bbqQuantity,
-          cheeseQuantity: _cheeseQuantity,
+          hotQuantity: _cartService.hotQuantity,
+          bbqQuantity: _cartService.bbqQuantity,
+          cheeseQuantity: _cartService.cheeseQuantity,
           deliveryOption: _deliveryOption!,
           totalPrice: _totalPrice,
         ),
@@ -88,13 +88,27 @@ class _OrderPageState extends State<OrderPage> {
   @override
   void initState() {
     super.initState();
-    _hotQuantity = widget.initialHot;
-    _bbqQuantity = widget.initialBbq;
-    _cheeseQuantity = widget.initialCheese;
+    // Initialize CartService with values from constructor if provided
+    if (widget.initialHot > 0) _cartService.updateQuantity('HOT & SPICYYY', widget.initialHot);
+    if (widget.initialBbq > 0) _cartService.updateQuantity('SMOKY BBQ', widget.initialBbq);
+    if (widget.initialCheese > 0) _cartService.updateQuantity('CHEESE DIP', widget.initialCheese);
+
     _inventoryStream = Supabase.instance.client
         .from('inventory')
         .stream(primaryKey: ['id'])
         .order('id');
+    
+    _cartService.addListener(_onCartChanged);
+  }
+
+  void _onCartChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _cartService.removeListener(_onCartChanged);
+    super.dispose();
   }
 
   @override
@@ -183,16 +197,16 @@ class _OrderPageState extends State<OrderPage> {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
               bool changed = false;
-              if (_hotQuantity > hotStock) {
-                setState(() => _hotQuantity = hotStock);
+              if (_cartService.hotQuantity > hotStock) {
+                _cartService.updateQuantity('HOT & SPICYYY', hotStock);
                 changed = true;
               }
-              if (_bbqQuantity > bbqStock) {
-                setState(() => _bbqQuantity = bbqStock);
+              if (_cartService.bbqQuantity > bbqStock) {
+                _cartService.updateQuantity('SMOKY BBQ', bbqStock);
                 changed = true;
               }
-              if (_cheeseQuantity > cheeseStock) {
-                setState(() => _cheeseQuantity = cheeseStock);
+              if (_cartService.cheeseQuantity > cheeseStock) {
+                _cartService.updateQuantity('CHEESE DIP', cheeseStock);
                 changed = true;
               }
               
@@ -211,26 +225,34 @@ class _OrderPageState extends State<OrderPage> {
                 _FlavorQuantityCard(
                   title: 'HOT & SPICYYY',
                   subtitle: '(100g per pek)',
-                  quantity: _hotQuantity,
+                  quantity: _cartService.hotQuantity,
                   maxStock: hotStock,
                   onIncrement: () {
-                    if (_hotQuantity < hotStock) setState(() => _hotQuantity++);
+                    if (_cartService.hotQuantity < hotStock) {
+                      _cartService.updateQuantity('HOT & SPICYYY', _cartService.hotQuantity + 1);
+                    }
                   },
                   onDecrement: () {
-                    if (_hotQuantity > 0) setState(() => _hotQuantity--);
+                    if (_cartService.hotQuantity > 0) {
+                      _cartService.updateQuantity('HOT & SPICYYY', _cartService.hotQuantity - 1);
+                    }
                   },
                 ),
                 const SizedBox(height: 12),
                 _FlavorQuantityCard(
                   title: 'BBQ',
                   subtitle: '(100g per pek)',
-                  quantity: _bbqQuantity,
+                  quantity: _cartService.bbqQuantity,
                   maxStock: bbqStock,
                   onIncrement: () {
-                    if (_bbqQuantity < bbqStock) setState(() => _bbqQuantity++);
+                    if (_cartService.bbqQuantity < bbqStock) {
+                      _cartService.updateQuantity('SMOKY BBQ', _cartService.bbqQuantity + 1);
+                    }
                   },
                   onDecrement: () {
-                    if (_bbqQuantity > 0) setState(() => _bbqQuantity--);
+                    if (_cartService.bbqQuantity > 0) {
+                      _cartService.updateQuantity('SMOKY BBQ', _cartService.bbqQuantity - 1);
+                    }
                   },
                 ),
                 const SizedBox(height: 24),
@@ -239,13 +261,17 @@ class _OrderPageState extends State<OrderPage> {
                 _FlavorQuantityCard(
                   title: 'Cheese Dip',
                   subtitle: '(+ RM 1.00 per unit)',
-                  quantity: _cheeseQuantity,
+                  quantity: _cartService.cheeseQuantity,
                   maxStock: cheeseStock,
                   onIncrement: () {
-                    if (_cheeseQuantity < cheeseStock) setState(() => _cheeseQuantity++);
+                    if (_cartService.cheeseQuantity < cheeseStock) {
+                      _cartService.updateQuantity('CHEESE DIP', _cartService.cheeseQuantity + 1);
+                    }
                   },
                   onDecrement: () {
-                    if (_cheeseQuantity > 0) setState(() => _cheeseQuantity--);
+                    if (_cartService.cheeseQuantity > 0) {
+                      _cartService.updateQuantity('CHEESE DIP', _cartService.cheeseQuantity - 1);
+                    }
                   },
                 ),
                 const SizedBox(height: 24),

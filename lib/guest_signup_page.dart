@@ -66,7 +66,8 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
         data: {
           'full_name': fullName,
           'phone': phone,
-          'is_staff': false,
+          'role': 'customer',
+
         },
       );
       
@@ -80,7 +81,8 @@ class _GuestSignupPageState extends State<GuestSignupPage> {
           'full_name': fullName,
           'first_name': firstName,
           'last_name': lastName,
-          'is_staff': false,
+          'role': 'customer',
+
           'updated_at': DateTime.now().toIso8601String(),
         });
       }

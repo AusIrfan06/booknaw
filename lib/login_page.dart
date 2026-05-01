@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'signup_page.dart';
 import 'home_page.dart';
 import 'staff_dashboard.dart';
+import 'admin_dashboard.dart';
 import 'guest_signup_page.dart';
 import 'forgot_password_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
@@ -128,14 +129,29 @@ class _LoginPageState extends State<LoginPage> {
 
 
   void _handleSignInSuccess(AuthResponse res) {
-    final meta = res.session?.user.userMetadata;
-    final isStaff = meta?['is_staff'] == true;
+    final user = res.session?.user;
+    final meta = user?.userMetadata;
+    final role = meta?['role'] ?? 'customer';
+
+    if (role == 'admin') {
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const AdminDashboard()), (route) => false);
+      }
+      return;
+    }
+
+    if (role == 'staff') {
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const StaffDashboard()), (route) => false);
+      }
+      return;
+    }
 
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => isStaff ? const StaffDashboard() : const HomePage(),
+          builder: (context) => const HomePage(),
         ),
         (route) => false,
       );

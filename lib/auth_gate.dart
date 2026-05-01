@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login_page.dart';
 import 'home_page.dart';
 import 'staff_dashboard.dart';
+import 'admin_dashboard.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -21,13 +22,15 @@ class AuthGate extends StatelessWidget {
           return const LoginPage();
         }
 
-        final isStaff = session.user.userMetadata?['is_staff'] == true;
+        final role = session.user.userMetadata?['role'] ?? 'customer';
         
-        if (isStaff) {
-          return const StaffDashboard();
-        } else {
-          return const HomePage();
+        if (role == 'admin') {
+          return const AdminDashboard();
         }
+        if (role == 'staff') {
+          return const StaffDashboard();
+        }
+        return const HomePage();
       },
     );
   }

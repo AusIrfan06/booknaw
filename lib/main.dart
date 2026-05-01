@@ -23,7 +23,8 @@ class NachozyyyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final isStaff = user?.userMetadata?['is_staff'] == true;
+    final isStaff = user?.userMetadata?['role'] == 'staff';
+
 
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,

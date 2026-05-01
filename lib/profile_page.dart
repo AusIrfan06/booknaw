@@ -34,8 +34,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     // Data untuk UI sahaja
     final name = isLoggedIn ? (user.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
     final email = isLoggedIn ? (user.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
-    final isStaff = isLoggedIn && (user.userMetadata?['is_staff'] == true);
-    final isAdmin = isLoggedIn && (user.userMetadata?['is_admin'] == true);
+    final role = isLoggedIn ? (user.userMetadata?['role'] ?? "customer") : "customer";
+    final isStaff = role == 'staff';
+    final isAdmin = role == 'admin';
+
 
 
     return Scaffold(

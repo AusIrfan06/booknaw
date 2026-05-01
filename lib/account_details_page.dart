@@ -97,7 +97,9 @@ class _AccountDetailsPageState extends State<AccountDetailsPage> {
     }
 
     final email = user.email ?? "N/A";
-    final isStaff = user.userMetadata?['is_staff'] == true;
+    final role = user.userMetadata?['role'] ?? 'customer';
+    final isStaff = role == 'staff' || role == 'admin';
+
     final createdAt = user.createdAt;
 
     return Scaffold(

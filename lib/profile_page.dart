@@ -188,6 +188,35 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               }),
                           ])),
                         ],
+                        if (isOwner || isAdmin) ...[
+                          const SizedBox(height: 24),
+                          _buildSectionHeader("Mod Aplikasi"),
+                          _buildGlassSection(isDark, Column(children: [
+                            _buildSettingsTile(
+                              isDark, 
+                              HugeIcons.strokeRoundedExchange01, 
+                              widget.showAppBar ? "Tukar ke Mod Pengurusan" : "Tukar ke Mod Pelanggan", 
+                              onTap: () {
+                                if (widget.showAppBar) {
+                                  // From Home Page (Customer Mode) -> Dashboard (Owner Mode)
+                                  Navigator.pushAndRemoveUntil(
+                                    context, 
+                                    MaterialPageRoute(builder: (context) => isOwner ? const BusinessOwnerDashboard() : const AdminDashboard()), 
+                                    (route) => false
+                                  );
+                                } else {
+                                  // From Dashboard (Owner Mode) -> Home Page (Customer Mode)
+                                  Navigator.pushAndRemoveUntil(
+                                    context, 
+                                    MaterialPageRoute(builder: (context) => const HomePage()), 
+                                    (route) => false
+                                  );
+                                }
+                              }
+                            ),
+                          ])),
+                        ],
+
                         const SizedBox(height: 24),
                       ],
 

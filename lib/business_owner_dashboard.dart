@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'profile_page.dart';
+import 'supabase_service.dart';
 
 class BusinessOwnerDashboard extends StatefulWidget {
   const BusinessOwnerDashboard({super.key});
@@ -124,28 +125,36 @@ class _OwnerOverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildBusinessWelcomeBanner(context, isDark),
-          const SizedBox(height: 24),
-          const Text(
-            "Prestasi Perniagaan",
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: SupabaseService.getBusinessInfo(),
+      builder: (context, snapshot) {
+        final business = snapshot.data;
+        final businessName = business?['name'] ?? "Perniagaan Saya";
+
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildBusinessWelcomeBanner(context, isDark, businessName),
+              const SizedBox(height: 24),
+              const Text(
+                "Prestasi Perniagaan",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              _buildOwnerStatsGrid(isDark),
+              const SizedBox(height: 32),
+              _buildRecentSalesSection(context, isDark),
+            ],
           ),
-          const SizedBox(height: 16),
-          _buildOwnerStatsGrid(isDark),
-          const SizedBox(height: 32),
-          _buildRecentSalesSection(context, isDark),
-        ],
-      ),
+        );
+      }
     );
   }
 
-  Widget _buildBusinessWelcomeBanner(BuildContext context, bool isDark) {
+  Widget _buildBusinessWelcomeBanner(BuildContext context, bool isDark, String businessName) {
     final user = Supabase.instance.client.auth.currentUser;
     final name = user?.userMetadata?['full_name'] ?? "Owner";
 
@@ -190,7 +199,7 @@ class _OwnerOverviewTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Nachozyyy HQ beroperasi seperti biasa hari ini.",
+                    "$businessName beroperasi seperti biasa hari ini.",
                     style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
                   ),
                 ],

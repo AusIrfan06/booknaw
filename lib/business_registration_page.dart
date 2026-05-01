@@ -5,6 +5,7 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'utils/glass_toast.dart';
 import 'business_owner_dashboard.dart';
+import 'supabase_service.dart';
 
 
 class BusinessRegistrationPage extends StatefulWidget {
@@ -45,11 +46,25 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
         return;
       }
 
-      // Mock registration - in real app, this would save to a 'business_applications' table
-      await Future.delayed(const Duration(seconds: 2));
+      await SupabaseService.registerBusiness(
+        name: _businessNameController.text.trim(),
+        email: _businessEmailController.text.trim(),
+        phone: _businessPhoneController.text.trim(),
+        address: _businessAddressController.text.trim(),
+        type: _businessTypeController.text.trim(),
+      );
 
       if (mounted) {
-        _showSuccessOverlay();
+        showGlassToast(context, "Pendaftaran perniagaan berjaya!");
+        // Small delay to let the toast be seen
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+           Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const BusinessOwnerDashboard()),
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (mounted) showGlassToast(context, "Ralat: ${e.toString()}", isError: true);

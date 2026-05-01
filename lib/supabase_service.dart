@@ -82,4 +82,58 @@ class SupabaseService {
       rethrow;
     }
   }
+
+  /// Registers a new business and promotes the user to owner role.
+  static Future<void> registerBusiness({
+    required String name,
+    required String email,
+    required String phone,
+    required String address,
+    required String type,
+  }) async {
+    final user = client.auth.currentUser;
+    if (user == null) throw Exception("User not logged in");
+
+    try {
+      // 1. Insert into businesses table
+      await client.from('businesses').insert({
+        'owner_id': user.id,
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'type': type,
+      });
+
+      // 2. Update user role to owner
+      // We update both the public.users table and the auth metadata
+      await client.from('users').update({'role': 'owner'}).eq('id', user.id);
+      
+      await client.auth.updateUser(UserAttributes(
+        data: {'role': 'owner'}
+      ));
+      
+    } catch (e) {
+      debugPrint('Error registering business: $e');
+      rethrow;
+    }
+  }
+
+  /// Fetches business information for the current user (if they are an owner).
+  static Future<Map<String, dynamic>?> getBusinessInfo() async {
+    final user = client.auth.currentUser;
+    if (user == null) return null;
+
+    try {
+      final response = await client
+          .from('businesses')
+          .select()
+          .eq('owner_id', user.id)
+          .maybeSingle();
+      return response;
+    } catch (e) {
+      debugPrint('Error fetching business info: $e');
+      return null;
+    }
+  }
 }

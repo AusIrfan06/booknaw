@@ -6,6 +6,7 @@ import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'profile_page.dart';
 import 'supabase_service.dart';
+import 'inventory_management_page.dart';
 
 class BusinessOwnerDashboard extends StatefulWidget {
   const BusinessOwnerDashboard({super.key});
@@ -32,8 +33,8 @@ class _BusinessOwnerDashboardState extends State<BusinessOwnerDashboard> {
     final pages = [
       const _OwnerOverviewTab(),
       const _OwnerOrdersTab(),
-      const _OwnerStaffTab(),
-      const _OwnerInventoryTab(),
+      const InventoryManagementPage(), // Now combined
+      const InventoryManagementPage(), // Both tabs lead to the same combined view
       const ProfileSettingsScreen(showAppBar: false),
     ];
 
@@ -91,8 +92,8 @@ class _BusinessOwnerDashboardState extends State<BusinessOwnerDashboard> {
         items: const [
           NavItem(icon: HugeIcons.strokeRoundedStore01, title: 'Bisnes'),
           NavItem(icon: HugeIcons.strokeRoundedTask01, title: 'Order'),
+          NavItem(icon: HugeIcons.strokeRoundedPackage, title: 'Inventori'),
           NavItem(icon: HugeIcons.strokeRoundedUserGroup, title: 'Staf'),
-          NavItem(icon: HugeIcons.strokeRoundedPackage, title: 'Produk'),
           NavItem(icon: HugeIcons.strokeRoundedUser, title: 'Profil'),
         ],
       ),

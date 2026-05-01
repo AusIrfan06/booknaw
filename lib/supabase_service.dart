@@ -136,4 +136,23 @@ class SupabaseService {
       return null;
     }
   }
+
+  /// Uploads a product image to Supabase Storage.
+  static Future<String?> uploadProductImage(dynamic file) async {
+    try {
+      final fileExtension = file.name.split('.').last;
+      final fileName = 'prod_${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+      final path = 'products/$fileName';
+
+      final bytes = await file.readAsBytes();
+      await client.storage
+          .from('products')
+          .uploadBinary(path, bytes, fileOptions: FileOptions(contentType: 'image/$fileExtension'));
+      
+      return client.storage.from('products').getPublicUrl(path);
+    } catch (e) {
+      debugPrint('Error uploading product image: $e');
+      return null;
+    }
+  }
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'supabase_service.dart';
 
 LiquidGlassSettings _getGlassSettings(bool isDark) {
@@ -371,6 +374,12 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
   late TextEditingController _stockController;
   late TextEditingController _skuController;
   late TextEditingController _categoryController;
+  
+  XFile? _selectedImage;
+  final _picker = ImagePicker();
+  
+  // Variations
+  List<Map<String, dynamic>> _variations = [];
   bool _isLoading = false;
 
   @override
@@ -382,6 +391,11 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     _stockController = TextEditingController(text: widget.product?['stock_quantity']?.toString() ?? '0');
     _skuController = TextEditingController(text: widget.product?['sku']);
     _categoryController = TextEditingController(text: widget.product?['category']);
+    
+    // Initialize variations if editing
+    if (widget.product != null && widget.product!['variations'] != null) {
+      _variations = List<Map<String, dynamic>>.from(widget.product!['variations']);
+    }
   }
 
   @override
@@ -395,6 +409,33 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() => _selectedImage = image);
+    }
+  }
+
+  void _addVariation() {
+    setState(() {
+      _variations.add({
+        'name': '',
+        'price': _priceController.text,
+        'image_url': null,
+        'file': null, // Temporary for new uploads
+      });
+    });
+  }
+
+  Future<void> _pickVariationImage(int index) async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (image != null) {
+      setState(() {
+        _variations[index]['file'] = image;
+      });
+    }
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -402,6 +443,20 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     try {
       final business = await SupabaseService.getBusinessInfo();
       if (business == null) throw "Perniagaan tidak dijumpai.";
+
+      String? mainImageUrl = widget.product?['image_url'];
+      if (_selectedImage != null) {
+        mainImageUrl = await SupabaseService.uploadProductImage(_selectedImage);
+      }
+
+      // Handle Variation Image Uploads
+      for (int i = 0; i < _variations.length; i++) {
+        if (_variations[i]['file'] != null) {
+          final url = await SupabaseService.uploadProductImage(_variations[i]['file']);
+          _variations[i]['image_url'] = url;
+          _variations[i].remove('file'); // Remove the file object before saving to DB
+        }
+      }
 
       final data = {
         'business_id': business['id'],
@@ -411,6 +466,8 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'stock_quantity': int.tryParse(_stockController.text) ?? 0,
         'sku': _skuController.text.trim(),
         'category': _categoryController.text.trim(),
+        'image_url': mainImageUrl,
+        'variations': _variations, // We'll store as JSONB for simplicity in this frame
         'updated_at': DateTime.now().toIso8601String(),
       };
 
@@ -457,7 +514,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         settings: LiquidGlassSettings(thickness: 0.2, blur: 40), // HIGH BLUR
         child: Container(
           decoration: BoxDecoration(
-            color: isDark ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+            color: isDark ? Colors.black.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.85),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
@@ -484,13 +541,17 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
                     controller: controller,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     children: [
+                      // --- IMAGE PICKER ---
+                      _buildImageSection(isDark),
+                      const SizedBox(height: 32),
+
                       _buildField("Nama Produk", _nameController, HugeIcons.strokeRoundedPackage),
                       const SizedBox(height: 16),
                       _buildField("Deskripsi", _descController, HugeIcons.strokeRoundedTextSelection, maxLines: 3),
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(child: _buildField("Harga (RM)", _priceController, HugeIcons.strokeRoundedWallet01, keyboardType: TextInputType.number)),
+                          Expanded(child: _buildField("Harga Dasar (RM)", _priceController, HugeIcons.strokeRoundedWallet01, keyboardType: TextInputType.number)),
                           const SizedBox(width: 16),
                           Expanded(child: _buildField("Stok", _stockController, HugeIcons.strokeRoundedArchive01, keyboardType: TextInputType.number)),
                         ],
@@ -499,6 +560,13 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
                       _buildField("SKU / Kod", _skuController, HugeIcons.strokeRoundedShoppingBag01),
                       const SizedBox(height: 16),
                       _buildField("Kategori", _categoryController, HugeIcons.strokeRoundedLayers01),
+                      
+                      const SizedBox(height: 32),
+                      // --- VARIATIONS SECTION ---
+                      _buildVariationsHeader(),
+                      const SizedBox(height: 16),
+                      ..._buildVariationsList(isDark),
+                      
                       const SizedBox(height: 40),
                       ElevatedButton(
                         onPressed: _isLoading ? null : _save,
@@ -519,6 +587,117 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildImageSection(bool isDark) {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Container(
+        height: 160,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFF5722).withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFFF5722).withValues(alpha: 0.2), style: BorderStyle.solid),
+        ),
+        child: _selectedImage != null 
+          ? ClipRRect(borderRadius: BorderRadius.circular(24), child: kIsWeb ? Image.network(_selectedImage!.path, fit: BoxFit.cover) : Image.file(File(_selectedImage!.path), fit: BoxFit.cover))
+          : (widget.product?['image_url'] != null 
+              ? ClipRRect(borderRadius: BorderRadius.circular(24), child: Image.network(widget.product!['image_url'], fit: BoxFit.cover))
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const HugeIcon(icon: HugeIcons.strokeRoundedImageAdd01, color: Color(0xFFFF5722), size: 32),
+                    const SizedBox(height: 8),
+                    Text("Tambah Gambar Utama", style: TextStyle(color: const Color(0xFFFF5722).withValues(alpha: 0.7), fontWeight: FontWeight.w600)),
+                  ],
+                )),
+      ),
+    );
+  }
+
+  Widget _buildVariationsHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text("Variasi Produk", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        TextButton.icon(
+          onPressed: _addVariation, 
+          icon: const Icon(Icons.add_circle_outline, color: Color(0xFFFF5722), size: 20),
+          label: const Text("Tambah Variasi", style: TextStyle(color: Color(0xFFFF5722))),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildVariationsList(bool isDark) {
+    return List.generate(_variations.length, (index) {
+      final variation = _variations[index];
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.03),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                // Variation Image
+                GestureDetector(
+                  onTap: () => _pickVariationImage(index),
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF5722).withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: variation['file'] != null 
+                      ? ClipRRect(borderRadius: BorderRadius.circular(12), child: kIsWeb ? Image.network(variation['file'].path, fit: BoxFit.cover) : Image.file(File(variation['file'].path), fit: BoxFit.cover))
+                      : (variation['image_url'] != null 
+                          ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(variation['image_url'], fit: BoxFit.cover))
+                          : const Icon(Icons.add_a_photo_outlined, color: Color(0xFFFF5722), size: 20)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildSmallField("Nama (cth: Saiz M)", (v) => _variations[index]['name'] = v, initialValue: variation['name']),
+                      const SizedBox(height: 8),
+                      _buildSmallField("Harga (RM)", (v) => _variations[index]['price'] = v, initialValue: variation['price']?.toString(), keyboardType: TextInputType.number),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => setState(() => _variations.removeAt(index)), 
+                  icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 20),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildSmallField(String hint, Function(String) onChanged, {String? initialValue, TextInputType? keyboardType}) {
+    return TextFormField(
+      initialValue: initialValue,
+      onChanged: onChanged,
+      keyboardType: keyboardType,
+      style: const TextStyle(fontSize: 13),
+      decoration: InputDecoration(
+        hintText: hint,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.5),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
       ),
     );
   }

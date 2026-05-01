@@ -53,7 +53,19 @@ class HelpCenterScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent, elevation: 0, centerTitle: true,
         title: Text("Pusat Bantuan", style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: isDark ? Colors.white : Colors.black87)),
-        leading: IconButton(icon: HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: isDark ? Colors.white70 : Colors.black54, size: 24), onPressed: () => Navigator.pop(context)),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
       ),
       body: Stack(
         children: [

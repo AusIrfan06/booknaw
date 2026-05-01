@@ -114,7 +114,22 @@ class _OrderPageState extends State<OrderPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Pesanan')),
+      appBar: AppBar(
+        title: const Text('Buat Pesanan'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      ),
       body: StreamBuilder<List<Map<String, dynamic>>>(
         stream: _inventoryStream,
         builder: (context, snapshot) {

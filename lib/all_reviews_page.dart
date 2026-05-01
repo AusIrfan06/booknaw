@@ -20,7 +20,22 @@ class AllReviewsPage extends StatelessWidget {
     final crossAxisCount = width > 1200 ? 5 : (width > 900 ? 4 : (width > 600 ? 3 : 2));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Semua Review Pelanggan')),
+      appBar: AppBar(
+        title: const Text('Semua Review Pelanggan'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
           await Future.delayed(const Duration(milliseconds: 500));

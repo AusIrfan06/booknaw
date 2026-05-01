@@ -148,14 +148,44 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
     if (_isLoadingCheck) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Tambah Review')),
+      appBar: AppBar(
+        title: const Text('Tambah Review'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (_alreadyReviewed) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Tambah Review')),
+      appBar: AppBar(
+        title: const Text('Tambah Review'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32.0),
@@ -187,7 +217,22 @@ class _AddReviewPageState extends State<AddReviewPage> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Review')),
+      appBar: AppBar(
+        title: const Text('Tambah Review'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 24, 24, 120),
         child: Column(

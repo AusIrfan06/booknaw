@@ -219,7 +219,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Bayaran & Maklumat')),
+      appBar: AppBar(
+        title: const Text('Bayaran & Maklumat'),
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
         child: Form(

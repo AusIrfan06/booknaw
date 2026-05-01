@@ -69,8 +69,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   Positioned(
                     top: 40,
                     left: 20,
-                    child: CircleAvatar(
-                      backgroundColor: Colors.black.withValues(alpha: 0.3),
+                    child: GlassContainer(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+                      settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
                       child: IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () => Navigator.pop(context),
@@ -105,88 +108,100 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
     // ── Mobile: Standard Sliver Layout ───────────────────────────────────────
     return Scaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 400,
-            pinned: true,
-            stretch: true,
-            backgroundColor: widget.themeColor,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: CircleAvatar(
-                backgroundColor: Colors.black.withValues(alpha: 0.3),
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
+      body: Stack(
+        children: [
+          CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 400,
+                pinned: true,
+                stretch: true,
+                backgroundColor: widget.themeColor,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GlassContainer(
+                    useOwnLayer: true,
+                    quality: GlassQuality.standard,
+                    shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+                    settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              stretchModes: const [
-                StretchMode.zoomBackground,
-                StretchMode.blurBackground,
-              ],
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          widget.themeColor,
-                          widget.themeColor.withValues(alpha: 0.5),
-                          isDark ? const Color(0xFF121212) : Colors.white,
-                        ],
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Hero(
-                      tag: widget.title,
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedPackage,
-                        size: 150,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: GlassContainer(
-                      useOwnLayer: true,
-                      quality: GlassQuality.standard,
-                      shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
-                      settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: const Row(
-                          children: [
-                             Icon(Icons.star, color: Colors.amber, size: 18),
-                             SizedBox(width: 4),
-                             Text('4.9 (120+)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                          ],
+                flexibleSpace: FlexibleSpaceBar(
+                  stretchModes: const [
+                    StretchMode.zoomBackground,
+                    StretchMode.blurBackground,
+                  ],
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              widget.themeColor,
+                              widget.themeColor.withValues(alpha: 0.5),
+                              isDark ? const Color(0xFF121212) : Colors.white,
+                            ],
+                          ),
                         ),
                       ),
-                    ),
+                      Center(
+                        child: Hero(
+                          tag: widget.title,
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedPackage,
+                            size: 150,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 20,
+                        right: 20,
+                        child: GlassContainer(
+                          useOwnLayer: true,
+                          quality: GlassQuality.standard,
+                          shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
+                          settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            child: const Row(
+                              children: [
+                                Icon(Icons.star, color: Colors.amber, size: 18),
+                                SizedBox(width: 4),
+                                Text('4.9 (120+)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _buildDetailsContent(context, isDark),
+                ),
+              ),
+            ],
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: _buildDetailsContent(context, isDark),
-            ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildBottomBar(context, isDark),
           ),
         ],
       ),
-      bottomSheet: _buildBottomBar(context, isDark),
     );
   }
 
@@ -385,18 +400,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            isDark ? Colors.black.withValues(alpha: 0) : Colors.white.withValues(alpha: 0),
+            isDark ? Colors.black.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+          ],
+        ),
       ),
       child: Row(
         children: [
-          // Tambah ke Troli (Ultra-transparent frosted)
+          // Tambah ke Troli (Frosted)
           Expanded(
             child: InkWell(
               onTap: () {
@@ -408,19 +423,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 quality: GlassQuality.standard,
                 shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
                 settings: LiquidGlassSettings(
-                  thickness: 0.05, blur: 5,
-                  glassColor: isDark ? Colors.white.withValues(alpha: 0.02) : Colors.white.withValues(alpha: 0.05),
+                  thickness: 0.1, blur: 15,
+                  glassColor: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                 ),
                 child: Container(
                   height: 54,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.02)),
+                    border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.1)),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
                       'TAMBAH KE TROLI',
-                      style: TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.bold, fontSize: 13),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
                 ),
@@ -428,7 +447,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ),
           const SizedBox(width: 12),
-          // Beli Sekarang (High-blur orange frosted)
+          // Beli Sekarang (Opaque)
           Expanded(
             child: InkWell(
               onTap: () {
@@ -443,27 +462,19 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ),
                 );
               },
-              child: GlassContainer(
-                useOwnLayer: true,
-                quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
-                settings: LiquidGlassSettings(
-                  thickness: 0.15, blur: 25,
-                  glassColor: const Color(0xFFFF5722).withValues(alpha: 0.7),
+              child: Container(
+                height: 54,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF5722),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: const Color(0xFFFF5722).withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 5)),
+                  ],
                 ),
-                child: Container(
-                  height: 54,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFFFF5722).withValues(alpha: 0.2), blurRadius: 15, offset: const Offset(0, 5)),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'BELI SEKARANG',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
-                    ),
+                child: const Center(
+                  child: Text(
+                    'BELI SEKARANG',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
                   ),
                 ),
               ),

@@ -44,9 +44,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text("Profil", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isDark ? Colors.white : Colors.black87)),
-        leading: Navigator.of(context).canPop() ? IconButton(
-            icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: Colors.grey, size: 24),
-            onPressed: () => Navigator.pop(context)
+        leading: Navigator.of(context).canPop() ? Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ) : null,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,

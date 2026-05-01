@@ -127,9 +127,18 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
         elevation: 0,
         centerTitle: true,
         title: Text("Daftar Perniagaan", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: isDark ? Colors.white : Colors.black87)),
-        leading: IconButton(
-          icon: const HugeIcon(icon: HugeIcons.strokeRoundedArrowLeft01, color: Colors.grey, size: 24),
-          onPressed: () => Navigator.pop(context)
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: GlassContainer(
+            useOwnLayer: true,
+            quality: GlassQuality.standard,
+            shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
+            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
         ),
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,

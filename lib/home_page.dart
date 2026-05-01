@@ -15,6 +15,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'cart_page.dart';
 import 'utils/cart_service.dart';
 
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 

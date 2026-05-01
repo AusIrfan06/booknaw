@@ -120,72 +120,93 @@ class _DashboardPage extends StatelessWidget {
         .from('inventory')
         .stream(primaryKey: ['id']);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Welcome banner ──────────────────────────────────────────────────
-              GlassContainer(
-                useOwnLayer: true,
-                quality: GlassQuality.standard,
-                shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
-                settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 
-                      Theme.of(context).brightness == Brightness.dark ? 0.15 : 0.08
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedUserCircle,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // Background blobs
+          Positioned(top: -100, right: -50, child: Container(width: 300, height: 300, decoration: BoxDecoration(shape: BoxShape.circle, color: Theme.of(context).colorScheme.primary.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.05 : 0.08)))),
+          Positioned(bottom: 100, left: -50, child: Container(width: 250, height: 250, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.orange.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.05 : 0.08)))),
+
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Welcome banner ──────────────────────────────────────────────────
+                    GlassContainer(
+                      useOwnLayer: true,
+                      quality: GlassQuality.standard,
+                      shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
+                      settings: _getStaffGlassSettings(Theme.of(context).brightness == Brightness.dark),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.1),
+                              Colors.orange.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.1 : 0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)
+                          ),
+                        ),
+                        child: Row(
                           children: [
-                            Text(
-                              'Selamat datang, $name',
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark 
-                                  ? Colors.white 
-                                  : Colors.black87,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                shape: BoxShape.circle,
+                              ),
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedUserCircle,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 32,
                               ),
                             ),
-                            Text(
-                              'Staff NACHOZYYY',
-                              style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark 
-                                  ? Colors.white70 
-                                  : Colors.black54,
-                                fontSize: 13,
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Selamat datang, $name',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white 
+                                        : Colors.black87,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Staff NACHOZYYY',
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness == Brightness.dark 
+                                        ? Colors.white70 
+                                        : Colors.black54,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
+                    ),
+
 
               const SizedBox(height: 22),
               const Text(
@@ -382,8 +403,13 @@ class _DashboardPage extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  ],
+),
+);
   }
+
+
 
   void _showStockUpdatePopup(BuildContext context, String flavorLabel, String dbColumn) {
     showModalBottomSheet(

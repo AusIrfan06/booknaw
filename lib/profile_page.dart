@@ -12,6 +12,8 @@ import 'account_details_page.dart';
 import 'privacy_safety_page.dart';
 import 'home_page.dart';
 import 'business_registration_page.dart';
+import 'admin_dashboard.dart';
+
 
 
 class ProfileSettingsScreen extends StatefulWidget {
@@ -33,6 +35,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     final name = isLoggedIn ? (user.userMetadata?['full_name'] ?? "Nama Pengguna") : "Tetamu";
     final email = isLoggedIn ? (user.email ?? "emel@contoh.com") : "Log masuk untuk akses lebih ciri";
     final isStaff = isLoggedIn && (user.userMetadata?['is_staff'] == true);
+    final isAdmin = isLoggedIn && (user.userMetadata?['is_admin'] == true);
+
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -145,11 +149,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacySafetyPage()));
                           }),
                         ])),
-                        if (!isStaff) ...[
+                        if (isLoggedIn && !isStaff) ...[
                           const SizedBox(height: 24),
                           _buildSectionHeader("Perniagaan"),
-                          _buildBusinessCard(isDark),
+                          if (isAdmin)
+                            _buildAdminCard(isDark)
+                          else
+                            _buildBusinessCard(isDark),
                         ],
+
                         if (isStaff) ...[
                           const SizedBox(height: 24),
                           _buildSectionHeader("AKSES"),
@@ -188,12 +196,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       if (isLoggedIn) ...[
                         _buildGlassButton(isDark, "Log Keluar", Colors.redAccent, () async {
                           await Supabase.instance.client.auth.signOut();
-                          if (!mounted) return;
-                          Navigator.pushAndRemoveUntil(
-                            context, 
-                            MaterialPageRoute(builder: (context) => const HomePage()), 
-                            (route) => false
-                          );
+                          if (context.mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              context, 
+                              MaterialPageRoute(builder: (context) => const HomePage()), 
+                              (route) => false
+                            );
+                          }
                         }),
                         const SizedBox(height: 40),
                       ],
@@ -362,4 +371,60 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       ),
     );
   }
+
+  Widget _buildAdminCard(bool isDark) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdminDashboard())),
+      child: GlassContainer(
+        useOwnLayer: true, quality: GlassQuality.standard, shape: LiquidRoundedSuperellipse(borderRadius: 24.0), settings: _getGlassSettings(isDark),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Colors.blue.withValues(alpha: isDark ? 0.2 : 0.1),
+                const Color(0xFFFF5722).withValues(alpha: isDark ? 0.1 : 0.05),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.blue.withValues(alpha: 0.3), width: 1.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const HugeIcon(icon: HugeIcons.strokeRoundedShield01, color: Colors.blue, size: 32),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "Dashboard Admin",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Urus platform dan perniagaan",
+                      style: TextStyle(fontSize: 13, color: isDark ? Colors.white70 : Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+              const HugeIcon(icon: HugeIcons.strokeRoundedArrowRight01, color: Colors.blue, size: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 }

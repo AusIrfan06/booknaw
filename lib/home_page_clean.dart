@@ -5,7 +5,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'order_page.dart';
 import 'status_page.dart';
 import 'profile_page.dart';
-import 'app_logo.dart';
 import 'all_reviews_page.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
@@ -105,7 +104,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
     final isLoggedIn = user != null;
-    final pages = [
+    final List<Widget> pages = [
       _HomeTab(onOrder: () {
         Navigator.push(
           context,
@@ -115,6 +114,7 @@ class _HomePageState extends State<HomePage> {
       if (isLoggedIn) const StatusPage(),
       const ProfileSettingsScreen(),
     ];
+
 
     // Clamp index in case user just logged out and was on Pesanan Saya
     final safeIndex = _currentIndex.clamp(0, pages.length - 1);
@@ -153,7 +153,9 @@ class _HomePageState extends State<HomePage> {
 }
 
 
-// ─── Home Tab Content ─────────────────�class _HomeTab extends StatefulWidget {
+// ─── Home Tab Content ────────────────────────────────────────────────────────
+class _HomeTab extends StatefulWidget {
+
   final VoidCallback onOrder;
   const _HomeTab({required this.onOrder});
 
@@ -232,7 +234,7 @@ class _HomeTabState extends State<_HomeTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ── Header Section (Auto-sliding Carousel) ─────────────────────
+                // â”€â”€ Header Section (Auto-sliding Carousel) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 SizedBox(
                   height: 280,
                   child: PageView.builder(
@@ -265,7 +267,7 @@ class _HomeTabState extends State<_HomeTab> {
 
                 const SizedBox(height: 32),
                 
-                // ── Selection Section ───────────────────────────────────────────
+                // â”€â”€ Selection Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
@@ -395,10 +397,18 @@ class _HomeTabState extends State<_HomeTab> {
         ),
       ),
     );
-    );
   }
-}
+
+  Widget _buildPinterestCard(
+    BuildContext context, {
+    required String title,
+    required String desc,
+    required String price,
+    required Color imageColor,
+    required double height,
+    required VoidCallback onTap,
   }) {
+
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GlassContainer(
       useOwnLayer: true,

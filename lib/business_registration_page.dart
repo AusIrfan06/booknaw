@@ -4,6 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'utils/glass_toast.dart';
+import 'admin_dashboard.dart';
 
 class BusinessRegistrationPage extends StatefulWidget {
   const BusinessRegistrationPage({super.key});
@@ -84,10 +85,10 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
                     child: const HugeIcon(icon: HugeIcons.strokeRoundedCheckmarkCircle02, color: Color(0xFFFF5722), size: 64),
                   ),
                   const SizedBox(height: 24),
-                  const Text("Permohonan Berjaya!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  const Text("Pendaftaran Berjaya!", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   const Text(
-                    "Terima kasih kerana berminat menyertai kami. Pasukan kami akan menyemak permohonan anda dan menghubungi anda dalam masa 24 jam.",
+                    "Perniagaan anda telah didaftarkan. Anda kini mempunyai akses ke Dashboard Admin.",
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.grey, height: 1.5),
                   ),
@@ -97,14 +98,18 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.pop(ctx); // Close dialog
-                        Navigator.pop(context); // Go back to profile
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AdminDashboard()),
+                          (route) => false,
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFFF5722),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      child: const Text("Kembali ke Profil", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: const Text("Ke Dashboard Admin", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -334,7 +339,7 @@ class _BusinessRegistrationPageState extends State<BusinessRegistrationPage> {
             child: _isLoading
                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                 : const Text(
-                    "Hantar Permohonan",
+                    "Daftar Perniagaan",
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                   ),
           ),

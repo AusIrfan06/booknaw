@@ -3,6 +3,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'all_reviews_page.dart';
+import 'order_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final String title;
@@ -425,7 +426,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           // Beli Sekarang (High-blur orange frosted)
           Expanded(
             child: InkWell(
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Menuju ke pembayaran...'))),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OrderPage(
+                      initialHot: widget.title == 'HOT & SPICYYY' ? _quantity : 0,
+                      initialBbq: widget.title == 'SMOKY BBQ' ? _quantity : 0,
+                      initialCheese: widget.title == 'CHEESE DIP' ? _quantity : 0,
+                    ),
+                  ),
+                );
+              },
               child: GlassContainer(
                 useOwnLayer: true,
                 quality: GlassQuality.standard,

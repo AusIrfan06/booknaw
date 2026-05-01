@@ -7,16 +7,25 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
 
 class OrderPage extends StatefulWidget {
-  const OrderPage({super.key});
+  final int initialHot;
+  final int initialBbq;
+  final int initialCheese;
+
+  const OrderPage({
+    super.key,
+    this.initialHot = 0,
+    this.initialBbq = 0,
+    this.initialCheese = 0,
+  });
 
   @override
   State<OrderPage> createState() => _OrderPageState();
 }
 
 class _OrderPageState extends State<OrderPage> {
-  int _hotQuantity = 0;
-  int _bbqQuantity = 0;
-  int _cheeseQuantity = 0;
+  late int _hotQuantity;
+  late int _bbqQuantity;
+  late int _cheeseQuantity;
   String? _deliveryOption;
   String? _deliveryType; // 'pickup' or 'delivery'
 
@@ -79,6 +88,9 @@ class _OrderPageState extends State<OrderPage> {
   @override
   void initState() {
     super.initState();
+    _hotQuantity = widget.initialHot;
+    _bbqQuantity = widget.initialBbq;
+    _cheeseQuantity = widget.initialCheese;
     _inventoryStream = Supabase.instance.client
         .from('inventory')
         .stream(primaryKey: ['id'])

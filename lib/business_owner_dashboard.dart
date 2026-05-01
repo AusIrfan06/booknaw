@@ -93,7 +93,7 @@ class _BusinessOwnerDashboardState extends State<BusinessOwnerDashboard> {
           NavItem(icon: HugeIcons.strokeRoundedStore01, title: 'Bisnes'),
           NavItem(icon: HugeIcons.strokeRoundedTask01, title: 'Pesanan'),
           NavItem(icon: HugeIcons.strokeRoundedAnalytics01, title: 'Stat'),
-          NavItem(icon: HugeIcons.strokeRoundedPackage, title: 'Inv'),
+          NavItem(icon: HugeIcons.strokeRoundedPackage, title: 'Urus'),
           NavItem(icon: HugeIcons.strokeRoundedUser, title: 'Profil'),
         ],
       ),

@@ -75,7 +75,8 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _ProductFormPopup(
-        onSaved: () {
+        onSaved: () async {
+          await Future.delayed(const Duration(milliseconds: 500));
           _fetchData();
         },
       ),
@@ -88,7 +89,8 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _StaffInvitePopup(
-        onInvited: () {
+        onInvited: () async {
+          await Future.delayed(const Duration(milliseconds: 500));
           _fetchData();
         },
       ),

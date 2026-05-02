@@ -40,6 +40,8 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
     setState(() => _isLoading = true);
     try {
       final business = await SupabaseService.getBusinessInfo();
+      debugPrint("DEBUG: Fetching products for Business ID: ${business?['id']}");
+
       if (business != null) {
         final businessId = business['id'];
         final user = Supabase.instance.client.auth.currentUser;
@@ -56,6 +58,8 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
             .select()
             .eq('business_id', businessId)
             .order('created_at', ascending: false);
+
+        debugPrint("DEBUG: Found ${productRes.length} products");
 
         if (mounted) {
           setState(() {
@@ -526,6 +530,18 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     if (widget.product == null) return;
     setState(() => _isLoading = true);
     try {
+      // 1. Cleanup images from storage
+      if (widget.product!['image_url'] != null) {
+        await SupabaseService.deleteProductImage(widget.product!['image_url']);
+      }
+      final variations = widget.product!['variations'] as List? ?? [];
+      for (var v in variations) {
+        if (v['image_url'] != null) {
+          await SupabaseService.deleteProductImage(v['image_url']);
+        }
+      }
+
+      // 2. Delete database record
       await Supabase.instance.client.from('products').delete().eq('id', widget.product!['id']);
       widget.onDeleted?.call();
       if (mounted) Navigator.pop(context);

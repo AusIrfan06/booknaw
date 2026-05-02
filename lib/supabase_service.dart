@@ -22,11 +22,13 @@ class SupabaseService {
     }
   }
 
-  /// Updates the current user's profile information.
+  /// Updates the current user's profile information in the 'users' or 'profiles' table.
   static Future<void> updateProfile({
     String? firstName,
     String? lastName,
+    String? fullName,
     String? phone,
+    String? avatarUrl,
   }) async {
     final user = client.auth.currentUser;
     if (user == null) return;
@@ -34,17 +36,22 @@ class SupabaseService {
     final updates = {
       if (firstName != null) 'first_name': firstName,
       if (lastName != null) 'last_name': lastName,
-      if (phone != null) 'phone': phone,
+      if (fullName != null) 'full_name': fullName,
       if (firstName != null || lastName != null)
         'full_name': '${firstName ?? ''} ${lastName ?? ''}'.trim(),
+      if (phone != null) 'phone': phone,
+      if (avatarUrl != null) 'avatar_url': avatarUrl,
       'updated_at': DateTime.now().toIso8601String(),
     };
 
     try {
+      // Update the main users table
       await client.from('users').update(updates).eq('id', user.id);
+      
+      // Also sync to profiles table for public access if needed
+      await client.from('profiles').upsert({'id': user.id, ...updates});
     } catch (e) {
-      debugPrint('Error updating user: $e');
-      rethrow;
+      debugPrint('Error updating user profile: $e');
     }
   }
 
@@ -62,8 +69,9 @@ class SupabaseService {
     }
   }
 
-  /// Creates a new order.
+  /// Creates a new order for a specific business.
   static Future<void> createOrder({
+    required String businessId,
     required List<Map<String, dynamic>> items,
     required double totalPrice,
   }) async {
@@ -72,6 +80,7 @@ class SupabaseService {
 
     try {
       await client.from('orders').insert({
+        'business_id': businessId,
         'user_id': user.id,
         'items': items,
         'total_price': totalPrice,
@@ -172,6 +181,50 @@ class SupabaseService {
     } catch (e) {
       debugPrint('Error uploading product image: $e');
       return null;
+    }
+  }
+
+  // --- Advanced Inventory Features ---
+
+  /// Adjusts stock for a product and logs the movement
+  static Future<void> adjustStock({
+    required String productId,
+    required int amount,
+    required String reason, // e.g., 'Restock' or 'Sales'
+  }) async {
+    try {
+      // 1. Update the actual product stock using RPC
+      // Note: requires a 'increment_stock' RPC function in Supabase
+      await client.rpc('increment_stock', params: {
+        'p_id': productId,
+        'amount': amount,
+      });
+
+      // 2. Log the movement in the inventory table (treated as log here)
+      // Note: We use 'inventory_logs' to avoid clashing with the legacy inventory table
+      await client.from('inventory_logs').insert({
+        'product_id': productId,
+        'change_amount': amount,
+        'reason': reason,
+      });
+    } catch (e) {
+      debugPrint("Stock adjustment error: $e");
+      rethrow;
+    }
+  }
+
+
+  /// Deletes a product image from storage to prevent ghost files
+  static Future<void> deleteProductImage(String imageUrl) async {
+    try {
+      final uri = Uri.parse(imageUrl);
+      final fileName = uri.pathSegments.last;
+      
+      await client.storage
+          .from('products') 
+          .remove([fileName]);
+    } catch (e) {
+      debugPrint("Cleanup error: $e");
     }
   }
 }

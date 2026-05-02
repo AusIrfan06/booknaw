@@ -496,7 +496,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'category': _categoryController.text.trim(),
         'image_url': mainImageUrl,
         'variations': cleanedVariations,
-        'updated_at': DateTime.now().toIso8601String(),
+        // Removed the 'updated_at' key to match your SQL schema
       };
 
       if (widget.product == null) {

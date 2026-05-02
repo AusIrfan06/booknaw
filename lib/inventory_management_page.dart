@@ -3,12 +3,11 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'supabase_service.dart';
 
+// --- SHARED UI SETTINGS ---
 LiquidGlassSettings _getGlassSettings(bool isDark) {
   return LiquidGlassSettings(
     thickness: 0.1, blur: 15, refractiveIndex: 1.0,
@@ -37,6 +36,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
     _fetchData();
   }
 
+  // --- DATABASE FETCHING ---
   Future<void> _fetchData() async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -46,13 +46,11 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         final businessId = business['id'];
         final user = Supabase.instance.client.auth.currentUser;
         
-        // Fetch Staff (join with users to get name)
         final staffRes = await Supabase.instance.client
             .from('staff')
             .select('*, users:user_id(full_name, email)')
             .eq('business_id', businessId);
         
-        // Fetch Products
         final productRes = await Supabase.instance.client
             .from('products')
             .select()
@@ -120,7 +118,6 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- SECTION 1: STAFF MANAGEMENT (TOP) ---
             _buildSectionHeader(
               "Pengurusan Staf", 
               HugeIcons.strokeRoundedUserGroup, 
@@ -131,7 +128,6 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
 
             const SizedBox(height: 40),
 
-            // --- SECTION 2: PRODUCT INVENTORY (BOTTOM) ---
             _buildSectionHeader("Inventori Produk", HugeIcons.strokeRoundedPackage, _showAddProductPopup),
             const SizedBox(height: 16),
             _buildProductGrid(isDark),
@@ -231,7 +227,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Padam Staf?"),
-        content: Text("Adakah anda pasti mahu memadam ${staff['full_name'] ?? staff['email']} daripada perniagaan?"),
+        content: Text("Adakah anda pasti mahu memadam staf ini daripada perniagaan?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
           TextButton(
@@ -366,7 +362,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
   }
 }
 
-// ─── HELPER POPUPS ──────────────────────────────────────────────────────────
+// ─── HELPER POPUP: PRODUCT FORM ─────────────────────────────────────────────
 
 class _ProductFormPopup extends StatefulWidget {
   final Map<String, dynamic>? product;
@@ -391,7 +387,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
   
   XFile? _selectedImage;
   final _picker = ImagePicker();
-  
   List<Map<String, dynamic>> _variations = [];
   bool _isLoading = false;
 
@@ -421,38 +416,16 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     super.dispose();
   }
 
-  // --- COMPRESSION LOGIC ---
-  Future<XFile?> _compressFile(XFile file) async {
-    if (kIsWeb) return file; // Skip compression on Web to avoid path errors
-    
-    try {
-      final tempDir = await getTemporaryDirectory();
-      final targetPath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_compressed.jpg';
-      
-      final result = await FlutterImageCompress.compressAndGetFile(
-        file.path, 
-        targetPath,
-        quality: 65,
-        minWidth: 800,
-        minHeight: 800,
-        format: CompressFormat.jpeg,
-      );
-      return result;
-    } catch (e) {
-      debugPrint("Compression failed: $e");
-      return file; // Fallback to original
-    }
-  }
-
+  // --- BUILT-IN COMPRESSION ---
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    // We use imageQuality and maxWidth to compress natively without extra plugins!
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 60,
+      maxWidth: 1080,
+    );
     if (image != null) {
-      setState(() => _isLoading = true);
-      final compressedImage = await _compressFile(image);
-      setState(() {
-        _selectedImage = compressedImage;
-        _isLoading = false;
-      });
+      setState(() => _selectedImage = image);
     }
   }
 
@@ -468,20 +441,21 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
   }
 
   Future<void> _pickVariationImage(int index) async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 60,
+      maxWidth: 1080,
+    );
     if (image != null) {
-      setState(() => _isLoading = true);
-      final compressedImage = await _compressFile(image);
       setState(() {
-        _variations[index]['file'] = compressedImage;
-        _isLoading = false;
+        _variations[index]['file'] = image;
       });
     }
   }
 
+  // --- SAVE & DELETE LOGIC ---
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-
     setState(() => _isLoading = true);
     try {
       final business = await SupabaseService.getBusinessInfo();
@@ -516,7 +490,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'category': _categoryController.text.trim(),
         'image_url': mainImageUrl,
         'variations': cleanedVariations,
-        'updated_at': DateTime.now().toIso8601String(), // Supported by new SQL
+        'updated_at': DateTime.now().toIso8601String(),
       };
 
       if (widget.product == null) {
@@ -530,12 +504,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     } catch (e) {
       debugPrint('Error saving product: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Ralat Simpan: $e"),
-            backgroundColor: Colors.red,
-          )
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ralat Simpan: $e"), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -556,6 +525,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     }
   }
 
+  // --- FORM UI ---
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -777,6 +747,8 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     );
   }
 }
+
+// ─── HELPER POPUP: STAFF INVITE ─────────────────────────────────────────────
 
 class _StaffInvitePopup extends StatefulWidget {
   final VoidCallback onInvited;

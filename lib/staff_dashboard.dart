@@ -9,6 +9,7 @@ import 'utils/glass_toast.dart';
 import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'inventory_management_page.dart';
+import 'supabase_service.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
@@ -918,10 +919,22 @@ class _OrdersTabState extends State<_OrdersTab>
     (label: 'Selesai', icon: Icons.check_circle_outline_rounded),
   ];
 
+  String? _businessId;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
+    _loadBusinessInfo();
+  }
+
+  Future<void> _loadBusinessInfo() async {
+    final business = await SupabaseService.getBusinessInfo();
+    if (mounted) {
+      setState(() {
+        _businessId = business?['id'];
+      });
+    }
   }
 
   @override
@@ -956,6 +969,7 @@ class _OrdersTabState extends State<_OrdersTab>
     final ordersStream = Supabase.instance.client
         .from('orders')
         .stream(primaryKey: ['id'])
+        .eq('business_id', _businessId ?? '')
         .order('created_at', ascending: false);
 
     return Column(
@@ -993,8 +1007,11 @@ class _OrdersTabState extends State<_OrdersTab>
               await Future.delayed(const Duration(milliseconds: 500));
             },
             child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: ordersStream,
+            stream: _businessId == null ? const Stream.empty() : ordersStream,
             builder: (context, snapshot) {
+              if (_businessId == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }

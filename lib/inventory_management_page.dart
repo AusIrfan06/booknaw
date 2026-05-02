@@ -468,8 +468,16 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         }
       }
 
+      // Clean up variations (remove temporary 'file' objects)
+      final cleanedVariations = _variations.map((v) {
+        final newV = Map<String, dynamic>.from(v);
+        newV.remove('file');
+        return newV;
+      }).toList();
+
       final data = {
         'business_id': business['id'],
+        'user_id': Supabase.instance.client.auth.currentUser?.id, // Track who added/updated
         'name': _nameController.text.trim(),
         'description': _descController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? 0.0,
@@ -477,7 +485,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'sku': _skuController.text.trim(),
         'category': _categoryController.text.trim(),
         'image_url': mainImageUrl,
-        'variations': _variations, // We'll store as JSONB for simplicity in this frame
+        'variations': cleanedVariations,
         'updated_at': DateTime.now().toIso8601String(),
       };
 
@@ -490,7 +498,15 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
       widget.onSaved();
       if (mounted) Navigator.pop(context);
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Ralat: $e")));
+      debugPrint('Error saving product: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Ralat Simpan: $e"),
+            backgroundColor: Colors.red,
+          )
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

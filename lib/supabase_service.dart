@@ -119,18 +119,37 @@ class SupabaseService {
     }
   }
 
-  /// Fetches business information for the current user (if they are an owner).
+  /// Fetches business information for the current user (Owner or Staff).
   static Future<Map<String, dynamic>?> getBusinessInfo() async {
     final user = client.auth.currentUser;
     if (user == null) return null;
 
     try {
-      final response = await client
+      // 1. Check if user is an owner
+      final ownerBusiness = await client
           .from('businesses')
           .select()
           .eq('owner_id', user.id)
           .maybeSingle();
-      return response;
+      
+      if (ownerBusiness != null) return ownerBusiness;
+
+      // 2. If not owner, check if user is staff
+      final staffEntry = await client
+          .from('staff')
+          .select('business_id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+      
+      if (staffEntry != null) {
+        return await client
+            .from('businesses')
+            .select()
+            .eq('id', staffEntry['business_id'])
+            .maybeSingle();
+      }
+      
+      return null;
     } catch (e) {
       debugPrint('Error fetching business info: $e');
       return null;

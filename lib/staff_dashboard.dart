@@ -8,6 +8,7 @@ import 'profile_page.dart';
 import 'utils/glass_toast.dart';
 import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
+import 'inventory_management_page.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
@@ -207,8 +208,42 @@ class _DashboardPage extends StatelessWidget {
                       ),
                     ),
 
-
-              const SizedBox(height: 22),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Tindakan Pantas',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _QuickActionCard(
+                            title: 'Urus Inventori',
+                            subtitle: 'Tambah & Edit Produk',
+                            icon: HugeIcons.strokeRoundedPackage,
+                            color: const Color(0xFFFF5722),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const InventoryManagementPage()),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _QuickActionCard(
+                            title: 'Pusat Bantuan',
+                            subtitle: 'Hubungi Sokongan',
+                            icon: HugeIcons.strokeRoundedCustomerService,
+                            color: Colors.blue,
+                            onTap: () {
+                              // Link to help or contact
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
               const Text(
                 'Ringkasan Hari Ini',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
@@ -417,6 +452,66 @@ class _DashboardPage extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _StockPopup(flavorLabel: flavorLabel, dbColumn: dbColumn),
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final dynamic icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickActionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: onTap,
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+        settings: _getStaffGlassSettings(isDark),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: HugeIcon(icon: icon, color: color, size: 20),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.grey),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

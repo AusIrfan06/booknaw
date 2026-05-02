@@ -27,6 +27,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
   bool _isLoading = true;
   List<Map<String, dynamic>> _staff = [];
   List<Map<String, dynamic>> _products = [];
+  bool _isOwner = false;
 
   @override
   void initState() {
@@ -41,11 +42,12 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       final business = await SupabaseService.getBusinessInfo();
       if (business != null) {
         final businessId = business['id'];
+        final user = Supabase.instance.client.auth.currentUser;
         
-        // Fetch Staff
+        // Fetch Staff (join with users to get name)
         final staffRes = await Supabase.instance.client
             .from('staff')
-            .select()
+            .select('*, users:user_id(full_name, email)')
             .eq('business_id', businessId);
         
         // Fetch Products
@@ -57,6 +59,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
 
         if (mounted) {
           setState(() {
+            _isOwner = business['owner_id'] == user?.id;
             _staff = List<Map<String, dynamic>>.from(staffRes);
             _products = List<Map<String, dynamic>>.from(productRes);
           });
@@ -75,6 +78,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _ProductFormPopup(
+        isOwner: _isOwner,
         onSaved: () async {
           await Future.delayed(const Duration(milliseconds: 500));
           _fetchData();
@@ -115,7 +119,11 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- SECTION 1: STAFF MANAGEMENT (TOP) ---
-            _buildSectionHeader("Pengurusan Staf", HugeIcons.strokeRoundedUserGroup, _showAddStaffPopup),
+            _buildSectionHeader(
+              "Pengurusan Staf", 
+              HugeIcons.strokeRoundedUserGroup, 
+              _isOwner ? _showAddStaffPopup : null // Only owner can add staff
+            ),
             const SizedBox(height: 16),
             _buildStaffList(isDark),
 
@@ -131,7 +139,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, dynamic icon, VoidCallback onAdd) {
+  Widget _buildSectionHeader(String title, dynamic icon, VoidCallback? onAdd) {
     return Row(
       children: [
         Container(
@@ -145,10 +153,11 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         const SizedBox(width: 12),
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
         const Spacer(),
-        IconButton(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add_circle_outline, color: Color(0xFFFF5722), size: 28),
-        )
+        if (onAdd != null)
+          IconButton(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_circle_outline, color: Color(0xFFFF5722), size: 28),
+          )
       ],
     );
   }
@@ -167,7 +176,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
         itemBuilder: (context, index) {
           final person = _staff[index];
           return GestureDetector(
-            onLongPress: () => _confirmDeleteStaff(person),
+            onLongPress: _isOwner ? () => _confirmDeleteStaff(person) : null,
             child: Container(
               width: 85,
               margin: const EdgeInsets.only(right: 16),
@@ -195,7 +204,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    person['full_name'] ?? "Staf",
+                    person['users']?['full_name'] ?? person['email']?.split('@')[0] ?? "Staf",
                     style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                     maxLines: 1,
@@ -328,6 +337,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => _ProductFormPopup(
         product: product,
+        isOwner: _isOwner,
         onSaved: () => _fetchData(),
         onDeleted: () => _fetchData(),
       ),
@@ -359,10 +369,11 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
 
 class _ProductFormPopup extends StatefulWidget {
   final Map<String, dynamic>? product;
+  final bool isOwner;
   final VoidCallback onSaved;
   final VoidCallback? onDeleted;
 
-  const _ProductFormPopup({this.product, required this.onSaved, this.onDeleted});
+  const _ProductFormPopup({this.product, required this.isOwner, required this.onSaved, this.onDeleted});
 
   @override
   State<_ProductFormPopup> createState() => _ProductFormPopupState();
@@ -477,7 +488,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
 
       final data = {
         'business_id': business['id'],
-        'user_id': Supabase.instance.client.auth.currentUser?.id, // Track who added/updated
         'name': _nameController.text.trim(),
         'description': _descController.text.trim(),
         'price': double.tryParse(_priceController.text) ?? 0.0,
@@ -554,7 +564,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(widget.product == null ? "Tambah Produk" : "Edit Produk", style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                    if (widget.product != null)
+                    if (widget.product != null && widget.isOwner)
                       IconButton(onPressed: _delete, icon: const Icon(Icons.delete_outline, color: Colors.red)),
                   ],
                 ),
@@ -788,7 +798,6 @@ class _StaffInvitePopupState extends State<_StaffInvitePopup> {
       await Supabase.instance.client.from('staff').insert({
         'business_id': business['id'],
         'user_id': userRes['id'],
-        'full_name': userRes['full_name'] ?? userRes['email'],
         'email': email,
         'role': 'Staff',
         'status': 'Active',

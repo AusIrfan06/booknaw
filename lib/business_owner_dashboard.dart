@@ -315,12 +315,12 @@ class _OwnerOrdersTab extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4), borderRadius: BorderRadius.circular(24)),
-              child: const Column(
+              child: Column(
                 children: [
                   HugeIcon(icon: HugeIcons.strokeRoundedTask01, color: Color(0xFFFF5722), size: 48),
-                  const SizedBox(height: 16),
+                  SizedBox(height: 16),
                   Text("Pesanan Pelanggan", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
+                  SizedBox(height: 8),
                   Text("Semua pesanan perniagaan anda akan muncul di sini.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
                 ],
               ),

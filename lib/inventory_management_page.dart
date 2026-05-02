@@ -3,6 +3,8 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'supabase_service.dart';
@@ -40,8 +42,6 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
     setState(() => _isLoading = true);
     try {
       final business = await SupabaseService.getBusinessInfo();
-      debugPrint("DEBUG: Fetching products for Business ID: ${business?['id']}");
-
       if (business != null) {
         final businessId = business['id'];
         final user = Supabase.instance.client.auth.currentUser;
@@ -58,8 +58,6 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
             .select()
             .eq('business_id', businessId)
             .order('created_at', ascending: false);
-
-        debugPrint("DEBUG: Found ${productRes.length} products");
 
         if (mounted) {
           setState(() {
@@ -126,7 +124,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
             _buildSectionHeader(
               "Pengurusan Staf", 
               HugeIcons.strokeRoundedUserGroup, 
-              _isOwner ? _showAddStaffPopup : null // Only owner can add staff
+              _isOwner ? _showAddStaffPopup : null 
             ),
             const SizedBox(height: 16),
             _buildStaffList(isDark),
@@ -202,7 +200,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
                       child: Center(
                         child: person['image_url'] != null 
                           ? ClipOval(child: Image.network(person['image_url'], fit: BoxFit.cover, width: 64, height: 64))
-                          : HugeIcon(icon: HugeIcons.strokeRoundedUser, color: const Color(0xFFFF5722), size: 24),
+                          : const HugeIcon(icon: HugeIcons.strokeRoundedUser, color: Color(0xFFFF5722), size: 24),
                       ),
                     ),
                   ),
@@ -233,7 +231,7 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Padam Staf?"),
-        content: Text("Adakah anda pasti mahu memadam ${staff['full_name']} daripada perniagaan?"),
+        content: Text("Adakah anda pasti mahu memadam ${staff['full_name'] ?? staff['email']} daripada perniagaan?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Batal")),
           TextButton(
@@ -366,7 +364,6 @@ class _InventoryManagementPageState extends State<InventoryManagementPage> {
       ),
     );
   }
-
 }
 
 // ─── HELPER POPUPS ──────────────────────────────────────────────────────────
@@ -395,7 +392,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
   XFile? _selectedImage;
   final _picker = ImagePicker();
   
-  // Variations
   List<Map<String, dynamic>> _variations = [];
   bool _isLoading = false;
 
@@ -409,7 +405,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     _skuController = TextEditingController(text: widget.product?['sku']);
     _categoryController = TextEditingController(text: widget.product?['category']);
     
-    // Initialize variations if editing
     if (widget.product != null && widget.product!['variations'] != null) {
       _variations = List<Map<String, dynamic>>.from(widget.product!['variations']);
     }
@@ -426,14 +421,38 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     super.dispose();
   }
 
+  // --- COMPRESSION LOGIC ---
+  Future<XFile?> _compressFile(XFile file) async {
+    if (kIsWeb) return file; // Skip compression on Web to avoid path errors
+    
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final targetPath = '${tempDir.path}/${DateTime.now().millisecondsSinceEpoch}_compressed.jpg';
+      
+      final result = await FlutterImageCompress.compressAndGetFile(
+        file.path, 
+        targetPath,
+        quality: 65,
+        minWidth: 800,
+        minHeight: 800,
+        format: CompressFormat.jpeg,
+      );
+      return result;
+    } catch (e) {
+      debugPrint("Compression failed: $e");
+      return file; // Fallback to original
+    }
+  }
+
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery, 
-      imageQuality: 50,
-      maxWidth: 1080,
-    );
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
-      setState(() => _selectedImage = image);
+      setState(() => _isLoading = true);
+      final compressedImage = await _compressFile(image);
+      setState(() {
+        _selectedImage = compressedImage;
+        _isLoading = false;
+      });
     }
   }
 
@@ -443,20 +462,19 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'name': '',
         'price': _priceController.text,
         'image_url': null,
-        'file': null, // Temporary for new uploads
+        'file': null,
       });
     });
   }
 
   Future<void> _pickVariationImage(int index) async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery, 
-      imageQuality: 50,
-      maxWidth: 1080,
-    );
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
+      setState(() => _isLoading = true);
+      final compressedImage = await _compressFile(image);
       setState(() {
-        _variations[index]['file'] = image;
+        _variations[index]['file'] = compressedImage;
+        _isLoading = false;
       });
     }
   }
@@ -474,16 +492,14 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         mainImageUrl = await SupabaseService.uploadProductImage(_selectedImage);
       }
 
-      // Handle Variation Image Uploads
       for (int i = 0; i < _variations.length; i++) {
         if (_variations[i]['file'] != null) {
           final url = await SupabaseService.uploadProductImage(_variations[i]['file']);
           _variations[i]['image_url'] = url;
-          _variations[i].remove('file'); // Remove the file object before saving to DB
+          _variations[i].remove('file'); 
         }
       }
 
-      // Clean up variations (remove temporary 'file' objects)
       final cleanedVariations = _variations.map((v) {
         final newV = Map<String, dynamic>.from(v);
         newV.remove('file');
@@ -500,7 +516,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         'category': _categoryController.text.trim(),
         'image_url': mainImageUrl,
         'variations': cleanedVariations,
-        // Removed the 'updated_at' key to match your SQL schema
+        'updated_at': DateTime.now().toIso8601String(), // Supported by new SQL
       };
 
       if (widget.product == null) {
@@ -530,18 +546,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
     if (widget.product == null) return;
     setState(() => _isLoading = true);
     try {
-      // 1. Cleanup images from storage
-      if (widget.product!['image_url'] != null) {
-        await SupabaseService.deleteProductImage(widget.product!['image_url']);
-      }
-      final variations = widget.product!['variations'] as List? ?? [];
-      for (var v in variations) {
-        if (v['image_url'] != null) {
-          await SupabaseService.deleteProductImage(v['image_url']);
-        }
-      }
-
-      // 2. Delete database record
       await Supabase.instance.client.from('products').delete().eq('id', widget.product!['id']);
       widget.onDeleted?.call();
       if (mounted) Navigator.pop(context);
@@ -563,7 +567,7 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
         useOwnLayer: true,
         quality: GlassQuality.standard,
         shape: LiquidRoundedSuperellipse(borderRadius: 32),
-        settings: LiquidGlassSettings(thickness: 0.2, blur: 40), // HIGH BLUR
+        settings: LiquidGlassSettings(thickness: 0.2, blur: 40), 
         child: Container(
           decoration: BoxDecoration(
             color: isDark ? Colors.black.withValues(alpha: 0.7) : Colors.white.withValues(alpha: 0.85),
@@ -593,7 +597,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
                     controller: controller,
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     children: [
-                      // --- IMAGE PICKER ---
                       _buildImageSection(isDark),
                       const SizedBox(height: 32),
 
@@ -614,7 +617,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
                       _buildField("Kategori", _categoryController, HugeIcons.strokeRoundedLayers01),
                       
                       const SizedBox(height: 32),
-                      // --- VARIATIONS SECTION ---
                       _buildVariationsHeader(),
                       const SizedBox(height: 16),
                       ..._buildVariationsList(isDark),
@@ -699,7 +701,6 @@ class _ProductFormPopupState extends State<_ProductFormPopup> {
           children: [
             Row(
               children: [
-                // Variation Image
                 GestureDetector(
                   onTap: () => _pickVariationImage(index),
                   child: Container(
@@ -798,8 +799,6 @@ class _StaffInvitePopupState extends State<_StaffInvitePopup> {
       final business = await SupabaseService.getBusinessInfo();
       if (business == null) throw "Perniagaan tidak dijumpai.";
 
-      // 1. Check if user exists in auth.users (via a RPC or a search)
-      // For this demo, we simulate finding the user or just adding them if they exist in public.users
       final userRes = await Supabase.instance.client
           .from('users')
           .select()
@@ -807,10 +806,9 @@ class _StaffInvitePopupState extends State<_StaffInvitePopup> {
           .maybeSingle();
 
       if (userRes == null) {
-        throw "Pengguna dengan emel ini tidak berdaftar di BookNaw.";
+        throw "Pengguna dengan emel ini tidak berdaftar.";
       }
 
-      // 2. Add to staff table
       await Supabase.instance.client.from('staff').insert({
         'business_id': business['id'],
         'user_id': userRes['id'],
@@ -892,4 +890,3 @@ class _StaffInvitePopupState extends State<_StaffInvitePopup> {
     );
   }
 }
-

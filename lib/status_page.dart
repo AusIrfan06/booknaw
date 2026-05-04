@@ -153,10 +153,24 @@ class _StatusPageState extends State<StatusPage>
               return const Center(child: CircularProgressIndicator());
             }
 
-            // On error (e.g. user_id column not yet added), just show empty
-            final allOrders = snapshot.hasError
-                ? <Map<String, dynamic>>[]
-                : (snapshot.data ?? <Map<String, dynamic>>[]);
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, color: Colors.red, size: 48),
+                      const SizedBox(height: 16),
+                      Text('Ralat: ${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 16),
+                      const Text('Sila pastikan table "orders" wujud dan mempunyai column "user_id".', textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
+              );
+            }
+            final allOrders = snapshot.data ?? <Map<String, dynamic>>[];
 
             return TabBarView(
               controller: _tabController,

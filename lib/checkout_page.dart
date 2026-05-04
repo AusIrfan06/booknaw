@@ -79,12 +79,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
       lName = lName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
 
       // Fetch first business ID as default
+      // We try to get ANY business ID that might be available.
+      // In a single-business app, this works. In multi-business, we'd need more context.
       final bizRes = await Supabase.instance.client.from('businesses').select('id').limit(1).maybeSingle();
       final bizId = bizRes?['id'];
+      
+      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
+      debugPrint('Submitting order: business_id=$bizId, user_id=$currentUserId');
 
       final response = await Supabase.instance.client.from('orders').insert({
         'business_id': bizId,
-        'user_id': Supabase.instance.client.auth.currentUser?.id,
+        'user_id': currentUserId,
         'customer_name': '$fName $lName'.trim(),
         'phone_number': _phoneController.text,
         'delivery_address': _isDelivery ? _addressController.text.trim() : null,
@@ -94,6 +100,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
+        'status': 'pending', // Explicitly set status to pending
+        'created_at': DateTime.now().toIso8601String(),
       }).select().single();
 
       final orderId = response['id'];

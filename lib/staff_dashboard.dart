@@ -1016,7 +1016,21 @@ class _OrdersTabState extends State<_OrdersTab>
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
-                return Center(child: Text('Ralat: ${snapshot.error}'));
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, color: Colors.red, size: 48),
+                        const SizedBox(height: 16),
+                        Text('Ralat: ${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 16),
+                        Text('Business ID: $_businessId', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    ),
+                  ),
+                );
               }
               final allOrders = snapshot.data ?? [];
 

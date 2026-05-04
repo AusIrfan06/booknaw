@@ -113,22 +113,14 @@ class _DashboardPage extends StatelessWidget {
     final meta = user?.userMetadata;
     final name = meta?['full_name'] ?? user?.email?.split('@').first ?? 'Staff';
 
-    final ordersFuture = SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
-      if (biz == null) return <Map<String, dynamic>>[];
-      return Supabase.instance.client
-          .from('orders')
-          .select()
-          .eq('business_id', biz['id'])
-          .order('created_at', ascending: false);
-    });
+    final ordersStream = Supabase.instance.client
+        .from('orders')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
 
-    final inventoryFuture = SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
-      if (biz == null) return <Map<String, dynamic>>[];
-      return Supabase.instance.client
-          .from('inventory')
-          .select()
-          .eq('business_id', biz['id']); // Add business_id filter if table supports it
-    });
+    final inventoryStream = Supabase.instance.client
+        .from('inventory')
+        .stream(primaryKey: ['id']);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -260,8 +252,8 @@ class _DashboardPage extends StatelessWidget {
               const SizedBox(height: 12),
 
               // ── Stats cards ─────────────────────────────────────────────────────
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: ordersFuture,
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: ordersStream,
                 builder: (context, snap) {
                   final orders = snap.data ?? [];
                   final pending = orders
@@ -337,8 +329,8 @@ class _DashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: inventoryFuture,
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: inventoryStream,
                 builder: (context, snap) {
                   if (!snap.hasData || snap.data!.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
@@ -394,8 +386,8 @@ class _DashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: ordersFuture,
+              StreamBuilder<List<Map<String, dynamic>>>(
+                stream: ordersStream,
                 builder: (context, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -927,22 +919,10 @@ class _OrdersTabState extends State<_OrdersTab>
     (label: 'Selesai', icon: Icons.check_circle_outline_rounded),
   ];
 
-  String? _businessId;
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
-    _loadBusinessInfo();
-  }
-
-  Future<void> _loadBusinessInfo() async {
-    final business = await SupabaseService.getBusinessInfo();
-    if (mounted) {
-      setState(() {
-        _businessId = business?['id'];
-      });
-    }
   }
 
   @override
@@ -974,128 +954,92 @@ class _OrdersTabState extends State<_OrdersTab>
 
   @override
   Widget build(BuildContext context) {
-    // If _businessId is null, we return an empty stream to avoid error
-    final ordersStream = _businessId == null 
-        ? Stream.value(<Map<String, dynamic>>[])
-        : Supabase.instance.client
-            .from('orders')
-            .stream(primaryKey: ['id'])
-            .eq('business_id', _businessId!)
-            .order('created_at', ascending: false);
+    final ordersStream = Supabase.instance.client
+        .from('orders')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
 
     return Column(
       children: [
-        // ── Tab bar ────────────────────────────────────────────────────────
         Container(
-          color: Theme.of(context).colorScheme.primary,
+          color: Theme.of(context).colorScheme.surface,
           child: TabBar(
             controller: _tabController,
             isScrollable: true,
             tabAlignment: TabAlignment.start,
-            indicatorColor: Colors.white,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white60,
-            tabs: _tabs
-                .map(
-                  (t) => Tab(
-                    child: Row(
-                      children: [
-                        Icon(t.icon, size: 16),
-                        const SizedBox(width: 6),
-                        Text(t.label),
-                      ],
-                    ),
-                  ),
-                )
-                .toList(),
+            tabs: const [
+              Tab(text: 'Semua'),
+              Tab(text: 'Belum Bayar'),
+              Tab(text: 'Diproses'),
+              Tab(text: 'Selesai'),
+            ],
           ),
         ),
-
-        // ── Content ────────────────────────────────────────────────────────
         Expanded(
           child: RefreshIndicator(
             onRefresh: () async {
               await Future.delayed(const Duration(milliseconds: 500));
             },
             child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: ordersStream,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting && _businessId != null) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const HugeIcon(icon: HugeIcons.strokeRoundedAlertCircle, color: Colors.red, size: 48),
-                        const SizedBox(height: 16),
-                        Text('Ralat: ${snapshot.error}', textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
-                        const SizedBox(height: 16),
-                        Text('Business ID: $_businessId', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              if (_businessId == null) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.business_center_outlined, size: 64, color: Colors.grey.shade400),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Tiada perniagaan dijumpai.',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Akaun anda tidak dikaitkan dengan mana-mana perniagaan.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              final allOrders = snapshot.data ?? [];
-
-              return TabBarView(
-                controller: _tabController,
-                children: List.generate(_tabs.length, (i) {
-                  final filtered = _filter(allOrders, i);
-                  if (filtered.isEmpty) {
-                    return Center(
+              stream: ordersStream,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.inbox_outlined,
-                            size: 56,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Tiada pesanan "${_tabs[i].label}"',
-                            style: TextStyle(color: Colors.grey.shade600),
-                          ),
+                          const HugeIcon(
+                              icon: HugeIcons.strokeRoundedAlertCircle,
+                              color: Colors.red,
+                              size: 48),
+                          const SizedBox(height: 16),
+                          Text('Ralat: ${snapshot.error}',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Colors.red)),
                         ],
                       ),
-                    );
-                  }
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: filtered.length,
-                    itemBuilder: (context, idx) =>
-                        _StaffOrderCard(order: filtered[idx]),
+                    ),
                   );
-                }),
-              );
-            },
+                }
+                final allOrders = snapshot.data ?? [];
+
+                return TabBarView(
+                  controller: _tabController,
+                  children: List.generate(_tabs.length, (i) {
+                    final filtered = _filter(allOrders, i);
+                    if (filtered.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inbox_outlined,
+                              size: 56,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Tiada pesanan "${_tabs[i].label}"',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: filtered.length,
+                      itemBuilder: (context, idx) =>
+                          _StaffOrderCard(order: filtered[idx]),
+                    );
+                  }),
+                );
+              },
             ),
           ),
         ),
@@ -1354,15 +1298,11 @@ class _DeliveryTab extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
-                if (biz == null) return <Map<String, dynamic>>[];
-                return Supabase.instance.client
-                    .from('orders')
-                    .select()
-                    .eq('business_id', biz['id'])
-                    .order('created_at', ascending: false);
-              }),
+            child: StreamBuilder<List<Map<String, dynamic>>>(
+              stream: Supabase.instance.client
+                  .from('orders')
+                  .stream(primaryKey: ['id'])
+                  .order('created_at', ascending: false),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -1647,23 +1587,18 @@ class _DeliveryOrderCard extends StatelessWidget {
   }
 }
 
-// ─── Page 3: Statistik ────────────────────────────────────────────────────────
 class _StatisticsTab extends StatelessWidget {
   const _StatisticsTab();
 
   @override
   Widget build(BuildContext context) {
-    final ordersFuture = SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
-      if (biz == null) return <Map<String, dynamic>>[];
-      return Supabase.instance.client
-          .from('orders')
-          .select()
-          .eq('business_id', biz['id'])
-          .order('created_at', ascending: false);
-    });
+    final ordersStream = Supabase.instance.client
+        .from('orders')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false);
 
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: ordersFuture,
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: ordersStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

@@ -10,9 +10,9 @@ class AllReviewsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final reviewsFuture = Supabase.instance.client
+    final reviewsStream = Supabase.instance.client
         .from('reviews')
-        .select()
+        .stream(primaryKey: ['id'])
         .order('created_at', ascending: false);
 
     final width = MediaQuery.of(context).size.width;
@@ -37,11 +37,10 @@ class AllReviewsPage extends StatelessWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          (context as Element).markNeedsBuild(); // Re-trigger future
           await Future.delayed(const Duration(milliseconds: 500));
         },
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: reviewsFuture,
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: reviewsStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

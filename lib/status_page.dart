@@ -112,9 +112,9 @@ class _StatusPageState extends State<StatusPage>
     }
 
     // ── Logged in: filter by user_id ───────────────────────────────────────
-    final ordersFuture = Supabase.instance.client
+    final ordersStream = Supabase.instance.client
         .from('orders')
-        .select()
+        .stream(primaryKey: ['id'])
         .eq('user_id', user.id)
         .order('created_at', ascending: false);
 
@@ -144,11 +144,10 @@ class _StatusPageState extends State<StatusPage>
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          setState(() {}); // Trigger rebuild to refetch future
           await Future.delayed(const Duration(milliseconds: 500));
         },
-        child: FutureBuilder<List<Map<String, dynamic>>>(
-          future: ordersFuture,
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: ordersStream,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());

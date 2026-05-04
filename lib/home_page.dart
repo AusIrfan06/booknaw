@@ -549,9 +549,9 @@ class _ReviewsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final reviewsStream = Supabase.instance.client
+    final reviewsFuture = Supabase.instance.client
         .from('reviews')
-        .stream(primaryKey: ['id'])
+        .select()
         .order('created_at', ascending: false)
         .limit(10);
 
@@ -586,8 +586,8 @@ class _ReviewsSection extends StatelessWidget {
         const SizedBox(height: 16),
         SizedBox(
           height: 180,
-          child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: reviewsStream,
+          child: FutureBuilder<List<Map<String, dynamic>>>(
+            future: reviewsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());

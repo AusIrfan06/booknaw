@@ -113,14 +113,22 @@ class _DashboardPage extends StatelessWidget {
     final meta = user?.userMetadata;
     final name = meta?['full_name'] ?? user?.email?.split('@').first ?? 'Staff';
 
-    final ordersStream = Supabase.instance.client
-        .from('orders')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false);
+    final ordersFuture = SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
+      if (biz == null) return <Map<String, dynamic>>[];
+      return Supabase.instance.client
+          .from('orders')
+          .select()
+          .eq('business_id', biz['id'])
+          .order('created_at', ascending: false);
+    });
 
-    final inventoryStream = Supabase.instance.client
-        .from('inventory')
-        .stream(primaryKey: ['id']);
+    final inventoryFuture = SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
+      if (biz == null) return <Map<String, dynamic>>[];
+      return Supabase.instance.client
+          .from('inventory')
+          .select()
+          .eq('business_id', biz['id']); // Add business_id filter if table supports it
+    });
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -252,8 +260,8 @@ class _DashboardPage extends StatelessWidget {
               const SizedBox(height: 12),
 
               // ── Stats cards ─────────────────────────────────────────────────────
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: ordersStream,
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: ordersFuture,
                 builder: (context, snap) {
                   final orders = snap.data ?? [];
                   final pending = orders
@@ -329,8 +337,8 @@ class _DashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: inventoryStream,
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: inventoryFuture,
                 builder: (context, snap) {
                   if (!snap.hasData || snap.data!.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
@@ -386,8 +394,8 @@ class _DashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              StreamBuilder<List<Map<String, dynamic>>>(
-                stream: ordersStream,
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: ordersFuture,
                 builder: (context, snap) {
                   if (snap.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -966,11 +974,14 @@ class _OrdersTabState extends State<_OrdersTab>
 
   @override
   Widget build(BuildContext context) {
-    final ordersStream = Supabase.instance.client
-        .from('orders')
-        .stream(primaryKey: ['id'])
-        .eq('business_id', _businessId ?? '')
-        .order('created_at', ascending: false);
+    // If _businessId is null, we return an empty stream to avoid error
+    final ordersStream = _businessId == null 
+        ? Stream.value(<Map<String, dynamic>>[])
+        : Supabase.instance.client
+            .from('orders')
+            .stream(primaryKey: ['id'])
+            .eq('business_id', _businessId!)
+            .order('created_at', ascending: false);
 
     return Column(
       children: [
@@ -1007,12 +1018,9 @@ class _OrdersTabState extends State<_OrdersTab>
               await Future.delayed(const Duration(milliseconds: 500));
             },
             child: StreamBuilder<List<Map<String, dynamic>>>(
-            stream: _businessId == null ? const Stream.empty() : ordersStream,
+            stream: ordersStream,
             builder: (context, snapshot) {
-              if (_businessId == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (snapshot.connectionState == ConnectionState.waiting && _businessId != null) {
                 return const Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
@@ -1029,6 +1037,28 @@ class _OrdersTabState extends State<_OrdersTab>
                         Text('Business ID: $_businessId', style: const TextStyle(fontSize: 12, color: Colors.grey)),
                       ],
                     ),
+                  ),
+                );
+              }
+
+              if (_businessId == null) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.business_center_outlined, size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Tiada perniagaan dijumpai.',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Akaun anda tidak dikaitkan dengan mana-mana perniagaan.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
                 );
               }
@@ -1324,11 +1354,15 @@ class _DeliveryTab extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: Supabase.instance.client
-                  .from('orders')
-                  .stream(primaryKey: ['id'])
-                  .order('created_at', ascending: false),
+            child: FutureBuilder<List<Map<String, dynamic>>>(
+              future: SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
+                if (biz == null) return <Map<String, dynamic>>[];
+                return Supabase.instance.client
+                    .from('orders')
+                    .select()
+                    .eq('business_id', biz['id'])
+                    .order('created_at', ascending: false);
+              }),
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -1619,13 +1653,17 @@ class _StatisticsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ordersStream = Supabase.instance.client
-        .from('orders')
-        .stream(primaryKey: ['id'])
-        .order('created_at', ascending: false);
+    final ordersFuture = SupabaseService.getBusinessInfo().then<List<Map<String, dynamic>>>((biz) {
+      if (biz == null) return <Map<String, dynamic>>[];
+      return Supabase.instance.client
+          .from('orders')
+          .select()
+          .eq('business_id', biz['id'])
+          .order('created_at', ascending: false);
+    });
 
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: ordersStream,
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: ordersFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

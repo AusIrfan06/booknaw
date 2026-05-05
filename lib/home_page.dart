@@ -325,46 +325,70 @@ class _HomeTabState extends State<_HomeTab> {
                           ),
                         ],
                       ),
-                      MasonryGridView.count(
-                        crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : (MediaQuery.of(context).size.width > 600 ? 2 : 2),
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 4,
-                        itemBuilder: (context, index) {
-                          final products = [
-                            (title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', color: Colors.redAccent),
-                            (title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', color: Colors.orangeAccent),
-                            (title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', color: Colors.amber),
-                            (title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', color: Colors.yellow.shade700),
-                          ];
-                          final p = products[index];
-                          return _buildPinterestCard(
-                            context,
-                            title: p.title,
-                            desc: p.desc,
-                            price: p.price,
-                            imageColor: p.color,
-                            onTap: () {
-                              if (p.title == 'HOT & SPICYYY' || p.title == 'SMOKY BBQ' || p.title == 'CHEESE DIP') {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductDetailPage(
-                                      title: p.title,
-                                      price: p.price,
-                                      description: p.desc,
-                                      themeColor: p.color,
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                showGlassToast(context, 'Menu ini akan menyusul tidak lama lagi! ✨', isError: false);
-                              }
+                      StreamBuilder<List<Map<String, dynamic>>>(
+                        stream: Supabase.instance.client
+                            .from('inventory')
+                            .stream(primaryKey: ['id']),
+                        builder: (context, snapshot) {
+                          final inventory = snapshot.data ?? [];
+                          
+                          int totalHot = 0;
+                          int totalBbq = 0;
+                          int totalCheese = 0;
+                          
+                          for (var loc in inventory) {
+                            totalHot += (loc['hot_stock'] as int? ?? 0);
+                            totalBbq += (loc['bbq_stock'] as int? ?? 0);
+                            totalCheese += (loc['cheese_stock'] as int? ?? 0);
+                          }
+
+                          return MasonryGridView.count(
+                            crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : (MediaQuery.of(context).size.width > 600 ? 2 : 2),
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: 4,
+                            itemBuilder: (context, index) {
+                              final products = [
+                                (title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', color: Colors.redAccent, isOutOfStock: totalHot <= 0),
+                                (title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', color: Colors.orangeAccent, isOutOfStock: totalBbq <= 0),
+                                (title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', color: Colors.amber, isOutOfStock: totalCheese <= 0),
+                                (title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', color: Colors.yellow.shade700, isOutOfStock: false),
+                              ];
+                              final p = products[index];
+                              return _buildPinterestCard(
+                                context,
+                                title: p.title,
+                                desc: p.desc,
+                                price: p.price,
+                                imageColor: p.color,
+                                isOutOfStock: p.isOutOfStock,
+                                onTap: () {
+                                  if (p.isOutOfStock) {
+                                    showGlassToast(context, 'Maaf, stok ${p.title} telah habis! 😭', isError: true);
+                                    return;
+                                  }
+                                  if (p.title == 'HOT & SPICYYY' || p.title == 'SMOKY BBQ' || p.title == 'CHEESE DIP') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ProductDetailPage(
+                                          title: p.title,
+                                          price: p.price,
+                                          description: p.desc,
+                                          themeColor: p.color,
+                                        ),
+                                      ),
+                                    );
+                                  } else {
+                                    showGlassToast(context, 'Menu ini akan menyusul tidak lama lagi! ✨', isError: false);
+                                  }
+                                },
+                              );
                             },
                           );
-                        },
+                        }
                       ),
                       const SizedBox(height: 32),
                       const _ReviewsSection(),
@@ -443,6 +467,7 @@ class _HomeTabState extends State<_HomeTab> {
     required String desc,
     required String price,
     required Color imageColor,
+    bool isOutOfStock = false,
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -468,48 +493,75 @@ class _HomeTabState extends State<_HomeTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Stack(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: imageColor.withValues(alpha: 0.2),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                      border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: title.length % 2 == 0 ? 32 : 48), // Dynamic height based on title length
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: imageColor.withValues(alpha: 0.2),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                  border: Border(bottom: BorderSide(color: imageColor.withValues(alpha: 0.1))),
+                ),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: title.length % 2 == 0 ? 32 : 48),
                       child: Center(
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 54),
-                      ),
-                    ),
-                  ),
-                  // Rating Badge on Bottom Left of Image
-                  Positioned(
-                    bottom: 12,
-                    left: 12,
-                    child: GlassContainer(
-                      useOwnLayer: true,
-                      quality: GlassQuality.standard,
-                      shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
-                      settings: LiquidGlassSettings(thickness: 0.3, blur: 20),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.star_rounded, color: Colors.amber, size: 12),
-                            SizedBox(width: 2),
-                            Text('4.9', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-                          ],
+                        child: ColorFiltered(
+                          colorFilter: isOutOfStock 
+                            ? const ColorFilter.matrix([
+                                0.2126, 0.7152, 0.0722, 0, 0,
+                                0.2126, 0.7152, 0.0722, 0, 0,
+                                0.2126, 0.7152, 0.0722, 0, 0,
+                                0,      0,      0,      1, 0,
+                              ])
+                            : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+                          child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 54),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    if (isOutOfStock)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'STOK HABIS',
+                            style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    // Rating Badge
+                    Positioned(
+                      bottom: 12,
+                      left: 12,
+                      child: GlassContainer(
+                        useOwnLayer: true,
+                        quality: GlassQuality.standard,
+                        shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
+                        settings: LiquidGlassSettings(thickness: 0.3, blur: 20),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.star_rounded, color: Colors.amber, size: 12),
+                              SizedBox(width: 2),
+                              Text('4.9', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -529,6 +581,20 @@ class _HomeTabState extends State<_HomeTab> {
                             const SizedBox(height: 4),
                             Text('100+ terjual', style: TextStyle(fontSize: 10, color: Colors.grey.shade500)),
                           ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isOutOfStock 
+                              ? Colors.grey.withValues(alpha: 0.1) 
+                              : const Color(0xFFFF5722).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedAdd01, 
+                            color: isOutOfStock ? Colors.grey : const Color(0xFFFF5722), 
+                            size: 20
+                          ),
                         ),
                       ],
                     ),

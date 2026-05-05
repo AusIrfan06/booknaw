@@ -77,16 +77,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
       String lName = _lastNameController.text.trim();
       lName = lName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
 
-      // Fetch first business ID as default
-      final bizRes = await Supabase.instance.client.from('businesses').select('id').limit(1).maybeSingle();
-      final bizId = bizRes?['id'];
-      
       final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
-      debugPrint('Submitting order: business_id=$bizId, user_id=$currentUserId');
+      debugPrint('Submitting order: user_id=$currentUserId');
 
       final response = await Supabase.instance.client.from('orders').insert({
-        'business_id': bizId,
         'user_id': currentUserId,
         'customer_name': '$fName $lName'.trim(),
         'phone_number': _phoneController.text,

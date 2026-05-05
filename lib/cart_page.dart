@@ -33,17 +33,7 @@ class CartPage extends StatelessWidget {
         listenable: CartService(),
         builder: (context, _) {
           final service = CartService();
-          final items = <Map<String, dynamic>>[];
-          
-          if (service.hotQuantity > 0) {
-            items.add({'title': 'HOT & SPICYYY', 'qty': service.hotQuantity, 'color': Colors.redAccent, 'price': 5.0});
-          }
-          if (service.bbqQuantity > 0) {
-            items.add({'title': 'SMOKY BBQ', 'qty': service.bbqQuantity, 'color': Colors.orangeAccent, 'price': 5.0});
-          }
-          if (service.cheeseQuantity > 0) {
-            items.add({'title': 'CHEESE DIP', 'qty': service.cheeseQuantity, 'color': Colors.amber, 'price': 1.0});
-          }
+          final items = service.items;
 
           if (items.isEmpty) {
             return Center(
@@ -88,18 +78,20 @@ class CartPage extends StatelessWidget {
                               Container(
                                 width: 60, height: 60,
                                 decoration: BoxDecoration(
-                                  color: (item['color'] as Color).withValues(alpha: 0.2),
+                                  color: const Color(0xFFFF5722).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: item['color'] as Color, size: 24),
+                                child: item.imageUrl != null 
+                                  ? ClipRRect(borderRadius: BorderRadius.circular(12), child: Image.network(item.imageUrl!, fit: BoxFit.cover))
+                                  : const HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: Color(0xFFFF5722), size: 24),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item['title'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    Text('RM ${(item['price'] as double).toStringAsFixed(2)}', 
+                                    Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    Text('RM ${item.price.toStringAsFixed(2)}', 
                                       style: const TextStyle(color: Color(0xFFFF5722), fontWeight: FontWeight.w900)),
                                   ],
                                 ),
@@ -107,16 +99,14 @@ class CartPage extends StatelessWidget {
                               Row(
                                 children: [
                                   _qtyBtn(Icons.remove, () {
-                                    if (item['qty'] > 0) {
-                                      service.updateQuantity(item['title'], item['qty'] - 1);
-                                    }
+                                    service.updateQuantity(item.title, item.quantity - 1);
                                   }),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                                    child: Text('${item['qty']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    child: Text('${item.quantity}', style: const TextStyle(fontWeight: FontWeight.bold)),
                                   ),
                                   _qtyBtn(Icons.add, () {
-                                    service.updateQuantity(item['title'], item['qty'] + 1);
+                                    service.updateQuantity(item.title, item.quantity + 1);
                                   }),
                                 ],
                               ),
@@ -172,11 +162,7 @@ class CartPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => OrderPage(
-                      initialHot: service.hotQuantity,
-                      initialBbq: service.bbqQuantity,
-                      initialCheese: service.cheeseQuantity,
-                    ),
+                    builder: (context) => const OrderPage(),
                   ),
                 );
               },

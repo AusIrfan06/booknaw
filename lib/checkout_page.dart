@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'utils/glass_toast.dart';
+import 'utils/cart_service.dart';
 
 class CheckoutPage extends StatefulWidget {
-  final int hotQuantity;
-  final int bbqQuantity;
-  final int cheeseQuantity;
+  final List<CartItem> items;
   final String deliveryOption;
   final double totalPrice;
 
   const CheckoutPage({
     super.key,
-    required this.hotQuantity,
-    required this.bbqQuantity,
-    required this.cheeseQuantity,
+    required this.items,
     required this.deliveryOption,
     required this.totalPrice,
   });
@@ -52,7 +47,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
           _firstNameController.text = firstName;
           _lastNameController.text = lastName;
         } else if (fullName.isNotEmpty) {
-          // Fallback for old accounts without split names
           final parts = fullName.split(' ');
           _firstNameController.text = parts.first;
           if (parts.length > 1) {
@@ -78,15 +72,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
       String lName = _lastNameController.text.trim();
       lName = lName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
 
-      // Fetch first business ID as default
-      // We try to get ANY business ID that might be available.
-      // In a single-business app, this works. In multi-business, we'd need more context.
       final bizRes = await Supabase.instance.client.from('businesses').select('id').limit(1).maybeSingle();
       final bizId = bizRes?['id'];
       
       final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
-      debugPrint('Submitting order: business_id=$bizId, user_id=$currentUserId');
+      // Extract legacy quantities for backward compatibility with Staff Dashboard
+      int hotQty = 0;
+      int bbqQty = 0;
+      int cheeseQty = 0;
+      for (var item in widget.items) {
+        if (item.title == 'HOT & SPICYYY') hotQty += item.quantity;
+        if (item.title == 'SMOKY BBQ' || item.title == 'BBQ') bbqQty += item.quantity;
+        if (item.title == 'CHEESE DIP' || item.title == 'Cheese Dip') cheeseQty += item.quantity;
+      }
 
       final response = await Supabase.instance.client.from('orders').insert({
         'business_id': bizId,
@@ -94,68 +93,43 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'customer_name': '$fName $lName'.trim(),
         'phone_number': _phoneController.text,
         'delivery_address': _isDelivery ? _addressController.text.trim() : null,
-        'hot_quantity_100g': widget.hotQuantity,
-        'bbq_quantity_100g': widget.bbqQuantity,
-        'cheese_quantity': widget.cheeseQuantity,
+        'hot_quantity_100g': hotQty,
+        'bbq_quantity_100g': bbqQty,
+        'cheese_quantity': cheeseQty,
+        'items': widget.items.map((i) => i.toJson()).toList(), // NEW: Save dynamic items
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
-        'status': 'pending', // Explicitly set status to pending
-        'created_at': DateTime.now().toIso8601String(),
+        'status': 'pending',
       }).select().single();
 
       final orderId = response['id'];
 
-      // Determine locId from delivery option
-      int locId = 1;
-      if (widget.deliveryOption.contains('Alpha')) {
-        locId = 1;
-      } else if (widget.deliveryOption.contains('Beta')) {
-        locId = 2;
-      } else if (widget.deliveryOption.contains('Gamma')) {
-        locId = 3;
-      } else if (widget.deliveryOption.contains('NR')) {
-        locId = 4;
-      }
-
-      // Deduct stock from the CORRECT location
-      final invData = await Supabase.instance.client.from('inventory').select().eq('id', locId).single();
-      final newHot = (invData['hot_stock'] as int? ?? 0) - widget.hotQuantity;
-      final newBbq = (invData['bbq_stock'] as int? ?? 0) - widget.bbqQuantity;
-      final newCheese = (invData['cheese_stock'] as int? ?? 0) - widget.cheeseQuantity;
+      // NOTE: Stock deduction is now handled in Staff Dashboard when marking as PAID 
+      // to avoid double deduction and complex rollback logic.
       
-      await Supabase.instance.client.from('inventory').update({
-        'hot_stock': newHot < 0 ? 0 : newHot,
-        'bbq_stock': newBbq < 0 ? 0 : newBbq,
-        'cheese_stock': newCheese < 0 ? 0 : newCheese,
-      }).eq('id', locId);
-
       if (!mounted) return;
 
-      // Build WhatsApp message for Lysa
       final name = '${_firstNameController.text} ${_lastNameController.text}'.trim();
       final phone = _phoneController.text;
-      final hot = widget.hotQuantity > 0 ? 'HOT & SPICYYY x${widget.hotQuantity}' : '';
-      final bbq = widget.bbqQuantity > 0 ? 'BBQ x${widget.bbqQuantity}' : '';
-      final cheese = widget.cheeseQuantity > 0 ? 'Cheese Dip x${widget.cheeseQuantity}' : '';
-      final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
+      final itemsStr = widget.items.map((i) => '${i.title} x${i.quantity}').join(', ');
       final total = 'RM ${widget.totalPrice.toStringAsFixed(2)}';
-      final location = widget.deliveryOption;
-      final address = _isDelivery ? _addressController.text.trim() : 'Pickup';
-
+      
       final waMessage = Uri.encodeComponent(
         'Assalamualaikum Lysa Saya nak order Nachozy!\n\n'
         'No. Pesanan: #$orderId\n'
         'Nama: $name\n'
         'No. Tel: $phone\n'
-        'Pesanan: $items\n'
-        'Lokasi: $location\n'
-        'Alamat: $address\n'
+        'Pesanan: $itemsStr\n'
+        'Lokasi: ${widget.deliveryOption}\n'
         'Jumlah: $total\n\n'
-        'Saya akan hantar bukti pembayaran sekejap lagi ya! Terima kasih',
+        'Saya akan hantar bukti pembayaran sekejap lagi ya. Terima kasih!'
       );
       const lysaNumber = '60132163194';
       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
+
+      // Clear cart after success
+      CartService().clear();
 
       _showSuccessDialog(orderId, waUrl);
     } catch (e) {
@@ -171,53 +145,39 @@ class _CheckoutPageState extends State<CheckoutPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
+      builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.green, size: 64),
+            const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
             const SizedBox(height: 16),
-            Text(
-              'Pesanan #$orderId Berjaya!',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
+            const Text('Pesanan Berjaya!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
+            Text('No. Pesanan anda: #$orderId', style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 24),
             const Text(
-              'Langkah seterusnya: Hantar bukti pembayaran kepada Lysa melalui WhatsApp untuk pengesahan.',
+              'Sila hantar pesanan anda ke WhatsApp untuk pengesahan dan pembayaran.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  try {
-                    await launchUrl(waUrl, mode: LaunchMode.externalApplication);
-                  } catch (e) {
-                    debugPrint('Could not launch WhatsApp: $e');
-                  }
+                  await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                  if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
                 },
-                icon: const Icon(Icons.chat, color: Colors.white),
-                label: const Text(
-                  'Hubungi Lysa di WhatsApp',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Colors.white, size: 20),
+                label: const Text('HANTAR KE WHATSAPP'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF25D366),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                Navigator.popUntil(context, (route) => route.isFirst);
-              },
-              child: const Text('Kembali ke Laman Utama'),
             ),
           ],
         ),
@@ -228,141 +188,52 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Bayaran & Maklumat'),
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: GlassContainer(
-            useOwnLayer: true,
-            quality: GlassQuality.standard,
-            shape: LiquidRoundedSuperellipse(borderRadius: 999.0),
-            settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-              onPressed: () => Navigator.pop(context),
-            ),
-          ),
-        ),
+        title: const Text('Maklumat Penghantaran'),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 80),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- Contact Info Header ---
-              _buildSectionHeader(
-                icon: HugeIcons.strokeRoundedUser,
-                title: 'Maklumat Peribadi',
-                isDark: isDark,
+              const Text('Maklumat Anda', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: _buildField('Nama Depan', _firstNameController, Icons.person_outline)),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildField('Nama Belakang', _lastNameController, Icons.person_outline)),
+                ],
               ),
               const SizedBox(height: 16),
-              
-              _buildTextField(
-                controller: _firstNameController,
-                label: 'Nama Pertama',
-                icon: HugeIcons.strokeRoundedUser,
-                isDark: isDark,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
-                textCapitalization: TextCapitalization.words,
-                validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama pertama' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _lastNameController,
-                label: 'Nama Akhir',
-                icon: HugeIcons.strokeRoundedUser,
-                isDark: isDark,
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]'))],
-                textCapitalization: TextCapitalization.words,
-                validator: (val) => val == null || val.isEmpty ? 'Sila masukkan nama akhir' : null,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _phoneController,
-                label: 'No. Telefon (WhatsApp)',
-                icon: HugeIcons.strokeRoundedSmartPhone01,
-                isDark: isDark,
-                keyboardType: TextInputType.phone,
-                validator: (val) => val == null || val.isEmpty ? 'Sila masukkan no. telefon' : null,
-              ),
+              _buildField('No. Telefon', _phoneController, Icons.phone_android_outlined, keyboardType: TextInputType.phone),
               if (_isDelivery) ...[
+                const SizedBox(height: 24),
+                const Text('Alamat Penghantaran', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _addressController,
-                  label: 'Alamat Penghantaran',
-                  icon: HugeIcons.strokeRoundedMapsLocation01,
-                  isDark: isDark,
-                  maxLines: 2,
-                  validator: (val) => val == null || val.trim().isEmpty ? 'Sila masukkan alamat' : null,
-                ),
+                _buildField('Alamat Lengkap (Blok/No. Rumah/Zon)', _addressController, Icons.location_on_outlined, maxLines: 3),
               ],
-              
-              const SizedBox(height: 32),
-
-              // --- Order Summary Card ---
-              _buildModernSummary(isDark),
-              
-              const SizedBox(height: 32),
-
               const SizedBox(height: 40),
-
-              // --- Step 1: Payment ---
-              _buildStepHeader(
-                step: 'Langkah 1',
-                title: 'Tangkap Layar QR Code',
-                icon: Icons.qr_code_scanner_rounded,
-                color: primaryColor,
-              ),
-              const SizedBox(height: 16),
-              _buildQRCodeSection(isDark, primaryColor),
-
+              _buildOrderSummary(isDark),
               const SizedBox(height: 40),
-
-              // --- Step 2 & 3: WhatsApp ---
-              _buildStepHeader(
-                step: 'Langkah 2 & 3',
-                title: 'Hantar Pesanan & Bukti',
-                icon: HugeIcons.strokeRoundedWhatsapp,
-                color: const Color(0xFF25D366),
-              ),
-              const SizedBox(height: 12),
-              const Padding(
-                padding: EdgeInsets.only(left: 48),
-                child: Text(
-                  '1. Tekan butang di bawah untuk hantar pesanan.\n2. Kemudian, lampirkan (attach) gambar resit di WhatsApp.',
-                  style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
-                ),
-              ),
-
-              const SizedBox(height: 48),
-
-              // --- Submit Button ---
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _submitOrder,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
+                    backgroundColor: const Color(0xFFFF5722),
                     padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    elevation: 4,
-                    shadowColor: primaryColor.withValues(alpha: 0.4),
                   ),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Sahkan & Pesan Sekarang',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                  child: _isLoading 
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('SAHKAN PESANAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                 ),
               ),
-              const SizedBox(height: 40),
             ],
           ),
         ),
@@ -370,216 +241,48 @@ class _CheckoutPageState extends State<CheckoutPage> {
     );
   }
 
-  Widget _buildModernSummary(bool isDark) {
-    return GlassContainer(
-      useOwnLayer: true,
-      quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 24.0),
-      settings: LiquidGlassSettings(
-        thickness: 0.1, blur: 15, refractiveIndex: 1.0,
-        glassColor: Colors.transparent,
-      ),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const HugeIcon(icon: HugeIcons.strokeRoundedShoppingCart01, color: Color(0xFFFF5722), size: 24),
-                const SizedBox(width: 12),
-                const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            const Divider(height: 32),
-            if (widget.hotQuantity > 0) _buildSummaryRow('HOT & SPICYYY', '${widget.hotQuantity} pek'),
-            if (widget.bbqQuantity > 0) _buildSummaryRow('BBQ', '${widget.bbqQuantity} pek'),
-            if (widget.cheeseQuantity > 0) _buildSummaryRow('Cheese Dip', '${widget.cheeseQuantity} unit'),
-            _buildSummaryRow('Lokasi', widget.deliveryOption),
-            const Divider(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Total Bayaran', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text(
-                  'RM ${widget.totalPrice.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Color(0xFFFF5722)),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader({required dynamic icon, required String title, required bool isDark}) {
-    return Row(
-      children: [
-        HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 24),
-        const SizedBox(width: 12),
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-      ],
-    );
-  }
-
-  Widget _buildStepHeader({required String step, required String title, required dynamic icon, required Color color}) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: icon is IconData 
-            ? Icon(icon, color: color, size: 24)
-            : HugeIcon(icon: icon, color: color, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                step,
-                style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-              ),
-              Text(
-                title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQRCodeSection(bool isDark, Color primaryColor) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: primaryColor.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 15,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.asset(
-                'assets/qr_payment.png',
-                width: 200,
-                height: 200,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Column(
-                  children: [
-                    const Icon(Icons.qr_code_2_rounded, size: 100, color: Colors.grey),
-                    const SizedBox(height: 8),
-                    Text('QR Code tidak dapat dimuatkan', style: TextStyle(color: Colors.red.shade700, fontSize: 12)),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'SITI FARHANA ALLYSA BINTI MD FADLI',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'DuitNow / QR Pay',
-            style: TextStyle(color: Colors.grey, fontSize: 13),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              'Sila ambil tangkap layar (screenshot) QR ini',
-              style: TextStyle(fontSize: 12, color: primaryColor, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required dynamic icon,
-    required bool isDark,
-    int maxLines = 1,
-    TextInputType? keyboardType,
-    String? Function(String?)? validator,
-    List<TextInputFormatter>? inputFormatters,
-    TextCapitalization textCapitalization = TextCapitalization.none,
-  }) {
+  Widget _buildField(String label, TextEditingController controller, IconData icon, {int maxLines = 1, TextInputType? keyboardType}) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       keyboardType: keyboardType,
-      validator: validator,
-      inputFormatters: inputFormatters,
-      textCapitalization: textCapitalization,
+      validator: (v) => v!.isEmpty ? 'Wajib diisi' : null,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Padding(
-          padding: const EdgeInsets.all(12),
-          child: HugeIcon(icon: icon, color: const Color(0xFFFF5722), size: 20),
-        ),
-        filled: true,
-        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey.shade100,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFFF5722), width: 1),
-        ),
+        prefixIcon: Icon(icon),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildOrderSummary(bool isDark) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 14)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+          const Text('Ringkasan Bayaran', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 16),
+          _summaryRow('Subtotal', 'RM ${widget.totalPrice.toStringAsFixed(2)}'),
+          const Divider(height: 24),
+          _summaryRow('JUMLAH KESELURUHAN', 'RM ${widget.totalPrice.toStringAsFixed(2)}', isTotal: true),
         ],
       ),
+    );
+  }
+
+  Widget _summaryRow(String label, String value, {bool isTotal = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: TextStyle(fontWeight: isTotal ? FontWeight.bold : FontWeight.normal, fontSize: isTotal ? 16 : 14)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: isTotal ? 18 : 14, color: isTotal ? const Color(0xFFFF5722) : null)),
+      ],
     );
   }
 }

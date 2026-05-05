@@ -313,12 +313,13 @@ class _HomeTabState extends State<_HomeTab> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ProductDetailPage(
-                                      title: p.title,
-                                      price: p.price,
-                                      description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim dan rasa umami yang tinggi gerenti membuatkan anda ketagih!',
-                                      themeColor: p.color,
-                                    ),
+                                builder: (context) => ProductDetailPage(
+                                  title: p.title,
+                                  price: p.price,
+                                  rawPrice: p.title.contains('SALTED') ? 12.0 : 5.0,
+                                  description: 'Alami kemewahan rasa telur masin yang diadun sempurna dengan kepingan nachos premium. Tekstur berkrim dan rasa umami yang tinggi gerenti membuatkan anda ketagih!',
+                                  themeColor: p.color,
+                                ),
                                   ),
                                 );
                               } else {

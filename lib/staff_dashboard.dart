@@ -9,7 +9,6 @@ import 'utils/glass_toast.dart';
 import 'widgets/glass_nav_bar.dart';
 import 'widgets/nav_item.dart';
 import 'inventory_management_page.dart';
-import 'supabase_service.dart';
 
 // ─── Main Staff Dashboard with Bottom Nav ─────────────────────────────────────
 
@@ -1060,9 +1059,9 @@ class _StaffOrderCard extends StatelessWidget {
           .update({'payment_status': 'Paid'})
           .eq('id', order['id']);
 
-      // Deduct inventory
+      // Deduct legacy inventory
       final opt = order['delivery_option'] as String? ?? '';
-      int locationId = 1; // Default to Alpha
+      int locationId = 1; 
       if (opt.contains('Alpha')) {
         locationId = 1;
       } else if (opt.contains('Beta')) {
@@ -1089,18 +1088,42 @@ class _StaffOrderCard extends StatelessWidget {
           final currentBbq = invRes['bbq_stock'] as int? ?? 0;
           final currentCheese = invRes['cheese_stock'] as int? ?? 0;
 
-          final newHot = currentHot - hotQty;
-          final newBbq = currentBbq - bbqQty;
-          final newCheese = currentCheese - cheeseQty;
-
           await Supabase.instance.client
               .from('inventory')
               .update({
-                'hot_stock': newHot < 0 ? 0 : newHot,
-                'bbq_stock': newBbq < 0 ? 0 : newBbq,
-                'cheese_stock': newCheese < 0 ? 0 : newCheese,
+                'hot_stock': (currentHot - hotQty) < 0 ? 0 : (currentHot - hotQty),
+                'bbq_stock': (currentBbq - bbqQty) < 0 ? 0 : (currentBbq - bbqQty),
+                'cheese_stock': (currentCheese - cheeseQty) < 0 ? 0 : (currentCheese - cheeseQty),
               })
               .eq('id', locationId);
+        }
+      }
+
+      // NEW: Deduct dynamic products stock
+      if (order['items'] != null && (order['items'] as List).isNotEmpty) {
+        final List items = order['items'] as List;
+        for (var item in items) {
+          final productId = item['id'];
+          final quantity = item['quantity'] as int? ?? 0;
+          if (productId != null && quantity > 0) {
+            try {
+              final prodRes = await Supabase.instance.client
+                  .from('products')
+                  .select('stock')
+                  .eq('id', productId)
+                  .maybeSingle();
+              
+              if (prodRes != null) {
+                final currentStock = prodRes['stock'] as int? ?? 0;
+                await Supabase.instance.client
+                    .from('products')
+                    .update({'stock': (currentStock - quantity) < 0 ? 0 : (currentStock - quantity)})
+                    .eq('id', productId);
+              }
+            } catch (e) {
+              debugPrint('Error deducting stock for product $productId: $e');
+            }
+          }
         }
       }
     } catch (e) {
@@ -1207,6 +1230,11 @@ class _StaffOrderCard extends StatelessWidget {
               if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
               if (bbqQty > 0) Text('- BBQ x$bbqQty'),
               if (cheeseQty > 0) Text('- Cheese Dip x$cheeseQty'),
+              
+              // NEW: Display dynamic items
+              if (order['items'] != null && (order['items'] as List).isNotEmpty)
+                ...(order['items'] as List).map((item) => Text('- ${item['title']} x${item['quantity']}')),
+              
               const SizedBox(height: 8),
               Text(
                 'Lokasi: $delivery',
@@ -1510,6 +1538,11 @@ class _DeliveryOrderCard extends StatelessWidget {
             if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
             if (bbqQty > 0) Text('- BBQ x$bbqQty'),
             if (addCheese) const Text('- Cheese Dip'),
+
+            // NEW: Display dynamic items
+            if (order['items'] != null && (order['items'] as List).isNotEmpty)
+              ...(order['items'] as List).map((item) => Text('- ${item['title']} x${item['quantity']}')),
+
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),

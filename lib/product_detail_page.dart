@@ -8,17 +8,23 @@ import 'utils/cart_service.dart';
 import 'utils/glass_toast.dart';
 
 class ProductDetailPage extends StatefulWidget {
+  final String? id;
   final String title;
   final String price;
+  final double rawPrice;
   final String description;
   final Color themeColor;
+  final String? imageUrl;
 
   const ProductDetailPage({
     super.key,
+    this.id,
     required this.title,
     required this.price,
+    required this.rawPrice,
     required this.description,
     required this.themeColor,
+    this.imageUrl,
   });
 
   @override
@@ -58,11 +64,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Center(
                       child: Hero(
                         tag: widget.title,
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedPackage,
-                          size: 250,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
+                        child: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
+                          ? Image.network(widget.imageUrl!, fit: BoxFit.contain, width: 400)
+                          : HugeIcon(
+                              icon: HugeIcons.strokeRoundedPackage,
+                              size: 250,
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
                       ),
                     ),
                   ),
@@ -106,7 +114,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       );
     }
 
-    // ── Mobile: Standard Sliver Layout ───────────────────────────────────────
     return Scaffold(
       body: Stack(
         children: [
@@ -155,31 +162,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       Center(
                         child: Hero(
                           tag: widget.title,
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedPackage,
-                            size: 150,
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 20,
-                        right: 20,
-                        child: GlassContainer(
-                          useOwnLayer: true,
-                          quality: GlassQuality.standard,
-                          shape: LiquidRoundedSuperellipse(borderRadius: 16.0),
-                          settings: LiquidGlassSettings(thickness: 0.2, blur: 20),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                            child: const Row(
-                              children: [
-                                Icon(Icons.star, color: Colors.amber, size: 18),
-                                SizedBox(width: 4),
-                                Text('4.9 (120+)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-                              ],
-                            ),
-                          ),
+                          child: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
+                            ? Image.network(widget.imageUrl!, fit: BoxFit.cover, width: double.infinity)
+                            : HugeIcon(
+                                icon: HugeIcons.strokeRoundedPackage,
+                                size: 150,
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
                         ),
                       ),
                     ],
@@ -254,23 +243,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             fontSize: 13,
             height: 1.5,
             color: isDark ? Colors.white70 : Colors.black54,
-          ),
-        ),
-        const SizedBox(height: 24),
-        const Text(
-          'Maklumat Tambahan',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Row(
-            children: [
-              _infoCard(HugeIcons.strokeRoundedFire, 'Tahap Pedas', 'Ekstrem', Colors.red),
-              _infoCard(HugeIcons.strokeRoundedTimer01, 'Tempoh Sedia', '5-10 min', Colors.blue),
-              _infoCard(HugeIcons.strokeRoundedVegetarianFood, 'Asli', 'Tanpa MSG', Colors.green),
-            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -411,11 +383,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       ),
       child: Row(
         children: [
-          // Tambah ke Troli (Frosted)
           Expanded(
             child: InkWell(
               onTap: () {
-                CartService().addToCart(widget.title, _quantity);
+                CartService().addToCart(
+                  widget.title, 
+                  _quantity, 
+                  id: widget.id, 
+                  price: widget.rawPrice, 
+                  imageUrl: widget.imageUrl
+                );
                 showGlassToast(context, '${widget.title} x$_quantity ditambah ke troli! 🛒');
               },
               child: GlassContainer(
@@ -447,18 +424,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             ),
           ),
           const SizedBox(width: 12),
-          // Beli Sekarang (Opaque)
           Expanded(
             child: InkWell(
               onTap: () {
+                // Add to cart first to ensure it's there
+                CartService().addToCart(
+                  widget.title, 
+                  _quantity, 
+                  id: widget.id, 
+                  price: widget.rawPrice, 
+                  imageUrl: widget.imageUrl
+                );
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => OrderPage(
-                      initialHot: widget.title == 'HOT & SPICYYY' ? _quantity : 0,
-                      initialBbq: widget.title == 'SMOKY BBQ' ? _quantity : 0,
-                      initialCheese: widget.title == 'CHEESE DIP' ? _quantity : 0,
-                    ),
+                    builder: (context) => const OrderPage(),
                   ),
                 );
               },
@@ -480,29 +460,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoCard(dynamic icon, String label, String value, Color color) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        children: [
-          HugeIcon(icon: icon, color: color, size: 24),
-          const SizedBox(height: 12),
-          Text(label, style: TextStyle(fontSize: 10, color: isDark ? Colors.white54 : Colors.grey)),
-          const SizedBox(height: 2),
-          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black87)),
         ],
       ),
     );

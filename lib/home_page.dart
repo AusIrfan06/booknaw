@@ -325,46 +325,78 @@ class _HomeTabState extends State<_HomeTab> {
                           ),
                         ],
                       ),
-                      MasonryGridView.count(
-                        crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : (MediaQuery.of(context).size.width > 600 ? 2 : 2),
-                        mainAxisSpacing: 16,
-                        crossAxisSpacing: 16,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: 4,
-                        itemBuilder: (context, index) {
-                          final products = [
-                            (title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', color: Colors.redAccent),
-                            (title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', color: Colors.orangeAccent),
-                            (title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', color: Colors.amber),
-                            (title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', color: Colors.yellow.shade700),
-                          ];
-                          final p = products[index];
-                          return _buildPinterestCard(
-                            context,
-                            title: p.title,
-                            desc: p.desc,
-                            price: p.price,
-                            imageColor: p.color,
-                            onTap: () {
-                              if (p.title == 'HOT & SPICYYY' || p.title == 'SMOKY BBQ' || p.title == 'CHEESE DIP') {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ProductDetailPage(
-                                      title: p.title,
-                                      price: p.price,
-                                      description: p.desc,
-                                      themeColor: p.color,
+                      StreamBuilder<List<Map<String, dynamic>>>(
+                        stream: Supabase.instance.client
+                            .from('products')
+                            .stream(primaryKey: ['id'])
+                            .order('created_at', ascending: false),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: Padding(
+                              padding: EdgeInsets.all(40.0),
+                              child: CircularProgressIndicator(color: Color(0xFFFF5722)),
+                            ));
+                          }
+                          
+                          final dbProducts = snapshot.data ?? [];
+                          
+                          // Fallback to legacy hardcoded products if DB is empty
+                          final displayProducts = dbProducts.isNotEmpty 
+                            ? dbProducts.map((p) => (
+                                id: p['id']?.toString() ?? '',
+                                title: p['name']?.toString() ?? 'Produk',
+                                desc: p['description']?.toString() ?? '',
+                                price: 'RM ${(p['price'] ?? 0.0).toStringAsFixed(2)}',
+                                rawPrice: (p['price'] as num?)?.toDouble() ?? 0.0,
+                                imageUrl: p['image_url']?.toString(),
+                                color: p['name']?.toString().contains('HOT') == true ? Colors.redAccent 
+                                     : p['name']?.toString().contains('BBQ') == true ? Colors.orangeAccent
+                                     : p['name']?.toString().contains('CHEESE') == true ? Colors.amber
+                                     : Colors.blueAccent
+                              )).toList()
+                            : [
+                                (id: '1', title: 'HOT & SPICYYY', desc: 'Pedas gila, gerenti berpeluh! (100g)', price: 'RM 5.00', rawPrice: 5.0, imageUrl: null, color: Colors.redAccent),
+                                (id: '2', title: 'SMOKY BBQ', desc: 'Rasa salai yang premium. (100g)', price: 'RM 5.00', rawPrice: 5.0, imageUrl: null, color: Colors.orangeAccent),
+                                (id: '3', title: 'CHEESE DIP', desc: 'Sos keju berkrim & padu.', price: 'RM 1.00', rawPrice: 1.0, imageUrl: null, color: Colors.amber),
+                                (id: '4', title: 'SALTED EGG SUPREME', desc: 'Rasa telur masin premium yang mewah.', price: 'RM 12.00', rawPrice: 12.0, imageUrl: null, color: Colors.yellow.shade700),
+                              ];
+
+                          return MasonryGridView.count(
+                            crossAxisCount: MediaQuery.of(context).size.width > 900 ? 3 : (MediaQuery.of(context).size.width > 600 ? 2 : 2),
+                            mainAxisSpacing: 16,
+                            crossAxisSpacing: 16,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: displayProducts.length,
+                            itemBuilder: (context, index) {
+                              final p = displayProducts[index];
+                              return _buildPinterestCard(
+                                context,
+                                title: p.title,
+                                desc: p.desc,
+                                price: p.price,
+                                imageColor: p.color,
+                                imageUrl: p.imageUrl,
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ProductDetailPage(
+                                        id: p.id,
+                                        title: p.title,
+                                        price: p.price,
+                                        rawPrice: p.rawPrice,
+                                        description: p.desc,
+                                        themeColor: p.color,
+                                        imageUrl: p.imageUrl,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              } else {
-                                showGlassToast(context, 'Menu ini akan menyusul tidak lama lagi! ✨', isError: false);
-                              }
+                                  );
+                                },
+                              );
                             },
                           );
-                        },
+                        }
                       ),
                       const SizedBox(height: 32),
                       const _ReviewsSection(),
@@ -443,6 +475,7 @@ class _HomeTabState extends State<_HomeTab> {
     required String desc,
     required String price,
     required Color imageColor,
+    String? imageUrl,
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -480,7 +513,12 @@ class _HomeTabState extends State<_HomeTab> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(vertical: title.length % 2 == 0 ? 32 : 48), // Dynamic height based on title length
                       child: Center(
-                        child: HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 54),
+                        child: imageUrl != null && imageUrl.isNotEmpty
+                          ? ClipRRect(
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                              child: Image.network(imageUrl, fit: BoxFit.cover, width: double.infinity),
+                            )
+                          : HugeIcon(icon: HugeIcons.strokeRoundedPackage, color: imageColor, size: 54),
                       ),
                     ),
                   ),

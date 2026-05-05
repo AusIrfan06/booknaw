@@ -49,6 +49,8 @@ class _OrderPageState extends State<OrderPage> {
     return total;
   }
 
+  List<Map<String, dynamic>> _currentInventory = [];
+
   void _proceedToCheckout() {
     if (_cartService.totalItems == 0) {
       showGlassToast(context, 'Sila tambah sekurang-kurangnya 1 item (Nachos atau Cheese Dip)!', isError: true);
@@ -57,6 +59,39 @@ class _OrderPageState extends State<OrderPage> {
     if (_deliveryOption == null) {
       showGlassToast(context, 'Sila pilih cara delivery/pickup!', isError: true);
       return;
+    }
+
+    // NEW: Strict Location Stock Check
+    int locId = 1;
+    if (_deliveryOption!.contains('Alpha')) {
+      locId = 1;
+    } else if (_deliveryOption!.contains('Beta')) {
+      locId = 2;
+    } else if (_deliveryOption!.contains('Gamma')) {
+      locId = 3;
+    } else if (_deliveryOption!.contains('NR')) {
+      locId = 4;
+    }
+
+    final locData = _currentInventory.firstWhere((element) => element['id'] == locId, orElse: () => {});
+    if (locData.isNotEmpty) {
+      final hotStock = locData['hot_stock'] as int? ?? 0;
+      final bbqStock = locData['bbq_stock'] as int? ?? 0;
+      final cheeseStock = locData['cheese_stock'] as int? ?? 0;
+
+      String? errorMsg;
+      if (_cartService.hotQuantity > hotStock) {
+        errorMsg = 'Maaf, $_deliveryOption hanya mempunyai $hotStock stok HOT & SPICYYY.';
+      } else if (_cartService.bbqQuantity > bbqStock) {
+        errorMsg = 'Maaf, $_deliveryOption hanya mempunyai $bbqStock stok SMOKY BBQ.';
+      } else if (_cartService.cheeseQuantity > cheeseStock) {
+        errorMsg = 'Maaf, $_deliveryOption hanya mempunyai $cheeseStock stok Cheese Dip.';
+      }
+
+      if (errorMsg != null) {
+        showGlassToast(context, errorMsg, isError: true);
+        return;
+      }
     }
 
     if (Supabase.instance.client.auth.currentUser == null) {
@@ -140,6 +175,7 @@ class _OrderPageState extends State<OrderPage> {
           }
 
           final inventory = snapshot.data ?? [];
+          _currentInventory = inventory;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -204,12 +240,25 @@ class _OrderPageState extends State<OrderPage> {
     String stockKey,
     Color color,
   ) {
-    int totalStock = 0;
-    for (var loc in inventory) {
-      totalStock += (loc[stockKey] as int? ?? 0);
+    int displayStock = 0;
+    if (_deliveryOption != null) {
+      // Show stock for selected location
+      int locId = 1;
+      if (_deliveryOption!.contains('Alpha')) locId = 1;
+      else if (_deliveryOption!.contains('Beta')) locId = 2;
+      else if (_deliveryOption!.contains('Gamma')) locId = 3;
+      else if (_deliveryOption!.contains('NR')) locId = 4;
+      
+      final locData = inventory.firstWhere((e) => e['id'] == locId, orElse: () => {});
+      displayStock = locData[stockKey] as int? ?? 0;
+    } else {
+      // Show aggregate stock
+      for (var loc in inventory) {
+        displayStock += (loc[stockKey] as int? ?? 0);
+      }
     }
 
-    final isOutOfStock = totalStock <= 0;
+    final isOutOfStock = displayStock <= 0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -236,7 +285,7 @@ class _OrderPageState extends State<OrderPage> {
                 if (isOutOfStock)
                   const Text('Stok Habis', style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold))
                 else
-                  Text('Stok: $totalStock', style: const TextStyle(fontSize: 10, color: Colors.green)),
+                  Text('Stok: $displayStock', style: const TextStyle(fontSize: 10, color: Colors.green)),
               ],
             ),
           ),
@@ -251,7 +300,11 @@ class _OrderPageState extends State<OrderPage> {
                   child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 _qtyBtn(Icons.add, () {
-                  if (qty < totalStock) onChanged(qty + 1);
+                  if (qty < displayStock) {
+                    onChanged(qty + 1);
+                  } else {
+                    showGlassToast(context, 'Maaf, tiada stok tambahan di $_deliveryOption!', isError: true);
+                  }
                 }),
               ],
             ),
@@ -261,11 +314,22 @@ class _OrderPageState extends State<OrderPage> {
   }
 
   Widget _buildCheeseOption(List<Map<String, dynamic>> inventory) {
-    int totalStock = 0;
-    for (var loc in inventory) {
-      totalStock += (loc['cheese_stock'] as int? ?? 0);
+    int displayStock = 0;
+    if (_deliveryOption != null) {
+      int locId = 1;
+      if (_deliveryOption!.contains('Alpha')) locId = 1;
+      else if (_deliveryOption!.contains('Beta')) locId = 2;
+      else if (_deliveryOption!.contains('Gamma')) locId = 3;
+      else if (_deliveryOption!.contains('NR')) locId = 4;
+      
+      final locData = inventory.firstWhere((e) => e['id'] == locId, orElse: () => {});
+      displayStock = locData['cheese_stock'] as int? ?? 0;
+    } else {
+      for (var loc in inventory) {
+        displayStock += (loc['cheese_stock'] as int? ?? 0);
+      }
     }
-    final isOutOfStock = totalStock <= 0;
+    final isOutOfStock = displayStock <= 0;
     final qty = _cartService.cheeseQuantity;
 
     return Container(
@@ -293,7 +357,7 @@ class _OrderPageState extends State<OrderPage> {
                 if (isOutOfStock)
                   const Text('Stok Habis', style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold))
                 else
-                  Text('Stok: $totalStock', style: const TextStyle(fontSize: 10, color: Colors.green)),
+                  Text('Stok: $displayStock', style: const TextStyle(fontSize: 10, color: Colors.green)),
               ],
             ),
           ),
@@ -308,7 +372,11 @@ class _OrderPageState extends State<OrderPage> {
                   child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 _qtyBtn(Icons.add, () {
-                  if (qty < totalStock) _cartService.updateQuantity('CHEESE DIP', qty + 1);
+                  if (qty < displayStock) {
+                    _cartService.updateQuantity('CHEESE DIP', qty + 1);
+                  } else {
+                    showGlassToast(context, 'Maaf, tiada stok tambahan di $_deliveryOption!', isError: true);
+                  }
                 }),
               ],
             ),

@@ -281,7 +281,7 @@ class _OrderPageState extends State<OrderPage> {
             width: 48,
             height: 48,
             decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
-            child: const Icon(Icons.BakeryDining, color: Colors.amber),
+            child: const Icon(Icons.bakery_dining, color: Colors.amber),
           ),
           const SizedBox(width: 16),
           Expanded(

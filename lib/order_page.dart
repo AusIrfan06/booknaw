@@ -244,10 +244,15 @@ class _OrderPageState extends State<OrderPage> {
     if (_deliveryOption != null) {
       // Show stock for selected location
       int locId = 1;
-      if (_deliveryOption!.contains('Alpha')) locId = 1;
-      else if (_deliveryOption!.contains('Beta')) locId = 2;
-      else if (_deliveryOption!.contains('Gamma')) locId = 3;
-      else if (_deliveryOption!.contains('NR')) locId = 4;
+      if (_deliveryOption!.contains('Alpha')) {
+        locId = 1;
+      } else if (_deliveryOption!.contains('Beta')) {
+        locId = 2;
+      } else if (_deliveryOption!.contains('Gamma')) {
+        locId = 3;
+      } else if (_deliveryOption!.contains('NR')) {
+        locId = 4;
+      }
       
       final locData = inventory.firstWhere((e) => e['id'] == locId, orElse: () => {});
       displayStock = locData[stockKey] as int? ?? 0;
@@ -317,10 +322,15 @@ class _OrderPageState extends State<OrderPage> {
     int displayStock = 0;
     if (_deliveryOption != null) {
       int locId = 1;
-      if (_deliveryOption!.contains('Alpha')) locId = 1;
-      else if (_deliveryOption!.contains('Beta')) locId = 2;
-      else if (_deliveryOption!.contains('Gamma')) locId = 3;
-      else if (_deliveryOption!.contains('NR')) locId = 4;
+      if (_deliveryOption!.contains('Alpha')) {
+        locId = 1;
+      } else if (_deliveryOption!.contains('Beta')) {
+        locId = 2;
+      } else if (_deliveryOption!.contains('Gamma')) {
+        locId = 3;
+      } else if (_deliveryOption!.contains('NR')) {
+        locId = 4;
+      }
       
       final locData = inventory.firstWhere((e) => e['id'] == locId, orElse: () => {});
       displayStock = locData['cheese_stock'] as int? ?? 0;

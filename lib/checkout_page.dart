@@ -165,41 +165,105 @@ class _CheckoutPageState extends State<CheckoutPage> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.green, size: 80),
-            const SizedBox(height: 16),
-            const Text('Pesanan Berjaya!', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('No. Pesanan anda: #$orderId', style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 24),
-            const Text(
-              'Sila hantar pesanan anda ke WhatsApp untuk pengesahan dan pembayaran.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  await launchUrl(waUrl, mode: LaunchMode.externalApplication);
-                  if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
-                },
-                icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Colors.white, size: 20),
-                label: const Text('HANTAR KE WHATSAPP'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF25D366),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_outline, color: Colors.green, size: 60),
+              const SizedBox(height: 16),
+              const Text('Pesanan Berjaya!', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text('No. Pesanan anda: #$orderId', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+              const SizedBox(height: 20),
+              
+              _buildStepRow(
+                step: 'Langkah 1',
+                title: 'Tangkap Layar QR Code',
+                icon: Icons.qr_code_scanner_rounded,
+                color: const Color(0xFFFF5722),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/qr_payment.png',
+                    width: 150,
+                    height: 150,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.qr_code_2_rounded, size: 80, color: Colors.grey),
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 8),
+              const Text(
+                'SITI FARHANA ALLYSA BINTI MD FADLI',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+              ),
+              const SizedBox(height: 20),
+              
+              _buildStepRow(
+                step: 'Langkah 2 & 3',
+                title: 'Hantar Pesanan & Bukti',
+                icon: HugeIcons.strokeRoundedWhatsapp,
+                color: const Color(0xFF25D366),
+              ),
+              const SizedBox(height: 16),
+              
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    await launchUrl(waUrl, mode: LaunchMode.externalApplication);
+                    if (context.mounted) Navigator.popUntil(context, (route) => route.isFirst);
+                  },
+                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Colors.white, size: 20),
+                  label: const Text('HANTAR KE WHATSAPP'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF25D366),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStepRow({required String step, required String title, required dynamic icon, required Color color}) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), shape: BoxShape.circle),
+          child: icon is IconData 
+            ? Icon(icon, color: color, size: 18)
+            : HugeIcon(icon: icon, color: color, size: 18),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(step, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 10)),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

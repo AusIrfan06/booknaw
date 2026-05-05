@@ -1106,8 +1106,7 @@ class _StaffOrderCard extends StatelessWidget {
   }
 
 
-  @override
-  Widget build(BuildContext context) {
+  void _showOrderDetails(BuildContext context) {
     final hotQty = order['hot_quantity_100g'] as int? ?? 0;
     final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
     final cheeseQty = order['cheese_quantity'] as int? ?? 0;
@@ -1118,152 +1117,243 @@ class _StaffOrderCard extends StatelessWidget {
     final status = order['status'] ?? 'Pending';
     final paymentStatus = order['payment_status'] ?? 'Pending Payment';
     final isPaid = paymentStatus == 'Paid';
-    final isDelivered = status == 'Delivered';
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final date = DateTime.tryParse(order['created_at'].toString()) ?? DateTime.now();
 
-    return GlassContainer(
-      useOwnLayer: true,
-      quality: GlassQuality.standard,
-      shape: LiquidRoundedSuperellipse(borderRadius: 12.0),
-      settings: _getStaffGlassSettings(isDark),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: isDelivered
-              ? (isDark
-                  ? Colors.green.shade900.withValues(alpha: 0.3)
-                  : Colors.green.shade50.withValues(alpha: 0.5))
-              : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4)),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDelivered 
-              ? Colors.green.withValues(alpha: 0.3) 
-              : Colors.white.withValues(alpha: isDark ? 0.1 : 0.5)
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      customerName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    status,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isDelivered ? Colors.green : Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Text(phone, style: const TextStyle(color: Colors.grey)),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () async {
-                      final Uri url = Uri.parse('tel:${phone.replaceAll(RegExp(r'\D'), '')}');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url);
-                      }
-                    },
-                    icon: const Icon(Icons.phone_rounded, color: Colors.blue, size: 20),
-                    tooltip: 'Call',
-                  ),
-                  IconButton(
-                    onPressed: () async {
-                      String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-                      if (cleanPhone.startsWith('0')) cleanPhone = '6$cleanPhone';
-                      final Uri url = Uri.parse('https://wa.me/$cleanPhone');
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
-                    },
-                    icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
-                    tooltip: 'WhatsApp',
-                  ),
-                ],
-              ),
-              const Divider(),
-              if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
-              if (bbqQty > 0) Text('- BBQ x$bbqQty'),
-              if (cheeseQty > 0) Text('- Cheese Dip x$cheeseQty'),
-              const SizedBox(height: 8),
-              Text(
-                'Lokasi: $delivery',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              Text(
-                'Total: RM ${totalPrice.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              // Payment status row
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isPaid ? Colors.green : Colors.orange,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      isPaid ? (isDelivered ? 'Telah Bayar' : 'Dibayar') : 'Belum Bayar',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              if (!isPaid) ...[
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => _markPaid(context),
-                    icon: const Icon(
-                      Icons.payments_outlined,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    label: const Text(
-                      'Tandakan Dibayar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        minChildSize: 0.5,
+        builder: (_, controller) => GlassContainer(
+          useOwnLayer: true,
+          quality: GlassQuality.standard,
+          shape: LiquidRoundedSuperellipse(borderRadius: 32.0),
+          settings: _getStaffGlassSettings(isDark),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E).withValues(alpha: 0.95) : Colors.white.withValues(alpha: 0.95),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+            ),
+            child: ListView(
+              controller: controller,
+              padding: const EdgeInsets.all(24),
+              children: [
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2)),
                   ),
                 ),
+                const SizedBox(height: 24),
+                const Text('Butiran Pesanan', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                Text('#${order['id']}', style: const TextStyle(color: Colors.grey)),
+                const SizedBox(height: 24),
+                _detailRow('Pelanggan', customerName, Icons.person_outline),
+                _detailRow('No. Telefon', phone, Icons.phone_outlined),
+                _detailRow('Lokasi', delivery, Icons.location_on_outlined),
+                _detailRow('Tarikh', '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}', Icons.calendar_today_outlined),
+                const Divider(height: 40),
+                const Text('Pesanan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                if (hotQty > 0) _itemRow('HOT & SPICYYY', hotQty, 5.0),
+                if (bbqQty > 0) _itemRow('SMOKY BBQ', bbqQty, 5.0),
+                if (cheeseQty > 0) _itemRow('Cheese Dip', cheeseQty, 1.0),
+                const Divider(height: 40),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Jumlah Keseluruhan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text('RM ${totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
+                  ],
+                ),
+                const SizedBox(height: 40),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _statusBadge(
+                        isPaid ? 'Dibayar' : 'Belum Bayar',
+                        isPaid ? Colors.green : Colors.orange,
+                        isDark,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _statusBadge(
+                        status,
+                        status == 'Delivered' ? Colors.blue : Colors.orange,
+                        isDark,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                if (!isPaid)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _markPaid(context);
+                      },
+                      icon: const Icon(Icons.payments_outlined, color: Colors.white),
+                      label: const Text('Tandakan Dibayar', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                    ),
+                  ),
               ],
-            ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Colors.grey),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              Text(value, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _itemRow(String name, int qty, double price) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('$qty x $name', style: const TextStyle(fontSize: 14)),
+          Text('RM ${(qty * price).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusBadge(String label, Color color, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final totalPrice = (order['total_price'] ?? 0) as num;
+    final customerName = order['customer_name'] ?? 'Unknown';
+    final phone = order['phone_number'] ?? 'Unknown';
+    final delivery = order['delivery_option'] ?? 'Unknown';
+    final status = order['status'] ?? 'Pending';
+    final paymentStatus = order['payment_status'] ?? 'Pending Payment';
+    final isPaid = paymentStatus == 'Paid';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+        settings: _getStaffGlassSettings(isDark),
+        child: InkWell(
+          onTap: () => _showOrderDetails(context),
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(customerName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          Text(delivery, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    _miniStatusBadge(status, status == 'Delivered' ? Colors.green : Colors.orange),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Text('RM ${totalPrice.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Color(0xFFFF5722))),
+                    const Spacer(),
+                    _actionIcon(Icons.phone_outlined, Colors.blue, () async {
+                      final url = Uri.parse('tel:${phone.replaceAll(RegExp(r'\D'), '')}');
+                      if (await canLaunchUrl(url)) await launchUrl(url);
+                    }),
+                    const SizedBox(width: 8),
+                    _actionIcon(HugeIcons.strokeRoundedWhatsapp, const Color(0xFF25D366), () async {
+                      String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+                      if (cleanPhone.startsWith('0')) cleanPhone = '6$cleanPhone';
+                      final url = Uri.parse('https://wa.me/$cleanPhone');
+                      if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }),
+                    const SizedBox(width: 12),
+                    const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _miniStatusBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _actionIcon(dynamic icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+        child: icon is IconData ? Icon(icon, color: color, size: 18) : HugeIcon(icon: icon, color: color, size: 18),
       ),
     );
   }
@@ -1414,28 +1504,8 @@ class _DeliveryOrderCard extends StatelessWidget {
     }
   }
 
-  Future<void> _markAsDelivered(BuildContext context) async {
-    try {
-      await Supabase.instance.client
-          .from('orders')
-          .update({'status': 'Delivered'})
-          .eq('id', order['id']);
-      
-      if (context.mounted) {
-        showGlassToast(context, 'Pesanan telah ditanda sebagai Selesai.');
-      }
-    } catch (e) {
-      if (context.mounted) {
-        showGlassToast(context, e.toString(), isError: true);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final hotQty = order['hot_quantity_100g'] as int? ?? 0;
-    final bbqQty = order['bbq_quantity_100g'] as int? ?? 0;
-    final addCheese = order['add_cheese_dip'] as bool? ?? false;
     final customerName = order['customer_name'] ?? 'Unknown';
     final phone = order['phone_number'] ?? 'Unknown';
     final delivery = order['delivery_option'] ?? 'Unknown';
@@ -1444,143 +1514,111 @@ class _DeliveryOrderCard extends StatelessWidget {
     final isOutForDelivery = status == 'Out for Delivery';
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.delivery_dining,
-                  color: Colors.deepOrange,
-                  size: 28,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    customerName,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+      child: GlassContainer(
+        useOwnLayer: true,
+        quality: GlassQuality.standard,
+        shape: LiquidRoundedSuperellipse(borderRadius: 20.0),
+        settings: _getStaffGlassSettings(isDark),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.white.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(Icons.delivery_dining, color: Colors.blue, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(customerName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(phone, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Text(phone, style: const TextStyle(color: Colors.grey)),
-                const Spacer(),
-                IconButton(
-                  onPressed: () async {
-                    final Uri url = Uri.parse('tel:${phone.replaceAll(RegExp(r'\D'), '')}');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url);
-                    }
-                  },
-                  icon: const Icon(Icons.phone_rounded, color: Colors.blue, size: 20),
-                  tooltip: 'Call',
-                ),
-                IconButton(
-                  onPressed: () async {
-                    String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
-                    if (cleanPhone.startsWith('0')) cleanPhone = '6$cleanPhone';
-                    final Uri url = Uri.parse('https://wa.me/$cleanPhone');
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url, mode: LaunchMode.externalApplication);
-                    }
-                  },
-                  icon: const HugeIcon(icon: HugeIcons.strokeRoundedWhatsapp, color: Color(0xFF25D366), size: 20),
-                  tooltip: 'WhatsApp',
-                ),
-              ],
-            ),
-            const Divider(),
-            if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
-            if (bbqQty > 0) Text('- BBQ x$bbqQty'),
-            if (addCheese) const Text('- Cheese Dip'),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    delivery,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  if (address != null && address.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(address),
-                  ],
+                  _miniStatusBadge(status, isOutForDelivery ? Colors.orange : Colors.green),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            if (delivery.toLowerCase().contains('pickup'))
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _markAsDelivered(context),
-                  icon: const Icon(Icons.check_circle, color: Colors.white),
-                  label: const Text(
-                    'Telah Diambil (Mark as Delivered)',
-                    style: TextStyle(color: Colors.white),
+              const SizedBox(height: 16),
+              const Text('Destinasi:', style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold)),
+              Text(delivery, style: const TextStyle(fontWeight: FontWeight.bold)),
+              if (address != null && address.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(address, style: const TextStyle(fontSize: 13)),
+              ],
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _updateStatusAndWhatsApp(
+                        context,
+                        isOutForDelivery ? 'Delivered' : 'Out for Delivery',
+                      ),
+                      icon: Icon(isOutForDelivery ? Icons.check_circle : Icons.local_shipping),
+                      label: Text(isOutForDelivery ? 'Selesai' : 'Mula Hantar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isOutForDelivery ? const Color(0xFF25D366) : Colors.orange,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              )
-            else if (!isOutForDelivery)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _updateStatusAndWhatsApp(context, 'Out for Delivery'),
-                  icon: const Icon(Icons.two_wheeler, color: Colors.white),
-                  label: const Text(
-                    'Mula Penghantaran (WhatsApp)',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              )
-            else
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _updateStatusAndWhatsApp(context, 'Delivered'),
-                  icon: const Icon(Icons.camera_alt, color: Colors.white),
-                  label: const Text(
-                    'Selesai & Hantar Gambar',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF25D366),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
+                  const SizedBox(width: 12),
+                  _actionIcon(Icons.phone_outlined, Colors.blue, () async {
+                    final url = Uri.parse('tel:${phone.replaceAll(RegExp(r'\D'), '')}');
+                    if (await canLaunchUrl(url)) await launchUrl(url);
+                  }),
+                  const SizedBox(width: 8),
+                  _actionIcon(HugeIcons.strokeRoundedWhatsapp, const Color(0xFF25D366), () async {
+                    String cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+                    if (cleanPhone.startsWith('0')) cleanPhone = '6$cleanPhone';
+                    final url = Uri.parse('https://wa.me/$cleanPhone');
+                    if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }),
+                ],
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
+  Widget _miniStatusBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+      child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+    );
+  }
+
+  Widget _actionIcon(dynamic icon, Color color, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+        child: icon is IconData ? Icon(icon, color: color, size: 18) : HugeIcon(icon: icon, color: color, size: 18),
+      ),
+    );
+  }
 }
+
 
 class _StatisticsTab extends StatelessWidget {
   const _StatisticsTab();

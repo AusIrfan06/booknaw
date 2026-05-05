@@ -331,10 +331,6 @@ class _CustomerOrderCard extends StatelessWidget {
                 if (addCheese)
                   _row('Cheese Dip', 'Ya', isDark),
 
-                // NEW: Display dynamic items
-                if (order['items'] != null && (order['items'] as List).isNotEmpty)
-                  ...(order['items'] as List).map((item) => _row(item['title'], 'x${item['quantity']}', isDark)),
-
                 const SizedBox(height: 12),
 
                 // Status pills
@@ -530,13 +526,6 @@ class _CustomerOrderCard extends StatelessWidget {
                       '${bbqQty}x  @RM5.00  =  RM${(bbqQty * 5.0).toStringAsFixed(2)}'),
                 if (addCheese)
                   _receiptRow('Cheese Dip', 'RM1.00'),
-
-                // NEW: Display dynamic items
-                if (order['items'] != null && (order['items'] as List).isNotEmpty)
-                  ...(order['items'] as List).map((item) => _receiptRow(
-                    item['title'], 
-                    '${item['quantity']}x  @RM${(item['price'] ?? 0.0).toStringAsFixed(2)}  =  RM${((item['price'] ?? 0.0) * item['quantity']).toStringAsFixed(2)}'
-                  )),
                 _dashedDivider(),
 
                 // Total

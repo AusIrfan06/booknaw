@@ -1098,34 +1098,6 @@ class _StaffOrderCard extends StatelessWidget {
               .eq('id', locationId);
         }
       }
-
-      // NEW: Deduct dynamic products stock
-      if (order['items'] != null && (order['items'] as List).isNotEmpty) {
-        final List items = order['items'] as List;
-        for (var item in items) {
-          final productId = item['id'];
-          final quantity = item['quantity'] as int? ?? 0;
-          if (productId != null && quantity > 0) {
-            try {
-              final prodRes = await Supabase.instance.client
-                  .from('products')
-                  .select('stock')
-                  .eq('id', productId)
-                  .maybeSingle();
-              
-              if (prodRes != null) {
-                final currentStock = prodRes['stock'] as int? ?? 0;
-                await Supabase.instance.client
-                    .from('products')
-                    .update({'stock': (currentStock - quantity) < 0 ? 0 : (currentStock - quantity)})
-                    .eq('id', productId);
-              }
-            } catch (e) {
-              debugPrint('Error deducting stock for product $productId: $e');
-            }
-          }
-        }
-      }
     } catch (e) {
       if (context.mounted) {
         showGlassToast(context, e.toString(), isError: true);
@@ -1230,11 +1202,6 @@ class _StaffOrderCard extends StatelessWidget {
               if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
               if (bbqQty > 0) Text('- BBQ x$bbqQty'),
               if (cheeseQty > 0) Text('- Cheese Dip x$cheeseQty'),
-              
-              // NEW: Display dynamic items
-              if (order['items'] != null && (order['items'] as List).isNotEmpty)
-                ...(order['items'] as List).map((item) => Text('- ${item['title']} x${item['quantity']}')),
-              
               const SizedBox(height: 8),
               Text(
                 'Lokasi: $delivery',
@@ -1538,11 +1505,6 @@ class _DeliveryOrderCard extends StatelessWidget {
             if (hotQty > 0) Text('- HOT & SPICYYY x$hotQty'),
             if (bbqQty > 0) Text('- BBQ x$bbqQty'),
             if (addCheese) const Text('- Cheese Dip'),
-
-            // NEW: Display dynamic items
-            if (order['items'] != null && (order['items'] as List).isNotEmpty)
-              ...(order['items'] as List).map((item) => Text('- ${item['title']} x${item['quantity']}')),
-
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),

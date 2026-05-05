@@ -7,20 +7,33 @@ import 'utils/glass_toast.dart';
 import 'utils/cart_service.dart';
 
 class OrderPage extends StatefulWidget {
-  const OrderPage({super.key});
+  final int initialHot;
+  final int initialBbq;
+  final int initialCheese;
+
+  const OrderPage({
+    super.key,
+    this.initialHot = 0,
+    this.initialBbq = 0,
+    this.initialCheese = 0,
+  });
 
   @override
   State<OrderPage> createState() => _OrderPageState();
 }
 
 class _OrderPageState extends State<OrderPage> {
+  // Use CartService for quantities
   final _cartService = CartService();
   String? _deliveryOption;
+  String? _deliveryType; // 'pickup' or 'delivery'
+
+  final double _pricePer100g = 5.0;
+  final double _cheeseDipPrice = 1.0;
 
   final Map<String, double> _deliveryFees = {
     'Pickup Alpha (A5-03-03)': 0.0,
     'Pickup Beta (B10-03-11)': 0.0,
-    'Pickup Gamma (G-01-01)': 0.0,
     'Delivery Alpha': 1.0,
     'Delivery Beta': 1.0,
     'Delivery Gamma': 1.0,
@@ -28,7 +41,8 @@ class _OrderPageState extends State<OrderPage> {
   };
 
   double get _totalPrice {
-    double total = _cartService.totalPrice;
+    double total = ((_cartService.hotQuantity + _cartService.bbqQuantity) * _pricePer100g);
+    if (_cartService.cheeseQuantity > 0) total += (_cartService.cheeseQuantity * _cheeseDipPrice);
     if (_deliveryOption != null) {
       total += _deliveryFees[_deliveryOption] ?? 0.0;
     }
@@ -37,7 +51,7 @@ class _OrderPageState extends State<OrderPage> {
 
   void _proceedToCheckout() {
     if (_cartService.totalItems == 0) {
-      showGlassToast(context, 'Sila tambah sekurang-kurangnya 1 item ke troli!', isError: true);
+      showGlassToast(context, 'Sila tambah sekurang-kurangnya 1 item (Nachos atau Cheese Dip)!', isError: true);
       return;
     }
     if (_deliveryOption == null) {
@@ -58,7 +72,9 @@ class _OrderPageState extends State<OrderPage> {
       context,
       MaterialPageRoute(
         builder: (context) => CheckoutPage(
-          items: _cartService.items,
+          hotQuantity: _cartService.hotQuantity,
+          bbqQuantity: _cartService.bbqQuantity,
+          cheeseQuantity: _cartService.cheeseQuantity,
           deliveryOption: _deliveryOption!,
           totalPrice: _totalPrice,
         ),
@@ -66,9 +82,21 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
+  late final Stream<List<Map<String, dynamic>>> _inventoryStream;
+
   @override
   void initState() {
     super.initState();
+    // Initialize CartService with values from constructor if provided
+    if (widget.initialHot > 0) _cartService.updateQuantity('HOT & SPICYYY', widget.initialHot);
+    if (widget.initialBbq > 0) _cartService.updateQuantity('SMOKY BBQ', widget.initialBbq);
+    if (widget.initialCheese > 0) _cartService.updateQuantity('CHEESE DIP', widget.initialCheese);
+
+    _inventoryStream = Supabase.instance.client
+        .from('inventory')
+        .stream(primaryKey: ['id'])
+        .order('id');
+    
     _cartService.addListener(_onCartChanged);
   }
 
@@ -84,11 +112,9 @@ class _OrderPageState extends State<OrderPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ringkasan Pesanan'),
+        title: const Text('Buat Pesanan'),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: GlassContainer(
@@ -103,63 +129,245 @@ class _OrderPageState extends State<OrderPage> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Item Pesanan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      body: StreamBuilder<List<Map<String, dynamic>>>(
+        stream: _inventoryStream,
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Ralat: ${snapshot.error}'));
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final inventory = snapshot.data ?? [];
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader('1. Pilih Perisa Nachos (100g)'),
+                const SizedBox(height: 16),
+                _buildNachosOption(
+                  'HOT & SPICYYY',
+                  'Pedas gila, gerenti berpeluh!',
+                  _cartService.hotQuantity,
+                  (val) => _cartService.updateQuantity('HOT & SPICYYY', val),
+                  inventory,
+                  'hot_stock',
+                  Colors.redAccent,
+                ),
+                const SizedBox(height: 12),
+                _buildNachosOption(
+                  'SMOKY BBQ',
+                  'Rasa salai yang premium.',
+                  _cartService.bbqQuantity,
+                  (val) => _cartService.updateQuantity('SMOKY BBQ', val),
+                  inventory,
+                  'bbq_stock',
+                  Colors.orangeAccent,
+                ),
+                const SizedBox(height: 32),
+                _buildSectionHeader('2. Tambah Sos Keju'),
+                const SizedBox(height: 16),
+                _buildCheeseOption(inventory),
+                const SizedBox(height: 32),
+                _buildSectionHeader('3. Cara Penghantaran'),
+                const SizedBox(height: 16),
+                _buildDeliveryTypeSelection(),
+                if (_deliveryType != null) ...[
+                  const SizedBox(height: 16),
+                  _buildLocationSelection(),
+                ],
+                const SizedBox(height: 150),
+              ],
             ),
-            const SizedBox(height: 16),
-            ..._cartService.items.map((item) => _buildOrderItem(item, isDark)),
-            const SizedBox(height: 32),
-            const Text(
-              'Pilih Cara Penghantaran',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildDeliveryOptions(isDark),
-            const SizedBox(height: 150),
-          ],
-        ),
+          );
+        },
       ),
-      bottomNavigationBar: _buildBottomBar(isDark),
+      bottomNavigationBar: _buildBottomBar(),
     );
   }
 
-  Widget _buildOrderItem(CartItem item, bool isDark) {
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildNachosOption(
+    String title,
+    String sub,
+    int qty,
+    ValueChanged<int> onChanged,
+    List<Map<String, dynamic>> inventory,
+    String stockKey,
+    Color color,
+  ) {
+    int totalStock = 0;
+    for (var loc in inventory) {
+      totalStock += (loc[stockKey] as int? ?? 0);
+    }
+
+    final isOutOfStock = totalStock <= 0;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(Icons.fastfood, color: color),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text('RM ${item.price.toStringAsFixed(2)} x ${item.quantity}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(sub, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                if (isOutOfStock)
+                  const Text('Stok Habis', style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold))
+                else
+                  Text('Stok: $totalStock', style: const TextStyle(fontSize: 10, color: Colors.green)),
               ],
             ),
           ),
-          Text('RM ${(item.price * item.quantity).toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFFF5722))),
+          if (!isOutOfStock)
+            Row(
+              children: [
+                _qtyBtn(Icons.remove, () {
+                  if (qty > 0) onChanged(qty - 1);
+                }),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                _qtyBtn(Icons.add, () {
+                  if (qty < totalStock) onChanged(qty + 1);
+                }),
+              ],
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildDeliveryOptions(bool isDark) {
+  Widget _buildCheeseOption(List<Map<String, dynamic>> inventory) {
+    int totalStock = 0;
+    for (var loc in inventory) {
+      totalStock += (loc['cheese_stock'] as int? ?? 0);
+    }
+    final isOutOfStock = totalStock <= 0;
+    final qty = _cartService.cheeseQuantity;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(color: Colors.amber.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+            child: const Icon(Icons.BakeryDining, color: Colors.amber),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('CHEESE DIP', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Sos keju berkrim & padu.', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                if (isOutOfStock)
+                  const Text('Stok Habis', style: TextStyle(fontSize: 10, color: Colors.red, fontWeight: FontWeight.bold))
+                else
+                  Text('Stok: $totalStock', style: const TextStyle(fontSize: 10, color: Colors.green)),
+              ],
+            ),
+          ),
+          if (!isOutOfStock)
+            Row(
+              children: [
+                _qtyBtn(Icons.remove, () {
+                  if (qty > 0) _cartService.updateQuantity('CHEESE DIP', qty - 1);
+                }),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                _qtyBtn(Icons.add, () {
+                  if (qty < totalStock) _cartService.updateQuantity('CHEESE DIP', qty + 1);
+                }),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeliveryTypeSelection() {
+    return Row(
+      children: [
+        _typeCard('Pickup', Icons.storefront, _deliveryType == 'pickup', () {
+          setState(() {
+            _deliveryType = 'pickup';
+            _deliveryOption = null;
+          });
+        }),
+        const SizedBox(width: 16),
+        _typeCard('Delivery', Icons.local_shipping, _deliveryType == 'delivery', () {
+          setState(() {
+            _deliveryType = 'delivery';
+            _deliveryOption = null;
+          });
+        }),
+      ],
+    );
+  }
+
+  Widget _typeCard(String title, IconData icon, bool isSelected, VoidCallback onTap) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFFF5722) : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isSelected ? const Color(0xFFFF5722) : Colors.grey.withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            children: [
+              Icon(icon, color: isSelected ? Colors.white : Colors.grey, size: 32),
+              const SizedBox(height: 8),
+              Text(title, style: TextStyle(color: isSelected ? Colors.white : Colors.grey, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationSelection() {
+    final options = _deliveryFees.keys.where((k) => k.toLowerCase().contains(_deliveryType!)).toList();
+
     return Column(
-      children: _deliveryFees.keys.map((opt) {
+      children: options.map((opt) {
         final fee = _deliveryFees[opt]!;
         final isSelected = _deliveryOption == opt;
-        
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: InkWell(
@@ -167,22 +375,12 @@ class _OrderPageState extends State<OrderPage> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? const Color(0xFFFF5722).withValues(alpha: 0.1) 
-                    : (isDark ? Colors.white.withValues(alpha: 0.02) : Colors.black.withValues(alpha: 0.02)),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected ? const Color(0xFFFF5722) : Colors.transparent,
-                  width: 1.5,
-                ),
+                color: isSelected ? const Color(0xFFFF5722).withValues(alpha: 0.1) : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isSelected ? const Color(0xFFFF5722) : Colors.grey.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  Icon(
-                    opt.contains('Pickup') ? Icons.storefront_rounded : Icons.local_shipping_rounded,
-                    color: isSelected ? const Color(0xFFFF5722) : Colors.grey,
-                  ),
-                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,7 +390,7 @@ class _OrderPageState extends State<OrderPage> {
                       ],
                     ),
                   ),
-                  if (isSelected) const Icon(Icons.check_circle_rounded, color: Color(0xFFFF5722)),
+                  if (isSelected) const Icon(Icons.check_circle, color: Color(0xFFFF5722)),
                 ],
               ),
             ),
@@ -202,7 +400,8 @@ class _OrderPageState extends State<OrderPage> {
     );
   }
 
-  Widget _buildBottomBar(bool isDark) {
+  Widget _buildBottomBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
       decoration: BoxDecoration(
@@ -229,10 +428,21 @@ class _OrderPageState extends State<OrderPage> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text('TERUSKAN KE PEMBAYARAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text('TERUSKAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _qtyBtn(IconData icon, VoidCallback onTap) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black.withValues(alpha: 0.05)),
+        child: Icon(icon, size: 16),
       ),
     );
   }

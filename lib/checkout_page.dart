@@ -6,13 +6,17 @@ import 'utils/glass_toast.dart';
 import 'utils/cart_service.dart';
 
 class CheckoutPage extends StatefulWidget {
-  final List<CartItem> items;
+  final int hotQuantity;
+  final int bbqQuantity;
+  final int cheeseQuantity;
   final String deliveryOption;
   final double totalPrice;
 
   const CheckoutPage({
     super.key,
-    required this.items,
+    required this.hotQuantity,
+    required this.bbqQuantity,
+    required this.cheeseQuantity,
     required this.deliveryOption,
     required this.totalPrice,
   });
@@ -47,6 +51,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
           _firstNameController.text = firstName;
           _lastNameController.text = lastName;
         } else if (fullName.isNotEmpty) {
+          // Fallback for old accounts without split names
           final parts = fullName.split(' ');
           _firstNameController.text = parts.first;
           if (parts.length > 1) {
@@ -72,20 +77,13 @@ class _CheckoutPageState extends State<CheckoutPage> {
       String lName = _lastNameController.text.trim();
       lName = lName.split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1).toLowerCase()}' : '').join(' ');
 
+      // Fetch first business ID as default
       final bizRes = await Supabase.instance.client.from('businesses').select('id').limit(1).maybeSingle();
       final bizId = bizRes?['id'];
       
       final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
-      // Extract legacy quantities for backward compatibility with Staff Dashboard
-      int hotQty = 0;
-      int bbqQty = 0;
-      int cheeseQty = 0;
-      for (var item in widget.items) {
-        if (item.title == 'HOT & SPICYYY') hotQty += item.quantity;
-        if (item.title == 'SMOKY BBQ' || item.title == 'BBQ') bbqQty += item.quantity;
-        if (item.title == 'CHEESE DIP' || item.title == 'Cheese Dip') cheeseQty += item.quantity;
-      }
+      debugPrint('Submitting order: business_id=$bizId, user_id=$currentUserId');
 
       final response = await Supabase.instance.client.from('orders').insert({
         'business_id': bizId,
@@ -93,26 +91,51 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'customer_name': '$fName $lName'.trim(),
         'phone_number': _phoneController.text,
         'delivery_address': _isDelivery ? _addressController.text.trim() : null,
-        'hot_quantity_100g': hotQty,
-        'bbq_quantity_100g': bbqQty,
-        'cheese_quantity': cheeseQty,
-        'items': widget.items.map((i) => i.toJson()).toList(), // NEW: Save dynamic items
+        'hot_quantity_100g': widget.hotQuantity,
+        'bbq_quantity_100g': widget.bbqQuantity,
+        'cheese_quantity': widget.cheeseQuantity,
         'delivery_option': widget.deliveryOption,
         'total_price': widget.totalPrice,
         'payment_status': 'Pending Payment',
-        'status': 'pending',
+        'status': 'pending', 
+        'created_at': DateTime.now().toIso8601String(),
       }).select().single();
 
       final orderId = response['id'];
 
-      // NOTE: Stock deduction is now handled in Staff Dashboard when marking as PAID 
-      // to avoid double deduction and complex rollback logic.
+      // Determine locId from delivery option
+      int locId = 1;
+      if (widget.deliveryOption.contains('Alpha')) {
+        locId = 1;
+      } else if (widget.deliveryOption.contains('Beta')) {
+        locId = 2;
+      } else if (widget.deliveryOption.contains('Gamma')) {
+        locId = 3;
+      } else if (widget.deliveryOption.contains('NR')) {
+        locId = 4;
+      }
+
+      // Deduct stock from the CORRECT location
+      final invData = await Supabase.instance.client.from('inventory').select().eq('id', locId).single();
+      final newHot = (invData['hot_stock'] as int? ?? 0) - widget.hotQuantity;
+      final newBbq = (invData['bbq_stock'] as int? ?? 0) - widget.bbqQuantity;
+      final newCheese = (invData['cheese_stock'] as int? ?? 0) - widget.cheeseQuantity;
       
+      await Supabase.instance.client.from('inventory').update({
+        'hot_stock': newHot < 0 ? 0 : newHot,
+        'bbq_stock': newBbq < 0 ? 0 : newBbq,
+        'cheese_stock': newCheese < 0 ? 0 : newCheese,
+      }).eq('id', locId);
+
       if (!mounted) return;
 
+      // Build WhatsApp message for Lysa
       final name = '${_firstNameController.text} ${_lastNameController.text}'.trim();
       final phone = _phoneController.text;
-      final itemsStr = widget.items.map((i) => '${i.title} x${i.quantity}').join(', ');
+      final hot = widget.hotQuantity > 0 ? 'HOT & SPICYYY x${widget.hotQuantity}' : '';
+      final bbq = widget.bbqQuantity > 0 ? 'BBQ x${widget.bbqQuantity}' : '';
+      final cheese = widget.cheeseQuantity > 0 ? 'Cheese Dip x${widget.cheeseQuantity}' : '';
+      final items = [hot, bbq, cheese].where((s) => s.isNotEmpty).join(', ');
       final total = 'RM ${widget.totalPrice.toStringAsFixed(2)}';
       
       final waMessage = Uri.encodeComponent(
@@ -120,7 +143,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         'No. Pesanan: #$orderId\n'
         'Nama: $name\n'
         'No. Tel: $phone\n'
-        'Pesanan: $itemsStr\n'
+        'Pesanan: $items\n'
         'Lokasi: ${widget.deliveryOption}\n'
         'Jumlah: $total\n\n'
         'Saya akan hantar bukti pembayaran sekejap lagi ya. Terima kasih!'
@@ -128,7 +151,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       const lysaNumber = '60132163194';
       final waUrl = Uri.parse('https://wa.me/$lysaNumber?text=$waMessage');
 
-      // Clear cart after success
+      // Clear cart
       CartService().clear();
 
       _showSuccessDialog(orderId, waUrl);

@@ -8,23 +8,17 @@ import 'utils/cart_service.dart';
 import 'utils/glass_toast.dart';
 
 class ProductDetailPage extends StatefulWidget {
-  final String? id;
   final String title;
   final String price;
-  final double rawPrice;
   final String description;
   final Color themeColor;
-  final String? imageUrl;
 
   const ProductDetailPage({
     super.key,
-    this.id,
     required this.title,
     required this.price,
-    required this.rawPrice,
     required this.description,
     required this.themeColor,
-    this.imageUrl,
   });
 
   @override
@@ -44,7 +38,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       return Scaffold(
         body: Row(
           children: [
-            // ── Left: Image Section ───────────────────────────────────────────
+            // â”€â”€ Left: Image Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Expanded(
               flex: 1,
               child: Stack(
@@ -64,13 +58,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     child: Center(
                       child: Hero(
                         tag: widget.title,
-                        child: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
-                          ? Image.network(widget.imageUrl!, fit: BoxFit.contain, width: 400)
-                          : HugeIcon(
-                              icon: HugeIcons.strokeRoundedPackage,
-                              size: 250,
-                              color: Colors.white.withValues(alpha: 0.8),
-                            ),
+                        child: HugeIcon(
+                          icon: HugeIcons.strokeRoundedPackage,
+                          size: 250,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
                       ),
                     ),
                   ),
@@ -91,7 +83,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
             ),
-            // ── Right: Details Section ────────────────────────────────────────
+            // â”€â”€ Right: Details Section â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Expanded(
               flex: 1,
               child: Container(
@@ -162,13 +154,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       Center(
                         child: Hero(
                           tag: widget.title,
-                          child: widget.imageUrl != null && widget.imageUrl!.isNotEmpty
-                            ? Image.network(widget.imageUrl!, fit: BoxFit.cover, width: double.infinity)
-                            : HugeIcon(
-                                icon: HugeIcons.strokeRoundedPackage,
-                                size: 150,
-                                color: Colors.white.withValues(alpha: 0.8),
-                              ),
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedPackage,
+                            size: 150,
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
                         ),
                       ),
                     ],
@@ -386,13 +376,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Expanded(
             child: InkWell(
               onTap: () {
-                CartService().addToCart(
-                  widget.title, 
-                  _quantity, 
-                  id: widget.id, 
-                  price: widget.rawPrice, 
-                  imageUrl: widget.imageUrl
-                );
+                CartService().addToCart(widget.title, _quantity);
                 showGlassToast(context, '${widget.title} x$_quantity ditambah ke troli! 🛒');
               },
               child: GlassContainer(
@@ -427,18 +411,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           Expanded(
             child: InkWell(
               onTap: () {
-                // Add to cart first to ensure it's there
-                CartService().addToCart(
-                  widget.title, 
-                  _quantity, 
-                  id: widget.id, 
-                  price: widget.rawPrice, 
-                  imageUrl: widget.imageUrl
-                );
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const OrderPage(),
+                    builder: (context) => OrderPage(
+                      initialHot: widget.title == 'HOT & SPICYYY' ? _quantity : 0,
+                      initialBbq: widget.title == 'SMOKY BBQ' ? _quantity : 0,
+                      initialCheese: widget.title == 'CHEESE DIP' ? _quantity : 0,
+                    ),
                   ),
                 );
               },
